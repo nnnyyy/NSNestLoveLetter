@@ -260,8 +260,8 @@ paket-files/
 
 
 ### Unity ###
-/[Ll]ibrary/
-/[Tt]emp/
+Library/
+Temp/
 /[Oo]bj/
 /[Bb]uild/
 /[Bb]uilds/
