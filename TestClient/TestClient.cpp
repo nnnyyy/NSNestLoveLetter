@@ -65,7 +65,24 @@ public:
 	}
 
 	void handle_receive() {
+		while (m_bConnect) {
+			if (!IsSocketOpen())
+				break;
+			boost::system::error_code err = boost::asio::error::host_not_found;
 
+			try {
+				boost::array<BYTE, _BUFF_SIZE> buf = { 0 };
+				size_t nByteTransfer = m_Socket.read_some(boost::asio::buffer(buf), err);
+
+				std::cout << "Received : " << nByteTransfer << std::endl;
+			}
+			catch (std::exception e) {
+				m_bConnect = false;
+				std::cerr << e.what() << std::endl;
+			}
+
+			Sleep(1);
+		}
 	}
 
 	void handle_send() {
@@ -78,14 +95,22 @@ public:
 			try
 			{
 				boost::array<BYTE, _BUFF_SIZE> buf = { 0 };
-				USHORT sPacketHeader = 62;
+				USHORT sPacketHeader = 4;
 				*reinterpret_cast<USHORT*>(&buf[0]) = sPacketHeader;
-
-				for (int i = 2; i < buf.size(); ++i) {
+				for (int i = 2; i < 6; ++i) {
 					buf[i] = packetSN;
 				}
+
+				packetSN++;
+
+				sPacketHeader = 6;
+				*reinterpret_cast<USHORT*>(&buf[6]) = sPacketHeader;
+				for (int i = 8; i < 14; ++i) {
+					buf[i] = packetSN;
+				}
+
 				boost::system::error_code error;
-				int len = boost::asio::write(m_Socket, boost::asio::buffer(buf, buf.size()), error);
+				int len = boost::asio::write(m_Socket, boost::asio::buffer(buf, 14), error);
 				if (len > 0) {
 					std::cout << "writed" << std::endl;
 					packetSN++;
@@ -116,9 +141,11 @@ int main()
 		CProtocol client(io);
 		client.Connect();
 		boost::thread Send(boost::bind( &CProtocol::handle_send, &client ));
+		boost::thread Receive(boost::bind(&CProtocol::handle_receive, &client));
 		io.run();	//	하는 일이 있을 때만 Blocking. work(io)로 block 처리.
 
 		Send.join();
+		Receive.join();
 	}
 	catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;

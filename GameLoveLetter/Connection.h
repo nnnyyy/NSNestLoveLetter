@@ -10,17 +10,17 @@ private:
 public:
 	ULONG m_uSocketSN;
 private:
-	boost::array<BYTE, _BUFF_SIZE> m_RecvBuf;
-	boost::circular_buffer<BYTE> m_CircularBuf;
+	boost::array<BYTE, _BUFF_SIZE> m_RecvBuf;	
 	std::string m_sMsg;
+	std::vector<BYTE> v;
 	InPacket packetBuf;
 
-	CConnection(boost::asio::io_service& io) : m_Socket(io), m_uSocketSN(-1){
-		m_CircularBuf.set_capacity(_BUFF_SIZE * 4);
+	CConnection(boost::asio::io_service& io) : m_Socket(io), m_uSocketSN(-1){		
 	}
 
 	void handle_Accept(const boost::system::error_code& err, size_t byte_transferred);
 	void handle_Read(const boost::system::error_code& err, size_t byte_transferred);
+	void handle_Write(const boost::system::error_code& err, size_t byte_transferred);
 
 public:
 
@@ -39,4 +39,13 @@ public:
 private:
 
 	void ProcessPacket(InPacket &iPacket);
+	void SendPacket(OutPacket &oPacket);
+
+private:
+	
+	std::string m_sID;
+	std::string m_sPW;
+
+
+	void OnLogin(InPacket &iPacket);
 };
