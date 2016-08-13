@@ -2,8 +2,9 @@
 
 #define _BUFF_SIZE 128
 
-using boost::asio::ip::tcp;
+#include "User.h"
 
+using boost::asio::ip::tcp;
 class CConnection : public boost::enable_shared_from_this<CConnection> {
 private:
 	tcp::socket m_Socket;
@@ -39,13 +40,19 @@ public:
 private:
 
 	void ProcessPacket(InPacket &iPacket);
+public:
 	void SendPacket(OutPacket &oPacket);
 
 private:
 	
 	std::string m_sID;
 	std::string m_sPW;
-
+	CUser::pointer m_pUser;
 
 	void OnLogin(InPacket &iPacket);
+	void OnCreateRoom(InPacket &iPacket);
+	void OnEnterRoom(InPacket &iPacket);
+	void OnLeaveRoom(InPacket &iPacket);
+	void OnGameStart(InPacket &iPacket);
+	void OnGameReady(InPacket &iPacket);
 };

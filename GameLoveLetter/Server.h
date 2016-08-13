@@ -3,6 +3,7 @@
 using boost::asio::ip::tcp;
 
 class Server;
+class CUser;
 
 class Server_Wrapper : public boost::serialization::singleton<Server_Wrapper> {
 public:
@@ -10,6 +11,8 @@ public:
 	~Server_Wrapper() {}
 
 	boost::shared_ptr<Server> m_pServer;
+
+	static std::map<ULONG, boost::shared_ptr<CUser> > m_mUsers;
 };
 
 class Server {	

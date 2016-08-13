@@ -3,10 +3,12 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
+#include "PacketProtocol.h"
 #include "Packet.h"
 #include "Connection.h"
-#include "Server.h"
 #include "User.h"
+#include "Server.h"
+
 
 using boost::asio::ip::tcp;	
 
@@ -19,8 +21,7 @@ void CConnection::handle_Accept(const boost::system::error_code& err, size_t byt
 
 void CConnection::handle_Read(const boost::system::error_code& err, size_t byte_transferred) {	
 	if (!err) {
-		if (m_RecvBuf.size()) {
-			//std::cout << "byte_transferred : " << byte_transferred << std::endl;			
+		if (m_RecvBuf.size()) {			
 			BYTE *pBuf = &m_RecvBuf[0];
 
 			while (pBuf) {
@@ -37,9 +38,10 @@ void CConnection::handle_Read(const boost::system::error_code& err, size_t byte_
 			boost::bind(&CConnection::handle_Read, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred
 				));
 	}
-	else {
+	else {		
 		std::cout << m_uSocketSN << " - Disconnect(Write) : " << err.message() << std::endl;
 		Server_Wrapper::get_mutable_instance().m_pServer->RemoveSocket(shared_from_this());
+		Server_Wrapper::m_mUsers.erase(m_pUser->GetCharacterID());
 	}
 }
 
@@ -59,12 +61,21 @@ void CConnection::start() {
 void CConnection::ProcessPacket(InPacket &iPacket) {
 	LONG nType = iPacket.Decode2();
 
+	if (nType >= CGP_User_Start && nType < CGP_User_End) {
+		
+	}
+
 	switch (nType) {
-	case 0: OnLogin(iPacket); break;
+	case CGP_Login: OnLogin(iPacket); break;
+	case CGP_CreateRoom: OnCreateRoom(iPacket); break;
+	case CGP_EnterRoom: OnEnterRoom(iPacket); break;
+	case CGP_LeaveRoom: OnLeaveRoom(iPacket); break;
+	case CGP_GameStart: OnGameStart(iPacket); break;
+	case CGP_GameReady: OnGameReady(iPacket); break;
 	}
 }
 
-void CConnection::SendPacket(OutPacket &oPacket) {	
+void CConnection::SendPacket(OutPacket &oPacket) {
 	oPacket.MakeBuf(v);
 	boost::asio::async_write(m_Socket, boost::asio::buffer(v),
 		boost::bind(&CConnection::handle_Write, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred
@@ -73,7 +84,29 @@ void CConnection::SendPacket(OutPacket &oPacket) {
 
 
 void CConnection::OnLogin(InPacket &iPacket) {
-
 	boost::shared_ptr<CUser> pUser(new CUser());
+	pUser->SetConnection(m_uSocketSN);
+	m_pUser = pUser;
+	Server_Wrapper::m_mUsers.insert(std::pair<ULONG, CUser::pointer >(pUser->GetCharacterID(), pUser));
+	//SendLoginResult();
+}
+
+void CConnection::OnCreateRoom(InPacket &iPacket) {
+
+}
+
+void CConnection::OnEnterRoom(InPacket &iPacket) {
+
+}
+
+void CConnection::OnLeaveRoom(InPacket &iPacket) {
+
+}
+
+void CConnection::OnGameStart(InPacket &iPacket) {
+
+}
+
+void CConnection::OnGameReady(InPacket &iPacket) {
 
 }

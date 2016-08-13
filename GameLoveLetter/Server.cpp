@@ -7,6 +7,8 @@
 #include "Connection.h"
 #include "Server.h"
 
+std::map<ULONG, boost::shared_ptr<CUser> > Server_Wrapper::m_mUsers;
+
 Server::Server(boost::asio::io_service& io) : m_Acceptor(io, tcp::endpoint(tcp::v4(),7770)), m_dwSocketSNCounter(0), m_nAcceptCnt(0) {
 	WaitAccept();
 }
@@ -25,7 +27,7 @@ void Server::handle_Accept(CConnection::pointer newConn, const boost::system::er
 		newConn->m_uSocketSN = m_dwSocketSNCounter;
 		m_dwSocketSNCounter++;
 		m_mSockets.insert(std::pair<ULONG, CConnection::pointer>(newConn->m_uSocketSN, newConn ));		
-		m_lSockets.push_back(newConn);
+		//m_lSockets.push_back(newConn);
 
 		newConn->start();
 		WaitAccept();
