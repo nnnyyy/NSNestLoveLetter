@@ -4,8 +4,10 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
 #include "Packet.h"
+#include "User.h"
 #include "Connection.h"
 #include "Server.h"
+#include "Room.h"
 
 
 
@@ -29,4 +31,13 @@ void CUser::SendPacket(OutPacket& oPacket) {
 
 void CUser::SetConnection(ULONG uSocketSN) {	
 	m_uSocketSN = uSocketSN;	
+}
+
+void CUser::PostDisconnect() {
+	if (m_pRoom) {		
+		CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+		pRoom->RemoveUser(shared_from_this());
+	}
+
+	m_pRoom = NULL;
 }

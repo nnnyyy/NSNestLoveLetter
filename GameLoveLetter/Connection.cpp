@@ -5,6 +5,7 @@
 #include <boost/asio.hpp>
 #include "PacketProtocol.h"
 #include "Packet.h"
+#include "User.h"
 #include "Connection.h"
 #include "User.h"
 #include "Server.h"
@@ -42,6 +43,7 @@ void CConnection::handle_Read(const boost::system::error_code& err, size_t byte_
 		std::cout << m_uSocketSN << " - Disconnect(Write) : " << err.message() << std::endl;
 		Server_Wrapper::get_mutable_instance().m_pServer->RemoveSocket(shared_from_this());
 		Server_Wrapper::m_mUsers.erase(m_pUser->GetCharacterID());
+		m_pUser->PostDisconnect();
 	}
 }
 
@@ -62,16 +64,28 @@ void CConnection::ProcessPacket(InPacket &iPacket) {
 	LONG nType = iPacket.Decode2();
 
 	if (nType >= CGP_User_Start && nType < CGP_User_End) {
-		
+		ProcessUserPacket(nType, iPacket);
+		return;
 	}
 
 	switch (nType) {
 	case CGP_Login: OnLogin(iPacket); break;
-	case CGP_CreateRoom: OnCreateRoom(iPacket); break;
-	case CGP_EnterRoom: OnEnterRoom(iPacket); break;
-	case CGP_LeaveRoom: OnLeaveRoom(iPacket); break;
-	case CGP_GameStart: OnGameStart(iPacket); break;
-	case CGP_GameReady: OnGameReady(iPacket); break;
+	default:
+		return;
+	}
+}
+
+void CConnection::ProcessUserPacket(LONG nType, InPacket &iPacket) {
+	if (!m_pUser) {
+		// Err
+		return;
+	}
+	switch (nType) {
+	case CGP_CreateRoom: m_pUser->OnCreateRoom(iPacket); break;
+	case CGP_EnterRoom: m_pUser->OnEnterRoom(iPacket); break;
+	case CGP_LeaveRoom: m_pUser->OnLeaveRoom(iPacket); break;
+	case CGP_GameStart: m_pUser->OnGameStart(iPacket); break;
+	case CGP_GameReady: m_pUser->OnGameReady(iPacket); break;
 	}
 }
 
@@ -88,25 +102,7 @@ void CConnection::OnLogin(InPacket &iPacket) {
 	pUser->SetConnection(m_uSocketSN);
 	m_pUser = pUser;
 	Server_Wrapper::m_mUsers.insert(std::pair<ULONG, CUser::pointer >(pUser->GetCharacterID(), pUser));
-	//SendLoginResult();
-}
-
-void CConnection::OnCreateRoom(InPacket &iPacket) {
-
-}
-
-void CConnection::OnEnterRoom(InPacket &iPacket) {
-
-}
-
-void CConnection::OnLeaveRoom(InPacket &iPacket) {
-
-}
-
-void CConnection::OnGameStart(InPacket &iPacket) {
-
-}
-
-void CConnection::OnGameReady(InPacket &iPacket) {
-
+	
+	OutPacket oPacket(GCP_LoginRet);
+	SendPacket(oPacket);
 }
