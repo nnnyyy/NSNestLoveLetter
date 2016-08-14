@@ -48,7 +48,7 @@ void CRoom::BroadcastPacket(OutPacket& oPacket) {
 }
 
 void CRoom::Update(LONG tCur) {
-	std::cout << "Room : " << m_nSN << " Update" << std::endl;
+	std::cout << "Room : " << m_nSN << " Update - User : " << GetUserCount() << std::endl;
 }
 
 void CRoom::Destroy() {
@@ -80,6 +80,7 @@ void CRoomManager::Register(CRoom::pointer pRoom) {
 }
 
 CRoom::pointer CRoomManager::GetRoom(LONG nSN) {
+	if (m_mRooms.find(nSN) == m_mRooms.end()) return NULL;
 	return m_mRooms.at(nSN);
 }
 

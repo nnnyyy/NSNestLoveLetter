@@ -79,6 +79,7 @@ void CConnection::ProcessPacket(InPacket &iPacket) {
 void CConnection::ProcessUserPacket(LONG nType, InPacket &iPacket) {
 	if (!m_pUser) {
 		// Err
+		// SendErrorPacket();
 		return;
 	}
 	switch (nType) {

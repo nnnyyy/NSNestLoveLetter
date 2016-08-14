@@ -180,12 +180,58 @@ int main()
 
 		CProtocol client(io);
 		client.Connect();
-		boost::thread Send(boost::bind( &CProtocol::handle_send, &client ));
+		//boost::thread Send(boost::bind( &CProtocol::handle_send, &client ));
 		boost::thread Receive(boost::bind(&CProtocol::handle_receive, &client));
-		io.run();	//	하는 일이 있을 때만 Blocking. work(io)로 block 처리.
+		boost::thread mainIO(boost::bind(&boost::asio::io_service::run, &io));
+		//io.run();	//	하는 일이 있을 때만 Blocking. work(io)로 block 처리.
 
-		Send.join();
+		char line[128 + 1];
+		while (std::cin.getline(line, 128))
+		{
+			int n = atoi(line);
+			switch (n) {
+			case 0: {
+				std::cout << "로그인 시도" << std::endl;
+				OutPacket oPacket(CGP_Login);
+				client.SendPacket(oPacket);
+			}	
+				break;
+			case 1: {
+				std::cout << "방 만들기 시도" << std::endl;
+				OutPacket oPacket(CGP_CreateRoom);
+				client.SendPacket(oPacket);			
+				//	방 생성
+			}
+				break;
+
+			case 2: {				
+				std::cout << "방 입장 시도" << std::endl;
+				std::cout << "몇번방 접속 : " << std::endl;
+				std::cin.getline(line, 128);
+				int n2 = atoi(line);
+				OutPacket oPacket(CGP_EnterRoom);
+				oPacket.Encode4(n2);
+				client.SendPacket(oPacket);
+			}
+				break;
+
+			case 3: {
+				std::cout << "방 떠나기 시도" << std::endl;
+				OutPacket oPacket(CGP_LeaveRoom);				
+				client.SendPacket(oPacket);
+			}
+					break;
+			default:
+				std::cout << "잘못된 명령어" << std::endl;
+				continue;
+			}
+
+		}
+
+		//Send.join();
 		Receive.join();
+
+		mainIO.join();
 	}
 	catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;

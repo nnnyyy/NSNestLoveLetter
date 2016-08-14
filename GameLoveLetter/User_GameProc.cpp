@@ -46,6 +46,10 @@ void CUser::OnEnterRoom(InPacket &iPacket) {
 }
 
 void CUser::OnLeaveRoom(InPacket &iPacket) {
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+	pRoom->RemoveUser(shared_from_this());
+	m_pRoom = NULL;
+	//	SendRetPacket
 }
 
 void CUser::OnGameStart(InPacket &iPacket) {
