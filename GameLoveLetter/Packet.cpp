@@ -123,6 +123,18 @@ void OutPacket::Encode8(UINT64 n) {
 	m_nOffset += sizeof(UINT64);
 }
 
+void OutPacket::EncodeStr(std::string s) {
+	Encode2(s.size());
+	BYTE *pSrc = (&m_Buf[0] + m_nOffset);
+	LONG nSize = s.size();
+	LONG nCnt = 0;
+	while (--nSize) {
+		pSrc[nCnt] = s[nCnt];
+		nCnt++;
+	}
+	m_nOffset += s.size();	
+}
+
 void OutPacket::MakeBuf(std::vector<BYTE> &v) {
 	v.resize(HEADER_SIZE + m_nOffset);
 	*reinterpret_cast<USHORT*>(&v[0]) = m_nOffset;

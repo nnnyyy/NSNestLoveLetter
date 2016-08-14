@@ -42,6 +42,8 @@ public:
 
 	void Update();	
 
+	void MakeRoomListPacket(OutPacket& oPacket);
+
 protected:
 	std::vector<CRoom::pointer> m_vRooms;
 	std::map<LONG, CRoom::pointer> m_mRooms;

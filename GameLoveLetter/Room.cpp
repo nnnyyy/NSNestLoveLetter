@@ -95,3 +95,11 @@ void CRoomManager::Update() {
 		++iter;
 	}
 }
+
+void CRoomManager::MakeRoomListPacket(OutPacket& oPacket) {
+	for (std::vector<CRoom::pointer>::iterator iter = m_vRooms.begin(); iter != m_vRooms.end(); ++iter) {
+		CRoom::pointer pRoom = *iter;
+		oPacket.Encode4(pRoom->GetSN());
+		oPacket.Encode1(pRoom->GetUserCount());
+	}
+}

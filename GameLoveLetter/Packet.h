@@ -46,6 +46,7 @@ public:
 	void Encode2(USHORT n);
 	void Encode4(ULONG n);
 	void Encode8(UINT64 n);	
+	void EncodeStr(std::string n);
 
 	void MakeBuf(std::vector<BYTE> &v);
 };

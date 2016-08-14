@@ -9,6 +9,7 @@
 #include "Connection.h"
 #include "User.h"
 #include "Server.h"
+#include "Room.h"
 
 
 using boost::asio::ip::tcp;	
@@ -104,5 +105,6 @@ void CConnection::OnLogin(InPacket &iPacket) {
 	Server_Wrapper::m_mUsers.insert(std::pair<ULONG, CUser::pointer >(pUser->GetCharacterID(), pUser));
 	
 	OutPacket oPacket(GCP_LoginRet);
+	CRoomManager::get_mutable_instance().MakeRoomListPacket(oPacket);
 	SendPacket(oPacket);
 }
