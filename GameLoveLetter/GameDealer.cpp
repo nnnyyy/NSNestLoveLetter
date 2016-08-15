@@ -154,6 +154,9 @@ void CGameDealerLoveLetter::NextTurn() {
 		CUser::pointer pUser = pRoom->GetUser(m_vPlayers[i]->nUserSN);
 		pUser->SendPacket(oPacket);
 	}
+
+	//	현재 턴인 플레이어의 2번째 카드를 그 플레이어에게만 전송한다.
+	//	나머지 플레이어에겐 뒷면을 제공 ( 클라 액션용 )
 }
 
 void CGameDealerLoveLetter::EncodePlayerInfo(OutPacket& oPacket) {
