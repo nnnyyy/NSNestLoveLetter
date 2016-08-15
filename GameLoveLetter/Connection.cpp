@@ -9,6 +9,7 @@
 #include "Connection.h"
 #include "User.h"
 #include "Server.h"
+#include "GameDealer.h"
 #include "Room.h"
 
 
@@ -42,9 +43,12 @@ void CConnection::handle_Read(const boost::system::error_code& err, size_t byte_
 	}
 	else {		
 		std::cout << m_uSocketSN << " - Disconnect(Write) : " << err.message() << std::endl;
-		Server_Wrapper::get_mutable_instance().m_pServer->RemoveSocket(shared_from_this());
-		Server_Wrapper::m_mUsers.erase(m_pUser->GetCharacterID());
-		m_pUser->PostDisconnect();
+		Server_Wrapper::get_mutable_instance().m_pServer->RemoveSocket(shared_from_this());		
+		if (m_pUser) {
+			Server_Wrapper::m_mUsers.erase(m_pUser->m_nUserSN);
+			m_pUser->PostDisconnect();
+			m_pUser = NULL;
+		}		
 	}
 }
 
@@ -82,30 +86,54 @@ void CConnection::ProcessUserPacket(LONG nType, InPacket &iPacket) {
 		// SendErrorPacket();
 		return;
 	}
+
+	if (nType >= CGP_GamePacket_Start && nType <= CGP_GamePacket_End) {
+		CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pUser->GetRoom());
+		if (!pRoom) {
+			// Err
+			// SendErrorPacket();
+			return;
+		}		
+		pRoom->OnGamePacket(iPacket, m_pUser);
+		return;
+	}
+
 	switch (nType) {
 	case CGP_CreateRoom: m_pUser->OnCreateRoom(iPacket); break;
 	case CGP_EnterRoom: m_pUser->OnEnterRoom(iPacket); break;
 	case CGP_LeaveRoom: m_pUser->OnLeaveRoom(iPacket); break;
 	case CGP_GameStart: m_pUser->OnGameStart(iPacket); break;
-	case CGP_GameReady: m_pUser->OnGameReady(iPacket); break;
+	case CGP_GameReady: m_pUser->OnGameReady(iPacket); break;		
 	}
 }
 
 void CConnection::SendPacket(OutPacket &oPacket) {
-	oPacket.MakeBuf(v);
-	boost::asio::async_write(m_Socket, boost::asio::buffer(v),
+	boost::shared_ptr< std::vector<BYTE> > p(new std::vector<BYTE>());
+	oPacket.MakeBuf(p);	
+	shared_const_buffer<BYTE> buffer(p);
+	boost::asio::async_write(m_Socket, buffer,
 		boost::bind(&CConnection::handle_Write, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred
 		));
 }
 
 
 void CConnection::OnLogin(InPacket &iPacket) {
+	static ULONG userSN_test = 1000;
+	if (m_pUser) {
+		//Disconnect();
+		OutPacket oPacket(GCP_LoginRet);
+		oPacket.Encode2(-1);
+		SendPacket(oPacket);
+		return;
+	}
 	boost::shared_ptr<CUser> pUser(new CUser());
 	pUser->SetConnection(m_uSocketSN);
+	pUser->m_nUserSN = userSN_test++;
 	m_pUser = pUser;
-	Server_Wrapper::m_mUsers.insert(std::pair<ULONG, CUser::pointer >(pUser->GetCharacterID(), pUser));
+	Server_Wrapper::m_mUsers.insert(std::pair<ULONG, CUser::pointer >(pUser->m_nUserSN, pUser));
 	
 	OutPacket oPacket(GCP_LoginRet);
-	CRoomManager::get_mutable_instance().MakeRoomListPacket(oPacket);
+	oPacket.Encode2(0);
+	oPacket.Encode4(pUser->m_nUserSN);	
 	SendPacket(oPacket);
 }

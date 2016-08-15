@@ -17,6 +17,7 @@
 #include <ctime>
 #include <list>
 #include <map>
+#include <boost/assert.hpp>
 #include <boost/serialization/singleton.hpp>
 #include <boost/circular_buffer.hpp>
 #include <boost/array.hpp>

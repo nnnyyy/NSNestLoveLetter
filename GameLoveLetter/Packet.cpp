@@ -135,8 +135,8 @@ void OutPacket::EncodeStr(std::string s) {
 	m_nOffset += s.size();	
 }
 
-void OutPacket::MakeBuf(std::vector<BYTE> &v) {
-	v.resize(HEADER_SIZE + m_nOffset);
-	*reinterpret_cast<USHORT*>(&v[0]) = m_nOffset;
-	std::copy(m_Buf.begin(), m_Buf.begin() + m_nOffset, v.begin() + HEADER_SIZE);
+void OutPacket::MakeBuf(boost::shared_ptr< std::vector<BYTE> > vData) {	
+	vData->resize(HEADER_SIZE + m_nOffset);
+	*reinterpret_cast<USHORT*>(&(*vData)[0]) = m_nOffset;
+	std::copy(m_Buf.begin(), m_Buf.begin() + m_nOffset, (*vData).begin() + HEADER_SIZE);
 }

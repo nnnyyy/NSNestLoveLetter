@@ -10,6 +10,7 @@
 #include "User.h"
 #include "Connection.h"
 #include "Server.h"
+#include "GameDealer.h"
 #include "Room.h"
 #include <mysql.h>
 
