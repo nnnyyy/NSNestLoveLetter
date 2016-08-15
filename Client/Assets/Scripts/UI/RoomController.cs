@@ -1,17 +1,22 @@
 ﻿using UnityEngine;
-using System.Collections;
 
-public class RoomController : MonoBehaviour {
+namespace NSNest.UI
+{
+    public class RoomController : MonoBehaviour, IButtonEventReceiver
+    {
+        void Start()
+        {
+            this.InitButton();
+        }
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+        void OnDestroy()
+        {
+            this.ReleaseButton();
+        }
 
-
+        public void OnPressButton(string buttonName)
+        {
+            Debug.Log("RoomController OnPressButton :" + buttonName);
+        }
+    }
 }
