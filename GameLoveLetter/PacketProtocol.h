@@ -9,3 +9,9 @@ enum {
 	CGP_GameReady,
 	CGP_User_End
 };
+
+enum {
+	GCP_LoginRet = 0,
+	GCP_RoomInfoRet,
+	GCP_GameStart
+};
