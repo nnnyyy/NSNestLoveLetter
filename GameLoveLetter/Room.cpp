@@ -29,6 +29,7 @@ void CRoom::Enter(CUser::pointer pUser) {
 		return;
 	}
 
+	pUser->m_bReady = FALSE;
 	m_vUsers.push_back(pUser);
 	m_mUsers.insert(std::pair<ULONG, CUser::pointer>( pUser->m_nUserSN, pUser ));
 

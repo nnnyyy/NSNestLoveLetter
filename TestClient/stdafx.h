@@ -19,3 +19,4 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/assert.hpp>
 #include <boost/serialization/singleton.hpp>
+#include <boost/format.hpp>

@@ -56,18 +56,27 @@ public:
 	CGameDealerLoveLetter();
 	virtual ~CGameDealerLoveLetter();
 
-	virtual void OnPacket(InPacket& iPacket, CUser::pointer pUser);
+	virtual void OnPacket(InPacket& iPacket, CUser::pointer pUser);				
 				void OnGuardAction(InPacket& iPacket, CUser::pointer pUser);
+				void OnRoyalSubjectAction(InPacket& iPacket, CUser::pointer pUser);
+				void OnGossipAction(InPacket& iPacket, CUser::pointer pUser);
+				void OnCompanionAction(InPacket& iPacket, CUser::pointer pUser);
+				void OnHeroAction(InPacket& iPacket, CUser::pointer pUser);
+				void OnWizardAction(InPacket& iPacket, CUser::pointer pUser);
+				void OnLadyAction(InPacket& iPacket, CUser::pointer pUser);
+				void OnPrincessAction(InPacket& iPacket, CUser::pointer pUser);
 	virtual void Update();	
 
 	void InitGame();
 	void NextTurn();
+	void GameOver();
 	void EncodePlayerInfo(OutPacket& oPacket);
 	void EncodePlayerIndexList(OutPacket& oPacket);
 
 protected:
 	BOOL GetCardFromDeck(Player::pointer pPlayer);
 	BOOL IsMyTurn(Player::pointer pPlayer);
+	BOOL DropCard(Player::pointer pPlayer, LONG nCardType);
 
 public:
 	typedef boost::shared_ptr<CGameDealerLoveLetter> pointer;

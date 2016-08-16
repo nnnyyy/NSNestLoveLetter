@@ -20,12 +20,20 @@
 
 class CProtocol;
 void PrintMenu();
+void PrintActionLog();
 void ProcMenu(CProtocol& client, LONG n);
 void ProcGameMenu(CProtocol& client, LONG n);
+void ProcCardCommand(CProtocol& client, LONG n);
+
+std::vector< std::string> g_vMessages;
+void AddMessage(std::string sMsg) {
+	g_vMessages.push_back(sMsg);
+}
 
 using boost::asio::ip::tcp;
 
 std::vector<BYTE> buf;
+boost::mutex g_mutex;
 
 class CContext : public boost::serialization::singleton<CContext> {
 public:
@@ -40,11 +48,12 @@ public:
 
 	struct Player : public boost::enable_shared_from_this<Player> {
 	public:
-		Player() : m_bReady(FALSE), m_bGuard(FALSE), m_bDead(FALSE) {}
+		Player() : m_bReady(FALSE), m_bGuard(FALSE), m_bDead(FALSE), m_nIndex(-1) {}
 		ULONG m_uUserSN;
 		BOOL m_bReady;
 		BOOL m_bGuard;
 		BOOL m_bDead;
+		LONG m_nIndex;
 		std::vector<LONG> m_vHandCardType;
 		std::vector<LONG> m_vGroundCardType;
 		typedef boost::shared_ptr<Player> pointer;
@@ -54,11 +63,18 @@ public:
 		RoomInfo() : m_bGameStart(FALSE) {}
 		LONG nSN;
 		LONG nUserCnt;
+		LONG nCurTurnIndex;
 		std::vector<Player::pointer> vPlayers;
 		Player::pointer pLocalPlayer;
 		std::map<ULONG, Player::pointer> mPlayers;
-		std::map<LONG, LONG> mIndex;
+		std::map<LONG, LONG> mSNToIndex;	//	UserSN to Idx
+		std::map<LONG, LONG> mIndexToSN;	//	Idx to UserSN  
 		BOOL m_bGameStart;
+
+		BOOL IsMyTurn() {
+			if (!pLocalPlayer) return FALSE;
+			return (nCurTurnIndex == pLocalPlayer->m_nIndex);
+		}
 
 		void PrintInfo() {
 			std::cout << "Me" << CContext::get_mutable_instance().m_uUserSN << std::endl;
@@ -76,16 +92,22 @@ public:
 
 		void PrintMyCardAndAllGroundCard() {
 			if (!pLocalPlayer) return;
+			if (IsMyTurn()) {
+				std::cout << "[턴]";
+			}
+			std::cout << "[" << pLocalPlayer->m_nIndex << "]";
 			if (pLocalPlayer->m_vHandCardType.size() >= 2) {
-				std::cout << "[My Hand Card] " << pLocalPlayer->m_vHandCardType[0] << " ," << pLocalPlayer->m_vHandCardType[1] << std::endl;
+				std::cout << (pLocalPlayer->m_bDead ? "#Dead#" : "") << "[My Hand Card] " << pLocalPlayer->m_vHandCardType[0] << " ," << pLocalPlayer->m_vHandCardType[1] << std::endl;
 			}
 			else {
-				std::cout << "[My Hand Card] " << pLocalPlayer->m_vHandCardType[0] << std::endl;
+				std::cout << (pLocalPlayer->m_bDead ? "#Dead#" : "") << "[My Hand Card] " << pLocalPlayer->m_vHandCardType[0] << std::endl;
 			}
 			
 			for (std::vector<Player::pointer>::iterator iter = vPlayers.begin(); iter != vPlayers.end(); ++iter) {
 				Player::pointer player = *iter;					
 				if (player == pLocalPlayer) continue;
+				std::cout << (player->m_bDead ? "#Dead#" : "");
+				std::cout << "[" << player->m_nIndex << "]";
 				std::cout << "[" << player->m_uUserSN << "] ";
 				if (player->m_vGroundCardType.size()) {
 					LONG nCardType = player->m_vGroundCardType.back();
@@ -373,6 +395,7 @@ public:
 		LONG nUserSN = iPacket.Decode4();
 		if (CContext::get_mutable_instance().m_uUserSN == nUserSN) {
 			CContext::get_mutable_instance().m_nRoom = -1;
+			CContext::get_mutable_instance().m_pRoom = NULL;
 			std::cout << "방에서 나왔습니다." << std::endl;
 		}		
 	}
@@ -398,7 +421,9 @@ public:
 			for (int i = 0; i < nSize; ++i) {
 				LONG nUserSN = iPacket.Decode4();
 				LONG nIndex = iPacket.Decode4();
-				pRoom->mIndex.insert(std::pair<LONG, LONG>(nUserSN, nIndex));
+				pRoom->mSNToIndex.insert(std::pair<LONG, LONG>(nUserSN, nIndex));
+				pRoom->mIndexToSN.insert(std::pair<LONG, LONG>(nIndex, nUserSN));
+				pRoom->mPlayers.at(nUserSN)->m_nIndex = nIndex;
 			}
 			return;
 		}
@@ -410,6 +435,10 @@ public:
 		case GCP_LL_Status:
 			OnLLStatus(iPacket);
 			break;
+
+		case GCP_LL_ActionRet:
+			OnActionRet(iPacket);
+			break;
 		}
 	}
 
@@ -417,6 +446,7 @@ public:
 		LONG nCurTurnIndex = iPacket.Decode4();
 		LONG nUserCnt = iPacket.Decode4();
 		boost::shared_ptr<CContext::RoomInfo> pRoom = CContext::get_mutable_instance().m_pRoom;
+		pRoom->nCurTurnIndex = nCurTurnIndex;
 		for (int i = 0; i < nUserCnt; ++i) {
 			LONG nUserSN = iPacket.Decode4();
 			BOOL bDead = iPacket.Decode4();
@@ -425,7 +455,7 @@ public:
 			pPlayer->m_bDead = bDead;
 			pPlayer->m_bGuard = bGuard;
 			LONG nGroundCardSize = iPacket.Decode4();
-			pPlayer->m_vGroundCardType.clear();
+			pPlayer->m_vGroundCardType.clear();			
 			if (nGroundCardSize) {				
 				for (int i = 0; i < nGroundCardSize; ++i) {
 					LONG nCardType = iPacket.Decode4();
@@ -447,6 +477,38 @@ public:
 		
 		pRoom->pLocalPlayer = pPlayer;		
 	}
+
+	void OnActionRet(InPacket& iPacket) {
+		boost::shared_ptr<CContext::RoomInfo> pRoom = CContext::get_mutable_instance().m_pRoom;
+		LONG nCardType = iPacket.Decode4();
+		switch (nCardType) {
+		case 1:
+			{
+				//	경비병 사용 결과
+				BOOL bSucceed = iPacket.Decode4();
+				if (bSucceed) {
+					LONG nIdxDead = iPacket.Decode4();
+					LONG nUserSNDead = pRoom->mIndexToSN[nIdxDead];
+					AddMessage("경비병 사용 성공");
+				}
+				else {
+					AddMessage("경비병 사용 실패");
+				}
+			}
+			break;		
+		case 2:
+			{
+				//	신하 사용 결과
+				BOOL bSucceed = iPacket.Decode4();
+				if (bSucceed) {
+					LONG nCardType = iPacket.Decode4();	
+					std::string sMsg = boost::str(boost::format("상대방은 %d 카드 입니다.") % nCardType);
+					AddMessage(sMsg);
+				}
+			}
+			break;
+		}				
+	}	
 
 	void PrintRoomList() {
 		if (m_vRoomInfo.size() <= 0) {
@@ -513,10 +575,12 @@ int main()
 }
 
 void PrintMenu() {
-	system("cls");
+	boost::lock_guard<boost::mutex> lock(g_mutex);
+	system("cls");	
 	if (CContext::get_mutable_instance().IsGameRunning()) {
+		PrintActionLog();
 		CContext::get_mutable_instance().m_pRoom->PrintMyCardAndAllGroundCard();
-		std::cout << "[메뉴] 0-카드 확인 1-카드 사용" << std::endl;
+		std::cout << "[메뉴] 0-카드 사용" << std::endl;
 	}
 	else {
 		if (!CContext::get_mutable_instance().m_bLogined) {
@@ -534,17 +598,132 @@ void PrintMenu() {
 	}
 }
 
-void ProcGameMenu(CProtocol& client, LONG n) {
-	switch (n) {
-		case 0: {
-			std::cout << "Game Menu0" << std::endl;
+void PrintActionLog() {
+	if (g_vMessages.size() < 3) {
+		for each (std::string s in g_vMessages)
+		{
+			std::cout << s << std::endl;
 		}
-				break;
+	}
+	else {
+		for (int i = g_vMessages.size() - 1; (g_vMessages.size() - 3) > i; --i) {
+			std::cout << g_vMessages[i] << std::endl;
+		}
+	}
 
-		case 1: {
-			std::cout << "Game Menu1" << std::endl;
+	std::cout << "" << std::endl;
+}
+
+void ProcGameMenu(CProtocol& client, LONG n) {
+	char line[128 + 1];
+	switch (n) {
+		case 0: {			
+			std::cout << "어떤 카드를 내시겠소 : ";
+			std::cin.getline(line, 128);			
+			int n2 = atoi(line);
+			ProcCardCommand(client, n2);			
 		}
-				break;
+				break;		
+	}
+}
+
+void ProcCardCommand(CProtocol& client, LONG n) {	
+	char line[128 + 1];
+	CContext::Player::pointer pLocalPlayer = CContext::get_mutable_instance().m_pRoom->pLocalPlayer;
+	std::vector<LONG>::iterator iter = pLocalPlayer->m_vHandCardType.begin();
+	BOOL bFind = FALSE;
+	for (; iter != pLocalPlayer->m_vHandCardType.end(); ++iter) {
+		if (*iter == n) {
+			bFind = TRUE;
+			break;
+		}
+	}
+	if (!bFind) {		
+		return;
+	}
+
+	if (n == 1) {
+		//	경비병 카드 사용 ( 누구에게 무엇이냐고 물어봐야함 )
+		LONG nWho;
+		LONG nWhat;
+		std::cout << "[경비] 누구에게? : ";
+		std::cin.getline(line, 128);
+		nWho = atoi(line);
+		std::cout << "[경비] 무엇인 것 같소 : ";
+		std::cin.getline(line, 128);
+		nWhat = atoi(line);
+		OutPacket oPacket(CGP_GameLoveLetter);
+		oPacket.Encode2(CGP_LL_GuardCheck);
+		oPacket.Encode4(nWho);
+		oPacket.Encode4(nWhat);
+		client.SendPacket(oPacket);
+	}
+
+	if (n == 2) {
+		//	왕실신하 카드 사용 ( 누가 무엇이냐고 물어봐야함 )
+		LONG nWho;		
+		std::cout << "[신하] 누구에게 물어보겠소? : ";
+		std::cin.getline(line, 128);
+		nWho = atoi(line);		
+		OutPacket oPacket(CGP_GameLoveLetter);
+		oPacket.Encode2(CGP_LL_RoyalSubject);
+		oPacket.Encode4(nWho);		
+		client.SendPacket(oPacket);
+	}
+
+	if (n == 3) {
+		//	험담가 사용 ( 누구와 싸울 것이냐고 물어 봄 )
+		LONG nWho;
+		std::cout << "[험담가] 누구와 싸우겠소? : ";
+		std::cin.getline(line, 128);
+		nWho = atoi(line);
+		OutPacket oPacket(CGP_GameLoveLetter);
+		oPacket.Encode2(CGP_LL_Gossip);
+		oPacket.Encode4(nWho);
+		client.SendPacket(oPacket);
+	}
+
+	if (n == 4) {
+		//	동료 사용						
+		OutPacket oPacket(CGP_GameLoveLetter);
+		oPacket.Encode2(CGP_LL_Companion);
+		client.SendPacket(oPacket);
+	}
+
+	if (n == 5) {
+		//	영웅 사용 ( 누구에게 쓰겠소 )
+		LONG nWho;
+		std::cout << "[영웅] 누구의 카드를 버리게 하겠소?(자신 포함) : ";
+		std::cin.getline(line, 128);
+		nWho = atoi(line);
+		OutPacket oPacket(CGP_GameLoveLetter);
+		oPacket.Encode2(CGP_LL_Hero);
+		oPacket.Encode4(nWho);
+		client.SendPacket(oPacket);
+	}
+
+	if (n == 6) {
+		//	마법사 사용 ( 누구에게 쓰겠소 )
+		LONG nWho;
+		std::cout << "[마법사] 누구와 카드를 교환하겠소? : ";
+		std::cin.getline(line, 128);
+		nWho = atoi(line);
+		OutPacket oPacket(CGP_GameLoveLetter);
+		oPacket.Encode2(CGP_LL_Wizard);
+		oPacket.Encode4(nWho);
+		client.SendPacket(oPacket);
+	}
+
+	if (n == 7) {
+		OutPacket oPacket(CGP_GameLoveLetter);
+		oPacket.Encode2(CGP_LL_Lady);
+		client.SendPacket(oPacket);
+	}
+
+	if (n == 8) {
+		OutPacket oPacket(CGP_GameLoveLetter);
+		oPacket.Encode2(CGP_LL_Princess);
+		client.SendPacket(oPacket);
 	}
 }
 

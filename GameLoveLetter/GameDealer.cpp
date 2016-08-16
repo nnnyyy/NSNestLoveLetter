@@ -54,21 +54,28 @@ void CGameDealerLoveLetter::OnPacket(InPacket& iPacket, CUser::pointer pUser) {
 	LONG nSubType = iPacket.Decode2();
 
 	switch (nSubType) {
-	case 0: OnGuardAction(iPacket, pUser); break;
+	case CGP_LL_GuardCheck: OnGuardAction(iPacket, pUser); break;
+	case CGP_LL_RoyalSubject: OnRoyalSubjectAction(iPacket, pUser); break;
+	case CGP_LL_Gossip: OnGossipAction(iPacket, pUser); break;
+	case CGP_LL_Companion: OnCompanionAction(iPacket, pUser); break;
+	case CGP_LL_Hero: OnHeroAction(iPacket, pUser); break;
+	case CGP_LL_Wizard: OnWizardAction(iPacket, pUser); break;
+	case CGP_LL_Lady: OnLadyAction(iPacket, pUser); break;
+	case CGP_LL_Princess: OnPrincessAction(iPacket, pUser); break;
 	}
 }
 
 void CGameDealerLoveLetter::OnGuardAction(InPacket& iPacket, CUser::pointer pUser) {
-	Player::pointer pPlayer = m_vPlayers[status.nCurTurnIndex];
-	if (pPlayer->nUserSN != pUser->m_nUserSN) {
+	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
+	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
 		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
 		return;
 	}
 
-	LONG nTargetIdx = iPacket.Decode1();	//	물어볼 타겟 인덱스
-	LONG nTypeGuess = iPacket.Decode1();	//	물어볼 타입
+	LONG nTargetIdx		= iPacket.Decode4();	//	누구?
+	LONG nCardTypeGuess = iPacket.Decode4();	//	무엇?
 
-	if (nTypeGuess == LOVELETTER_GAURD) {
+	if (nCardTypeGuess == LOVELETTER_GAURD) {
 		//	경비병을 직접 지목할 수 없다.
 		return;
 	}
@@ -77,10 +84,262 @@ void CGameDealerLoveLetter::OnGuardAction(InPacket& iPacket, CUser::pointer pUse
 		//	내 자신을 지목할 수 없다.
 		return;
 	}
+
+	if (m_vPlayers[nTargetIdx]->m_bDead) {
+		//	죽은 사람도 지목하지 말자.
+		return;
+	}
+
+	BOOL bDrop = DropCard(pTurnPlayer, LOVELETTER_GAURD);
+	if (!bDrop) {
+		//	오류
+		return;
+	}
+
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+	if (m_vPlayers[nTargetIdx]->m_vHandCards[0]->m_nType == nCardTypeGuess) {
+		m_vPlayers[nTargetIdx]->m_bDead = TRUE;
+		Card::pointer pCard = m_vPlayers[nTargetIdx]->m_vHandCards.back();
+		m_vPlayers[nTargetIdx]->m_vGroundCards.push_back(pCard);
+		//	잡았다.		
+		OutPacket oPacket(GCP_GameLoveLetter);
+		oPacket.Encode2(GCP_LL_ActionRet);
+		oPacket.Encode4(LOVELETTER_GAURD);		
+		oPacket.Encode4(TRUE);
+		oPacket.Encode4(nTargetIdx);
+		pRoom->BroadcastPacket(oPacket);
+	}
+	else {
+		//	아무일도 일어나지 않는다.
+		OutPacket oPacket(GCP_GameLoveLetter);
+		oPacket.Encode2(GCP_LL_ActionRet);
+		oPacket.Encode4(LOVELETTER_GAURD);
+		oPacket.Encode4(FALSE);		
+		pRoom->BroadcastPacket(oPacket);
+	}
+
+	status.nCurTurnIndex++;
+	if (status.nCurTurnIndex >= m_vPlayers.size()) {
+		status.nCurTurnIndex = 0;		
+	}
+
+	NextTurn();
+}
+
+void CGameDealerLoveLetter::OnRoyalSubjectAction(InPacket& iPacket, CUser::pointer pUser) {
+	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
+	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
+		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
+		return;
+	}
+
+	LONG nTargetIdx = iPacket.Decode4();	//	누구에게 물어볼 것인가	
+
+	if (nTargetIdx == status.nCurTurnIndex) {
+		//	내 자신을 지목할 수 없다.
+		return;
+	}
+
+	if (m_vPlayers[nTargetIdx]->m_bDead) {
+		//	죽은 사람도 지목하지 말자.
+		return;
+	}	
+
+	BOOL bDrop = DropCard(pTurnPlayer, LOVELETTER_ROYAL);
+	if (!bDrop) {
+		//	오류
+		return;
+	}
+
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);	
+
+	LONG nSize = m_vPlayers.size();	
+	for (int i = 0; i < nSize; ++i) {		
+		OutPacket oPacket(GCP_GameLoveLetter);
+		oPacket.Encode2(GCP_LL_ActionRet);
+		oPacket.Encode4(LOVELETTER_ROYAL);
+		BOOL bMyTurn = IsMyTurn(m_vPlayers[i]);
+		oPacket.Encode4(bMyTurn);
+		if (bMyTurn) {
+			oPacket.Encode4(m_vPlayers[nTargetIdx]->m_vHandCards[0]->m_nType);
+		}
+
+		CUser::pointer pUser = pRoom->GetUser(m_vPlayers[i]->nUserSN);
+		pUser->SendPacket(oPacket);
+	}
+
+	status.nCurTurnIndex++;
+	if (status.nCurTurnIndex >= m_vPlayers.size()) {
+		status.nCurTurnIndex = 0;
+	}
+
+	NextTurn();
+}
+
+void CGameDealerLoveLetter::OnGossipAction(InPacket& iPacket, CUser::pointer pUser) {
+	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
+	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
+		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
+		return;
+	}
+
+	BOOL bDrop = DropCard(pTurnPlayer, LOVELETTER_GOSSIP);
+	if (!bDrop) {
+		//	오류
+		return;
+	}
+
+	status.nCurTurnIndex++;
+	if (status.nCurTurnIndex >= m_vPlayers.size()) {
+		status.nCurTurnIndex = 0;
+	}
+
+	NextTurn();
+}
+
+void CGameDealerLoveLetter::OnCompanionAction(InPacket& iPacket, CUser::pointer pUser) {
+	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
+	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
+		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
+		return;
+	}
+
+	BOOL bDrop = DropCard(pTurnPlayer, LOVELETTER_COMPANION);
+	if (!bDrop) {
+		//	오류
+		return;
+	}
+
+	status.nCurTurnIndex++;
+	if (status.nCurTurnIndex >= m_vPlayers.size()) {
+		status.nCurTurnIndex = 0;
+	}
+
+	NextTurn();
+}
+
+void CGameDealerLoveLetter::OnHeroAction(InPacket& iPacket, CUser::pointer pUser) {
+	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
+	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
+		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
+		return;
+	}
+
+	BOOL bDrop = DropCard(pTurnPlayer, LOVELETTER_HERO);
+	if (!bDrop) {
+		//	오류
+		return;
+	}
+
+	status.nCurTurnIndex++;
+	if (status.nCurTurnIndex >= m_vPlayers.size()) {
+		status.nCurTurnIndex = 0;
+	}
+
+	NextTurn();
+}
+
+void CGameDealerLoveLetter::OnWizardAction(InPacket& iPacket, CUser::pointer pUser) {
+	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
+	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
+		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
+		return;
+	}
+
+	BOOL bDrop = DropCard(pTurnPlayer, LOVELETTER_WIZARD);
+	if (!bDrop) {
+		//	오류
+		return;
+	}
+
+	status.nCurTurnIndex++;
+	if (status.nCurTurnIndex >= m_vPlayers.size()) {
+		status.nCurTurnIndex = 0;
+	}
+
+	NextTurn();
+}
+
+void CGameDealerLoveLetter::OnLadyAction(InPacket& iPacket, CUser::pointer pUser) {
+	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
+	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
+		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
+		return;
+	}
+
+	BOOL bDrop = DropCard(pTurnPlayer, LOVELETTER_LADY);
+	if (!bDrop) {
+		//	오류
+		return;
+	}
+
+	status.nCurTurnIndex++;
+	if (status.nCurTurnIndex >= m_vPlayers.size()) {
+		status.nCurTurnIndex = 0;
+	}
+
+	NextTurn();
+}
+
+void CGameDealerLoveLetter::OnPrincessAction(InPacket& iPacket, CUser::pointer pUser) {
+	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
+	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
+		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
+		return;
+	}
+
+	BOOL bDrop = DropCard(pTurnPlayer, LOVELETTER_PRINCESS);
+	if (!bDrop) {
+		//	오류
+		return;
+	}
+
+	status.nCurTurnIndex++;
+	if (status.nCurTurnIndex >= m_vPlayers.size()) {
+		status.nCurTurnIndex = 0;
+	}
+
+	NextTurn();
+}
+
+BOOL CGameDealerLoveLetter::DropCard(Player::pointer pTurnPlayer, LONG nCardType) {
+	BOOL bFind = FALSE;
+	std::vector<Card::pointer>::iterator iterFind;
+	LONG nFindCardIndex = -1;
+	Card::pointer pCardDropped;
+	for (std::vector<Card::pointer>::iterator iter = pTurnPlayer->m_vHandCards.begin(); iter != pTurnPlayer->m_vHandCards.end(); ++iter) {
+		if ((*iter)->m_nType == nCardType) {
+			bFind = TRUE;
+			pCardDropped = *iter;
+			iterFind = iter;
+			//pTurnPlayer->m_vHandCards.erase(iter);
+			break;
+		}
+	}
+
+	if (!bFind)
+	{
+		return FALSE;
+	}
+	
+	if (nCardType == LOVELETTER_HERO || nCardType == LOVELETTER_WIZARD) {
+		//	내려놓는 카드가 영웅이나 위자드일 때,
+		//	나머지 카드에 귀부인이 있으면 귀부인을 먼저 버려야 함.
+		for each (Card::pointer pCard in pTurnPlayer->m_vHandCards)
+		{
+			if (pCard->m_nType == LOVELETTER_LADY) {
+				return FALSE;
+			}
+		}
+	}	
+
+	pTurnPlayer->m_vHandCards.erase(iterFind);
+	pTurnPlayer->m_vGroundCards.push_back(pCardDropped);
+	return TRUE;
 }
 
 void CGameDealerLoveLetter::Update() {
-
+	
 }
 
 void CGameDealerLoveLetter::InitGame() {	
@@ -91,6 +350,7 @@ void CGameDealerLoveLetter::InitGame() {
 	if (status.nPrevRoundWinIndex != -1) {
 
 	}
+	//	첫번째 턴인 유저
 	status.nCurTurnIndex = 0;
 
 	m_vPlayers.clear();
@@ -108,7 +368,7 @@ void CGameDealerLoveLetter::InitGame() {
 	m_pSecretCard = NULL;
 	m_vDeck.resize(m_vCards.size());
 	std::copy(m_vCards.begin(), m_vCards.end(), m_vDeck.begin());
-	auto engine = std::default_random_engine{};
+	auto engine = std::default_random_engine(std::random_device{}());
 	std::shuffle(std::begin(m_vDeck), std::end(m_vDeck), engine);
 	
 	//DistributeCard();
@@ -124,6 +384,10 @@ void CGameDealerLoveLetter::InitGame() {
 }
 
 void CGameDealerLoveLetter::NextTurn() {
+
+	//	죽을 사람이 다 죽으면 게임을 종료한다.
+	//if( !CheckDeadCount() ) { GameOver(); return; }
+
 	Player::pointer player = m_vPlayers[status.nCurTurnIndex];
 	if (player->m_bDead) {
 		status.nCurTurnIndex++;
@@ -165,6 +429,13 @@ void CGameDealerLoveLetter::NextTurn() {
 	//	나머지 플레이어에겐 뒷면을 제공 ( 클라 액션용 )
 }
 
+void CGameDealerLoveLetter::GameOver() {
+	//	이 함수 내에서 더 이상 게임 패킷을 받지 않게 플래그를 설정하고,
+	//	누가 이겼는지 게임 결과를 보내도록 한다.
+	//	라운드가 남아 있다면 다음 라운드를 진행하고
+	//	그것도 다 이겼으면 최종 결과 처리를 한다.
+}
+
 void CGameDealerLoveLetter::EncodePlayerInfo(OutPacket& oPacket) {
 	LONG nSize = m_vPlayers.size();
 	oPacket.Encode4(nSize);
@@ -175,8 +446,8 @@ void CGameDealerLoveLetter::EncodePlayerInfo(OutPacket& oPacket) {
 		LONG nGroundCardSize = m_vPlayers[i]->m_vGroundCards.size();
 		oPacket.Encode4(nGroundCardSize);		
 		if (nGroundCardSize) {
-			for (int i = 0; i < nGroundCardSize; ++i) {
-				Card::pointer pCard = m_vPlayers[i]->m_vGroundCards[i];
+			for (int i2 = 0; i2 < nGroundCardSize; ++i2) {
+				Card::pointer pCard = m_vPlayers[i]->m_vGroundCards[i2];
 				oPacket.Encode4(pCard->m_nType);
 			}						
 		}

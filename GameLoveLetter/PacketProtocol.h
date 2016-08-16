@@ -29,8 +29,20 @@ enum {
 };
 
 enum {
+	CGP_LL_GuardCheck,		//	경비병 액션
+	CGP_LL_RoyalSubject,	//	신하 액션
+	CGP_LL_Gossip,			//	험담가 액션
+	CGP_LL_Companion,		//	동료 액션
+	CGP_LL_Hero,			//	영웅 액션
+	CGP_LL_Wizard,			//	마법사 액션
+	CGP_LL_Lady,			//	귀부인 액션
+	CGP_LL_Princess,		//	공주 액션
+	CGP_LL_Action,		//	선택하기 전의 엑션
+};
+
+enum {
 	//	러브레터 패킷
-	GCP_LL_Action,		//	선택하기 전의 엑션	
-	GCP_LL_Status,		//	방 상태 정보	
-	GCP_LL_GuardCheck,	//	경비병 액션
+		
+	GCP_LL_Status,		//	방 상태 정보			
+	GCP_LL_ActionRet,	//	카드 사용 결과
 };

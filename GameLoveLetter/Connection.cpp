@@ -68,6 +68,8 @@ void CConnection::start() {
 void CConnection::ProcessPacket(InPacket &iPacket) {
 	LONG nType = iPacket.Decode2();
 
+	std::cout << "Processs Packet - Type : " << nType << std::endl;
+
 	if (nType >= CGP_User_Start && nType < CGP_User_End) {
 		ProcessUserPacket(nType, iPacket);
 		return;

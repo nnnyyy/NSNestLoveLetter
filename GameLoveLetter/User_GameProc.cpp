@@ -64,6 +64,10 @@ void CUser::OnEnterRoom(InPacket &iPacket) {
 }
 
 void CUser::OnLeaveRoom(InPacket &iPacket) {
+	if (!m_pRoom) {
+		//	ÀÌ¹Ì ³ª°¬´Ù
+		return;
+	}
 	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
 	pRoom->RemoveUser(shared_from_this());
 	//	SendRetPacket
