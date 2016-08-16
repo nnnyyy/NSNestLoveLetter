@@ -150,7 +150,13 @@ void CGameDealerLoveLetter::NextTurn() {
 		oPacket.Encode2(GCP_LL_Status);
 		status.EncodeStatus(oPacket);
 		EncodePlayerInfo(oPacket);
+		BOOL bMyTurn = IsMyTurn(m_vPlayers[i]);
+		oPacket.Encode4(bMyTurn);
 		oPacket.Encode4(m_vPlayers[i]->m_vHandCards[0]->m_nType);
+		if (bMyTurn) {
+			oPacket.Encode4(m_vPlayers[i]->m_vHandCards[1]->m_nType);
+		}
+
 		CUser::pointer pUser = pRoom->GetUser(m_vPlayers[i]->nUserSN);
 		pUser->SendPacket(oPacket);
 	}
@@ -166,10 +172,13 @@ void CGameDealerLoveLetter::EncodePlayerInfo(OutPacket& oPacket) {
 		oPacket.Encode4(m_vPlayers[i]->nUserSN);
 		oPacket.Encode4(m_vPlayers[i]->m_bDead);
 		oPacket.Encode4(m_vPlayers[i]->m_bGuard);
-		oPacket.Encode4(m_vPlayers[i]->m_vGroundCards.size());
-		if (m_vPlayers[i]->m_vGroundCards.size()) {
-			Card::pointer pCard = m_vPlayers[i]->m_vGroundCards.back();
-			oPacket.Encode4(pCard->m_nType);
+		LONG nGroundCardSize = m_vPlayers[i]->m_vGroundCards.size();
+		oPacket.Encode4(nGroundCardSize);		
+		if (nGroundCardSize) {
+			for (int i = 0; i < nGroundCardSize; ++i) {
+				Card::pointer pCard = m_vPlayers[i]->m_vGroundCards[i];
+				oPacket.Encode4(pCard->m_nType);
+			}						
 		}
 	}
 }
@@ -188,6 +197,10 @@ BOOL CGameDealerLoveLetter::GetCardFromDeck(Player::pointer pPlayer) {
 	BOOST_ASSERT(pPlayer->m_vHandCards.size() == 2);
 	m_vDeck.pop_back();	
 	return TRUE;
+}
+
+BOOL CGameDealerLoveLetter::IsMyTurn(Player::pointer pPlayer) {
+	return m_vPlayers[status.nCurTurnIndex] == pPlayer;
 }
 
 void CGameDealerLoveLetter::GameStatus::EncodeStatus(OutPacket& oPacket) {

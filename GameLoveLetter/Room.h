@@ -12,7 +12,7 @@ public:
 
 	enum {
 		FLAG_READY = 0x01,
-		FLAG_ALL = 0xffff
+		FLAG_ALL = 0x7fffffff
 	};
 
 	void Enter(CUser::pointer pUser);
@@ -35,6 +35,8 @@ public:
 		if (m_mUsers.find(nUserSN) == m_mUsers.end()) return NULL;
 		return m_mUsers.at(nUserSN);
 	}
+
+	CUser::pointer GetMaster() const { return m_pMaster; }
 
 private:
 	std::vector < CUser::pointer > m_vUsers;

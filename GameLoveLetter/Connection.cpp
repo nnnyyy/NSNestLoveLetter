@@ -99,6 +99,7 @@ void CConnection::ProcessUserPacket(LONG nType, InPacket &iPacket) {
 	}
 
 	switch (nType) {
+	case CGP_RoomListRequest: m_pUser->OnRoomListRequest(iPacket); break;
 	case CGP_CreateRoom: m_pUser->OnCreateRoom(iPacket); break;
 	case CGP_EnterRoom: m_pUser->OnEnterRoom(iPacket); break;
 	case CGP_LeaveRoom: m_pUser->OnLeaveRoom(iPacket); break;

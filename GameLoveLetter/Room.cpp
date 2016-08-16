@@ -55,7 +55,7 @@ void CRoom::BroadcastRoomState(DWORD dwFlag) {
 	oPacket.Encode1(nCnt);
 	for (int i = 0; i < nCnt; ++i) {
 		oPacket.Encode4(m_vUsers[i]->m_nUserSN);
-		oPacket.Encode1(m_vUsers[i]->m_bReady);		
+		oPacket.Encode1(m_vUsers[i]->m_bReady);
 	}
 	BroadcastPacket(oPacket);
 }
@@ -149,7 +149,13 @@ void CRoom::RemoveUser(CUser::pointer pUser) {
 
 	if (bFind && m_vUsers.size() > 0 && m_pMaster == pUser) {
 		m_pMaster = m_vUsers[0];
+		m_pMaster->m_bReady = TRUE;
 		//	새 방장 알림 패킷
+		OutPacket oPacket(GCP_RoomState);
+		DWORD dwFlag = 0x80000000;	//	새 방장 알리기
+		oPacket.Encode4(dwFlag);
+		oPacket.Encode4(m_pMaster->m_nUserSN);
+		BroadcastPacket(oPacket);
 	}
 
 	BroadcastRoomState();

@@ -67,6 +67,7 @@ public:
 
 protected:
 	BOOL GetCardFromDeck(Player::pointer pPlayer);
+	BOOL IsMyTurn(Player::pointer pPlayer);
 
 public:
 	typedef boost::shared_ptr<CGameDealerLoveLetter> pointer;

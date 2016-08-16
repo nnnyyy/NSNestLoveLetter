@@ -22,7 +22,8 @@ public:
 	void SetConnection(ULONG uSocketSN);
 	void PostDisconnect();
 
-	void OnCreateRoom(InPacket &iPacket);
+	void OnRoomListRequest(InPacket &iPacket);
+	void OnCreateRoom(InPacket &iPacket);	
 	void OnEnterRoom(InPacket &iPacket);
 	void OnLeaveRoom(InPacket &iPacket);
 	void OnGameStart(InPacket &iPacket);

@@ -15,6 +15,13 @@
 
 #define _BUFF_SIZE 128 
 #define _MY_IP "127.0.0.1" 
+#define _AWS_IP "52.79.205.198" 
+#define _PORT "7770"
+
+class CProtocol;
+void PrintMenu();
+void ProcMenu(CProtocol& client, LONG n);
+void ProcGameMenu(CProtocol& client, LONG n);
 
 using boost::asio::ip::tcp;
 
@@ -38,22 +45,56 @@ public:
 		BOOL m_bReady;
 		BOOL m_bGuard;
 		BOOL m_bDead;
-		LONG m_nHandCardType;
-		LONG m_nGroundCardType;
+		std::vector<LONG> m_vHandCardType;
+		std::vector<LONG> m_vGroundCardType;
 		typedef boost::shared_ptr<Player> pointer;
 	};
 
 	struct RoomInfo {
+		RoomInfo() : m_bGameStart(FALSE) {}
 		LONG nSN;
 		LONG nUserCnt;
 		std::vector<Player::pointer> vPlayers;
+		Player::pointer pLocalPlayer;
 		std::map<ULONG, Player::pointer> mPlayers;
 		std::map<LONG, LONG> mIndex;
+		BOOL m_bGameStart;
 
 		void PrintInfo() {
+			std::cout << "Me" << CContext::get_mutable_instance().m_uUserSN << std::endl;
 			std::cout << "Room Sn : " << nSN << " User Cnt : " << nUserCnt << std::endl;
 			for (int i = 0; i < vPlayers.size(); ++i) {
-				std::cout << "[" << vPlayers[i]->m_uUserSN << "] - " << (vPlayers[i]->m_bReady ? "Ready" : "Not Ready") << std::endl;
+				BOOL bLocal = (CContext::get_mutable_instance().m_uUserSN == vPlayers[i]->m_uUserSN);
+				if (bLocal) {
+					std::cout << "Me [" << vPlayers[i]->m_uUserSN << "] - " << (vPlayers[i]->m_bReady ? "Ready" : "Not Ready") << std::endl;
+				}	
+				else {
+					std::cout << "[" << vPlayers[i]->m_uUserSN << "] - " << (vPlayers[i]->m_bReady ? "Ready" : "Not Ready") << std::endl;
+				}
+			}
+		}
+
+		void PrintMyCardAndAllGroundCard() {
+			if (!pLocalPlayer) return;
+			if (pLocalPlayer->m_vHandCardType.size() >= 2) {
+				std::cout << "[My Hand Card] " << pLocalPlayer->m_vHandCardType[0] << " ," << pLocalPlayer->m_vHandCardType[1] << std::endl;
+			}
+			else {
+				std::cout << "[My Hand Card] " << pLocalPlayer->m_vHandCardType[0] << std::endl;
+			}
+			
+			for (std::vector<Player::pointer>::iterator iter = vPlayers.begin(); iter != vPlayers.end(); ++iter) {
+				Player::pointer player = *iter;					
+				if (player == pLocalPlayer) continue;
+				std::cout << "[" << player->m_uUserSN << "] ";
+				if (player->m_vGroundCardType.size()) {
+					LONG nCardType = player->m_vGroundCardType.back();
+					std::cout << "Last Ground Card : " << nCardType << std::endl;
+				}
+				else {
+					std::cout << std::endl;
+				}
+				
 			}
 		}
 	};
@@ -66,6 +107,12 @@ public:
 		p->nUserCnt = 0;
 		m_pRoom = p;
 	}
+
+	BOOL IsGameRunning() {	
+		if(!m_pRoom) return FALSE;
+
+		return m_pRoom->m_bGameStart;
+	}
 };
 
 class CProtocol {
@@ -77,7 +124,8 @@ public:
 
 	void Connect() {
 		tcp::resolver resolver(m_Socket.get_io_service());
-		tcp::resolver::query query(_MY_IP, "7770");
+		tcp::resolver::query query(_MY_IP, _PORT);
+		//tcp::resolver::query query(_AWS_IP, _PORT);	//	실제 서비스 할 서버
 		tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 		tcp::resolver::iterator end;
 
@@ -208,6 +256,10 @@ public:
 			OnLoginRet(iPacket);
 			break;
 
+		case GCP_RoomListRet:
+			OnRoomListRet(iPacket);
+			break;
+
 		case GCP_CreateRoomRet:
 			OnCreateRoomRet(iPacket);
 			break;
@@ -232,6 +284,7 @@ public:
 			OnGameLoveLetter(iPacket);
 			break;
 		}
+		PrintMenu();
 	}
 
 	void OnLoginRet(InPacket& iPacket) {		
@@ -243,11 +296,25 @@ public:
 		else if (nRet == 0) {
 			std::cout << "[Login] 로그인 되었습니다." << std::endl;
 			CContext::get_mutable_instance().m_bLogined = TRUE;
-			CContext::get_mutable_instance().m_uUserSN = iPacket.Decode4();			
+			CContext::get_mutable_instance().m_uUserSN = iPacket.Decode4();	
+
+			OutPacket oPacket(CGP_RoomListRequest);
+			SendPacket(oPacket);
+
 			return;
 		}
 		else {
 			std::cout << "[Login] 알 수 없는 오류 입니다." << std::endl;
+		}
+	}
+
+	void OnRoomListRet(InPacket& iPacket) {
+		std::cout << "## 게임 방 리스트 ##" << std::endl;
+		LONG nRoomCnt = iPacket.Decode4();
+		for (int i = 0; i < nRoomCnt; ++i) {
+			LONG nRoomSN = iPacket.Decode4();
+			LONG nUserCnt = iPacket.Decode4();
+			std::cout << "[방번호 : " << nRoomSN << "] - 인원 : " << nUserCnt << std::endl;
 		}
 	}
 
@@ -278,6 +345,13 @@ public:
 			return;
 		}
 		DWORD dwFlag = iPacket.Decode4();
+
+		if (dwFlag & 0x80000000) {
+			ULONG uUserSN = iPacket.Decode4();
+			std::cout << "새로운 방장 : " << uUserSN << std::endl;
+			return;
+		}
+
 		LONG nCnt = iPacket.Decode1();
 		boost::shared_ptr<CContext::RoomInfo> pRoom = CContext::get_mutable_instance().m_pRoom;
 		pRoom->nUserCnt = nCnt;
@@ -319,6 +393,7 @@ public:
 			std::cout << "게임 시작!" << std::endl;
 			boost::shared_ptr<CContext::RoomInfo> pRoom = CContext::get_mutable_instance().m_pRoom;			
 			
+			pRoom->m_bGameStart = TRUE;
 			LONG nSize = iPacket.Decode4();
 			for (int i = 0; i < nSize; ++i) {
 				LONG nUserSN = iPacket.Decode4();
@@ -350,18 +425,27 @@ public:
 			pPlayer->m_bDead = bDead;
 			pPlayer->m_bGuard = bGuard;
 			LONG nGroundCardSize = iPacket.Decode4();
-			if (nGroundCardSize) {
-				LONG nLastGroundCardType = iPacket.Decode4();
-				pPlayer->m_nGroundCardType = nLastGroundCardType;
+			pPlayer->m_vGroundCardType.clear();
+			if (nGroundCardSize) {				
+				for (int i = 0; i < nGroundCardSize; ++i) {
+					LONG nCardType = iPacket.Decode4();
+					pPlayer->m_vGroundCardType.push_back(nCardType);
+				}				
 			}
 		}
-		LONG nHandCardType = iPacket.Decode4();
 
 		CContext::Player::pointer pPlayer = pRoom->mPlayers.at(CContext::get_mutable_instance().m_uUserSN);
-		pPlayer->m_nHandCardType = nHandCardType;
-		BOOL bMyTurn = (pRoom->mIndex.at(CContext::get_mutable_instance().m_uUserSN) == nCurTurnIndex);
-
-		std::cout << "[LoveLetter Status] Player - " << pPlayer->m_nHandCardType << " , Turn : " << bMyTurn << std::endl;
+		pPlayer->m_vHandCardType.clear();
+		BOOL bMyTurn = iPacket.Decode4();
+		LONG nHandCardType = iPacket.Decode4();
+		pPlayer->m_vHandCardType.push_back(nHandCardType);
+		LONG nNewHandCardType;
+		if (bMyTurn) {
+			nNewHandCardType = iPacket.Decode4();
+			pPlayer->m_vHandCardType.push_back(nNewHandCardType);
+		}
+		
+		pRoom->pLocalPlayer = pPlayer;		
 	}
 
 	void PrintRoomList() {
@@ -387,7 +471,6 @@ private:
 	std::vector<RoomInfo> m_vRoomInfo;
 };
 
-void PrintScreen();
 int main()
 {
 	try {
@@ -401,62 +484,19 @@ int main()
 		boost::thread mainIO(boost::bind(&boost::asio::io_service::run, &io));
 		//io.run();	//	하는 일이 있을 때만 Blocking. work(io)로 block 처리.
 
+		PrintMenu();
 		char line[128 + 1];
 		while (std::cin.getline(line, 128))
 		{
 			int n = atoi(line);
-			switch (n) {
-			case 0: {
-				std::cout << "로그인 시도" << std::endl;
-				OutPacket oPacket(CGP_Login);
-				client.SendPacket(oPacket);
+			if (CContext::get_mutable_instance().IsGameRunning()) {
+				ProcGameMenu(client, n);
 			}
-					break;
-			case 1: {
-				std::cout << "방 만들기 시도" << std::endl;
-				OutPacket oPacket(CGP_CreateRoom);
-				client.SendPacket(oPacket);
-				//	방 생성
-			}
-					break;
+			else {
+				ProcMenu(client, n);
+			}			
 
-			case 2: {
-				std::cout << "방 입장 시도" << std::endl;
-				std::cout << "몇번방 접속 : " << std::endl;
-				std::cin.getline(line, 128);
-				int n2 = atoi(line);
-				OutPacket oPacket(CGP_EnterRoom);
-				oPacket.Encode4(n2);
-				client.SendPacket(oPacket);
-			}
-					break;
-
-			case 3: {
-				std::cout << "방 떠나기 시도" << std::endl;
-				OutPacket oPacket(CGP_LeaveRoom);
-				client.SendPacket(oPacket);
-			}
-					break;
-
-			case 4: {
-				std::cout << "게임 레디" << std::endl;
-				OutPacket oPacket(CGP_GameReady);
-				client.SendPacket(oPacket);
-				
-			}	
-					break;
-
-			case 5: {
-				std::cout << "게임 시작" << std::endl;
-				OutPacket oPacket(CGP_GameStart);
-				client.SendPacket(oPacket);
-			}
-					break;
-
-			default:
-				std::cout << "잘못된 명령어" << std::endl;
-				continue;
-			}
+			PrintMenu();
 
 		}
 
@@ -470,4 +510,95 @@ int main()
 	}
 
     return 0;
+}
+
+void PrintMenu() {
+	system("cls");
+	if (CContext::get_mutable_instance().IsGameRunning()) {
+		CContext::get_mutable_instance().m_pRoom->PrintMyCardAndAllGroundCard();
+		std::cout << "[메뉴] 0-카드 확인 1-카드 사용" << std::endl;
+	}
+	else {
+		if (!CContext::get_mutable_instance().m_bLogined) {
+			std::cout << "[메뉴] 0-로그인" << std::endl;
+			return;
+		}
+
+		if (CContext::get_mutable_instance().m_pRoom) {
+			CContext::get_mutable_instance().m_pRoom->PrintInfo();
+			std::cout << "[메뉴] 3-방퇴장, 4-게임레디, 5-게임시작" << std::endl;
+		}
+		else {
+			std::cout << "[메뉴] 1-방만들기, 2-방입장" << std::endl;
+		}
+	}
+}
+
+void ProcGameMenu(CProtocol& client, LONG n) {
+	switch (n) {
+		case 0: {
+			std::cout << "Game Menu0" << std::endl;
+		}
+				break;
+
+		case 1: {
+			std::cout << "Game Menu1" << std::endl;
+		}
+				break;
+	}
+}
+
+void ProcMenu(CProtocol& client, LONG n) {
+	char line[128 + 1];
+	switch (n) {
+	case 0: {
+		std::cout << "로그인 시도" << std::endl;
+		OutPacket oPacket(CGP_Login);
+		client.SendPacket(oPacket);
+	}
+			break;
+	case 1: {
+		std::cout << "방 만들기 시도" << std::endl;
+		OutPacket oPacket(CGP_CreateRoom);
+		client.SendPacket(oPacket);
+		//	방 생성
+	}
+			break;
+
+	case 2: {
+		std::cout << "방 입장 시도" << std::endl;
+		std::cout << "몇번방 접속 : " << std::endl;
+		std::cin.getline(line, 128);
+		int n2 = atoi(line);
+		OutPacket oPacket(CGP_EnterRoom);
+		oPacket.Encode4(n2);
+		client.SendPacket(oPacket);
+	}
+			break;
+
+	case 3: {
+		std::cout << "방 떠나기 시도" << std::endl;
+		OutPacket oPacket(CGP_LeaveRoom);
+		client.SendPacket(oPacket);
+	}
+			break;
+
+	case 4: {
+		std::cout << "게임 레디" << std::endl;
+		OutPacket oPacket(CGP_GameReady);
+		client.SendPacket(oPacket);
+
+	}
+			break;
+
+	case 5: {
+		std::cout << "게임 시작" << std::endl;
+		OutPacket oPacket(CGP_GameStart);
+		client.SendPacket(oPacket);
+	}
+			break;
+
+	default:
+		std::cout << "잘못된 명령어" << std::endl;
+	}
 }

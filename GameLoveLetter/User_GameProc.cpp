@@ -11,6 +11,12 @@
 #include "GameDealer.h"
 #include "Room.h"
 
+void CUser::OnRoomListRequest(InPacket &iPacket) {
+	OutPacket oPacket(GCP_RoomListRet);
+	CRoomManager::get_mutable_instance().MakeRoomListPacket(oPacket);
+	SendPacket(oPacket);
+}
+
 void CUser::OnCreateRoom(InPacket &iPacket) {
 	if (m_pRoom) {
 		// Err		
@@ -86,6 +92,12 @@ void CUser::OnGameReady(InPacket &iPacket) {
 		return;
 	}
 
-	m_bReady = TRUE;
+	if (pRoom->GetMaster() == shared_from_this()) {
+		//	방장은 레디 상태를 변경할 수 없다.
+		pRoom->BroadcastRoomState();
+		return;
+	}
+	
+	m_bReady = !m_bReady;
 	pRoom->BroadcastRoomState();
 }

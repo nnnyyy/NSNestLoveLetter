@@ -1,9 +1,11 @@
 #pragma once
 enum {
 	CGP_Login = 0,
-	CGP_HeartBeat,
+	CGP_Logout,
+	CGP_AliveAck,
 	CGP_User_Start,
-	CGP_CreateRoom = CGP_User_Start,
+	CGP_RoomListRequest = CGP_User_Start,
+	CGP_CreateRoom,
 	CGP_EnterRoom,
 	CGP_LeaveRoom,
 	CGP_GameStart,
@@ -16,6 +18,8 @@ enum {
 
 enum {
 	GCP_LoginRet = 0,
+	GCP_AliveAck,
+	GCP_RoomListRet,
 	GCP_CreateRoomRet,
 	GCP_EnterRoomRet,
 	GCP_LeaveRoomRet,
