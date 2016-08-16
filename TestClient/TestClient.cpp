@@ -93,19 +93,20 @@ public:
 		void PrintMyCardAndAllGroundCard() {
 			if (!pLocalPlayer) return;
 			if (IsMyTurn()) {
-				std::cout << "[턴]";
+				std::cout << "####나의 턴입니다####" << std::endl;
 			}
 			std::cout << "[" << pLocalPlayer->m_nIndex << "]";
 			if (pLocalPlayer->m_vHandCardType.size() >= 2) {
-				std::cout << (pLocalPlayer->m_bDead ? "#Dead#" : "") << "[My Hand Card] " << pLocalPlayer->m_vHandCardType[0] << " ," << pLocalPlayer->m_vHandCardType[1] << std::endl;
+				std::cout << (pLocalPlayer->m_bGuard ? "%Shield%" : "") << (pLocalPlayer->m_bDead ? "#Dead#" : "") << "[My Hand Card] " << pLocalPlayer->m_vHandCardType[0] << " ," << pLocalPlayer->m_vHandCardType[1] << std::endl;
 			}
 			else {
-				std::cout << (pLocalPlayer->m_bDead ? "#Dead#" : "") << "[My Hand Card] " << (pLocalPlayer->m_bDead ? -1 : pLocalPlayer->m_vHandCardType[0]) << std::endl;
+				std::cout << (pLocalPlayer->m_bGuard ? "%Shield%" : "") << "[My Hand Card] " << (pLocalPlayer->m_bDead ? -1 : pLocalPlayer->m_vHandCardType[0]) << std::endl;
 			}
 			
 			for (std::vector<Player::pointer>::iterator iter = vPlayers.begin(); iter != vPlayers.end(); ++iter) {
 				Player::pointer player = *iter;					
 				if (player == pLocalPlayer) continue;
+				std::cout << (player->m_bGuard ? "%Shield%" : "");
 				std::cout << (player->m_bDead ? "#Dead#" : "");
 				std::cout << "[" << player->m_nIndex << "]";
 				std::cout << "[" << player->m_uUserSN << "] ";
@@ -496,7 +497,10 @@ public:
 					AddMessage("경비병 사용 성공");
 				}
 				else {
-					AddMessage("경비병 사용 실패");
+					LONG nIdxAlive = iPacket.Decode4();
+					LONG nFailCardType = iPacket.Decode4();
+					std::string sMsg = boost::str(boost::format("[경비병] %d플레이어가 %d 가 아닙니다.") % nIdxAlive % nFailCardType);
+					AddMessage(sMsg);					
 				}
 			}
 			break;		
@@ -506,11 +510,35 @@ public:
 				BOOL bSucceed = iPacket.Decode4();
 				if (bSucceed) {
 					LONG nCardType = iPacket.Decode4();	
-					std::string sMsg = boost::str(boost::format("상대방은 %d 카드 입니다.") % nCardType);
+					std::string sMsg = boost::str(boost::format("[신하] 상대방은 %d 카드 입니다.") % nCardType);
 					AddMessage(sMsg);
 				}
 			}
 			break;
+		case 3:
+		{
+			//	험담가 사용 결과
+			BOOL bSucceed = iPacket.Decode4();
+			LONG nAliveIndex = iPacket.Decode4();
+			if (bSucceed) {
+				LONG nDeadIndex = iPacket.Decode4();				
+				std::string sMsg = boost::str(boost::format("[험담가] player[%] 가 player[%] 를 이겼습니다.") % nAliveIndex % nDeadIndex);
+				AddMessage(sMsg);
+			}
+			else {
+				std::string sMsg = boost::str(boost::format("[험담가] player[%] 와 아무 일도 없었습니다.") % nAliveIndex );
+				AddMessage(sMsg);
+			}
+		}
+		break;
+		case 4:
+		{
+			//	컴페니언 사용 결과
+			LONG nUserIndex = iPacket.Decode4();
+			std::string sMsg = boost::str(boost::format("%d 가 한 턴 동안 보호를 걸었습니다.") % nUserIndex);
+			AddMessage(sMsg);
+		}
+		break;
 		}				
 	}	
 
@@ -610,7 +638,7 @@ void PrintActionLog() {
 		}
 	}
 	else {
-		for (int i = g_vMessages.size() - 1; (g_vMessages.size() - 3) > i; --i) {
+		for (int i = g_vMessages.size() - 1; (g_vMessages.size() - 3) < i; --i) {
 			std::cout << g_vMessages[i] << std::endl;
 		}
 	}

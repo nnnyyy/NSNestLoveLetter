@@ -78,6 +78,7 @@ protected:
 	BOOL GetCardFromDeck(Player::pointer pPlayer);
 	BOOL IsMyTurn(Player::pointer pPlayer);
 	BOOL DropCard(Player::pointer pPlayer, LONG nCardType);
+	void Dead(Player::pointer pPlayer);
 
 public:
 	typedef boost::shared_ptr<CGameDealerLoveLetter> pointer;

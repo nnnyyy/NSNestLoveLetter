@@ -75,6 +75,11 @@ void CGameDealerLoveLetter::OnGuardAction(InPacket& iPacket, CUser::pointer pUse
 	LONG nTargetIdx		= iPacket.Decode4();	//	누구?
 	LONG nCardTypeGuess = iPacket.Decode4();	//	무엇?
 
+	Player::pointer pTargetPlayer = m_vPlayers[nTargetIdx];
+	if (!pTargetPlayer) {
+		return;
+	}
+
 	if (nCardTypeGuess == LOVELETTER_GAURD) {
 		//	경비병을 직접 지목할 수 없다.
 		return;
@@ -85,8 +90,12 @@ void CGameDealerLoveLetter::OnGuardAction(InPacket& iPacket, CUser::pointer pUse
 		return;
 	}
 
-	if (m_vPlayers[nTargetIdx]->m_bDead) {
+	if (pTargetPlayer->m_bDead) {
 		//	죽은 사람도 지목하지 말자.
+		return;
+	}
+
+	if (pTargetPlayer->m_bGuard) {
 		return;
 	}
 
@@ -94,17 +103,11 @@ void CGameDealerLoveLetter::OnGuardAction(InPacket& iPacket, CUser::pointer pUse
 	if (!bDrop) {
 		//	오류
 		return;
-	}if (CheckDead()) {
-		NextTurn();
-		return;
-	}
+	}	
 
 	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
 	if (m_vPlayers[nTargetIdx]->m_vHandCards[0]->m_nType == nCardTypeGuess) {
-		m_vPlayers[nTargetIdx]->m_bDead = TRUE;
-		Card::pointer pCard = m_vPlayers[nTargetIdx]->m_vHandCards.back();
-		m_vPlayers[nTargetIdx]->m_vHandCards.pop_back();
-		m_vPlayers[nTargetIdx]->m_vGroundCards.push_back(pCard);
+		Dead(m_vPlayers[nTargetIdx]);
 		//	잡았다.		
 		OutPacket oPacket(GCP_GameLoveLetter);
 		oPacket.Encode2(GCP_LL_ActionRet);
@@ -119,6 +122,8 @@ void CGameDealerLoveLetter::OnGuardAction(InPacket& iPacket, CUser::pointer pUse
 		oPacket.Encode2(GCP_LL_ActionRet);
 		oPacket.Encode4(LOVELETTER_GAURD);
 		oPacket.Encode4(FALSE);		
+		oPacket.Encode4(nTargetIdx);
+		oPacket.Encode4(nCardTypeGuess);
 		pRoom->BroadcastPacket(oPacket);
 	}
 
@@ -138,16 +143,21 @@ void CGameDealerLoveLetter::OnRoyalSubjectAction(InPacket& iPacket, CUser::point
 	}
 
 	LONG nTargetIdx = iPacket.Decode4();	//	누구에게 물어볼 것인가	
+	Player::pointer pTargetPlayer = m_vPlayers[nTargetIdx];
 
 	if (nTargetIdx == status.nCurTurnIndex) {
 		//	내 자신을 지목할 수 없다.
 		return;
 	}
 
-	if (m_vPlayers[nTargetIdx]->m_bDead) {
+	if (pTargetPlayer->m_bDead) {
 		//	죽은 사람도 지목하지 말자.
 		return;
-	}	
+	}
+
+	if (pTargetPlayer->m_bGuard) {
+		return;
+	}
 
 	BOOL bDrop = DropCard(pTurnPlayer, LOVELETTER_ROYAL);
 	if (!bDrop) {
@@ -165,7 +175,7 @@ void CGameDealerLoveLetter::OnRoyalSubjectAction(InPacket& iPacket, CUser::point
 		BOOL bMyTurn = IsMyTurn(m_vPlayers[i]);
 		oPacket.Encode4(bMyTurn);
 		if (bMyTurn) {
-			oPacket.Encode4(m_vPlayers[nTargetIdx]->m_vHandCards[0]->m_nType);
+			oPacket.Encode4(pTargetPlayer->m_vHandCards[0]->m_nType);
 		}
 
 		CUser::pointer pUser = pRoom->GetUser(m_vPlayers[i]->nUserSN);
@@ -187,11 +197,60 @@ void CGameDealerLoveLetter::OnGossipAction(InPacket& iPacket, CUser::pointer pUs
 		return;
 	}
 
+	LONG nWho = iPacket.Decode4();
+	Player::pointer pTargetPlayer = m_vPlayers[nWho];
+
+	if (pTargetPlayer->m_bDead) {
+		//	죽은 자도 타게팅 할 수 없다.
+		return;
+	}
+
+	if (pTargetPlayer->m_bGuard) {
+		return;
+	}
+
+	//	드롭
 	BOOL bDrop = DropCard(pTurnPlayer, LOVELETTER_GOSSIP);
 	if (!bDrop) {
 		//	오류
 		return;
+	}	
+
+	Card::pointer pTargetHandCard = pTargetPlayer->m_vHandCards[0];
+	Card::pointer pMyHandCard = pTurnPlayer->m_vHandCards[0];
+
+	BOOL bRet = FALSE;
+	LONG nDeadIndex = -1;
+	LONG nAliveIndex = -1;
+	if (pTargetHandCard->m_nType > pMyHandCard->m_nType) {
+		//	내가 죽음
+		Dead(pTurnPlayer);
+		bRet = TRUE;
+		nDeadIndex = status.nCurTurnIndex;
+		nAliveIndex = nWho;
 	}
+	else if (pTargetHandCard->m_nType < pMyHandCard->m_nType) {
+		//	상대방이 죽음
+		Dead(pTargetPlayer);
+		bRet = TRUE;
+		nDeadIndex = nWho;
+		nAliveIndex = status.nCurTurnIndex;
+	}
+	else {
+		//	비겨서 아무일도 일어나지 않음.
+		nAliveIndex = nWho;
+	}
+
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+	OutPacket oPacket(GCP_GameLoveLetter);
+	oPacket.Encode2(GCP_LL_ActionRet);
+	oPacket.Encode4(LOVELETTER_GOSSIP);
+	oPacket.Encode4(bRet);
+	oPacket.Encode4(nAliveIndex);
+	if (bRet) {
+		oPacket.Encode4(nDeadIndex);		
+	}	
+	pRoom->BroadcastPacket(oPacket);
 
 	status.nCurTurnIndex++;
 	if (status.nCurTurnIndex >= m_vPlayers.size()) {
@@ -213,6 +272,14 @@ void CGameDealerLoveLetter::OnCompanionAction(InPacket& iPacket, CUser::pointer 
 		//	오류
 		return;
 	}
+
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+	OutPacket oPacket(GCP_GameLoveLetter);
+	oPacket.Encode2(GCP_LL_ActionRet);
+	oPacket.Encode4(LOVELETTER_COMPANION);
+	oPacket.Encode4(status.nCurTurnIndex);
+	pRoom->BroadcastPacket(oPacket);
+
 
 	status.nCurTurnIndex++;
 	if (status.nCurTurnIndex >= m_vPlayers.size()) {
@@ -307,6 +374,9 @@ void CGameDealerLoveLetter::OnPrincessAction(InPacket& iPacket, CUser::pointer p
 }
 
 BOOL CGameDealerLoveLetter::DropCard(Player::pointer pTurnPlayer, LONG nCardType) {
+	//	항상 2장이 있어야 한다.
+	BOOST_ASSERT(pTurnPlayer->m_vHandCards.size() == 2);
+
 	BOOL bFind = FALSE;
 	std::vector<Card::pointer>::iterator iterFind;
 	LONG nFindCardIndex = -1;
@@ -340,6 +410,13 @@ BOOL CGameDealerLoveLetter::DropCard(Player::pointer pTurnPlayer, LONG nCardType
 	pTurnPlayer->m_vHandCards.erase(iterFind);
 	pTurnPlayer->m_vGroundCards.push_back(pCardDropped);
 	return TRUE;
+}
+
+void CGameDealerLoveLetter::Dead(Player::pointer pPlayer) {
+	pPlayer->m_bDead = TRUE;
+	Card::pointer pCard = pPlayer->m_vHandCards.back();
+	pPlayer->m_vHandCards.pop_back();
+	pPlayer->m_vGroundCards.push_back(pCard);
 }
 
 void CGameDealerLoveLetter::Update() {
