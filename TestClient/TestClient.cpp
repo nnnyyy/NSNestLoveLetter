@@ -100,7 +100,7 @@ public:
 				std::cout << (pLocalPlayer->m_bDead ? "#Dead#" : "") << "[My Hand Card] " << pLocalPlayer->m_vHandCardType[0] << " ," << pLocalPlayer->m_vHandCardType[1] << std::endl;
 			}
 			else {
-				std::cout << (pLocalPlayer->m_bDead ? "#Dead#" : "") << "[My Hand Card] " << pLocalPlayer->m_vHandCardType[0] << std::endl;
+				std::cout << (pLocalPlayer->m_bDead ? "#Dead#" : "") << "[My Hand Card] " << (pLocalPlayer->m_bDead ? -1 : pLocalPlayer->m_vHandCardType[0]) << std::endl;
 			}
 			
 			for (std::vector<Player::pointer>::iterator iter = vPlayers.begin(); iter != vPlayers.end(); ++iter) {
@@ -463,10 +463,14 @@ public:
 				}				
 			}
 		}
-
+		
 		CContext::Player::pointer pPlayer = pRoom->mPlayers.at(CContext::get_mutable_instance().m_uUserSN);
 		pPlayer->m_vHandCardType.clear();
 		BOOL bMyTurn = iPacket.Decode4();
+		if (pPlayer->m_bDead) {
+			return;
+		}
+
 		LONG nHandCardType = iPacket.Decode4();
 		pPlayer->m_vHandCardType.push_back(nHandCardType);
 		LONG nNewHandCardType;

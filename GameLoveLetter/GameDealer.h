@@ -70,6 +70,7 @@ public:
 	void InitGame();
 	void NextTurn();
 	void GameOver();
+	BOOL CheckDead();
 	void EncodePlayerInfo(OutPacket& oPacket);
 	void EncodePlayerIndexList(OutPacket& oPacket);
 

@@ -94,12 +94,16 @@ void CGameDealerLoveLetter::OnGuardAction(InPacket& iPacket, CUser::pointer pUse
 	if (!bDrop) {
 		//	오류
 		return;
+	}if (CheckDead()) {
+		NextTurn();
+		return;
 	}
 
 	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
 	if (m_vPlayers[nTargetIdx]->m_vHandCards[0]->m_nType == nCardTypeGuess) {
 		m_vPlayers[nTargetIdx]->m_bDead = TRUE;
 		Card::pointer pCard = m_vPlayers[nTargetIdx]->m_vHandCards.back();
+		m_vPlayers[nTargetIdx]->m_vHandCards.pop_back();
 		m_vPlayers[nTargetIdx]->m_vGroundCards.push_back(pCard);
 		//	잡았다.		
 		OutPacket oPacket(GCP_GameLoveLetter);
@@ -382,22 +386,30 @@ void CGameDealerLoveLetter::InitGame() {
 		m_vDeck.pop_back();
 	}
 }
+BOOL CGameDealerLoveLetter::CheckDead() {
+	Player::pointer player = m_vPlayers[status.nCurTurnIndex];
+	if (player->m_bDead) {
+		status.nCurTurnIndex++;
+		if (status.nCurTurnIndex >= m_vPlayers.size()) {
+			status.nCurTurnIndex = 0;
+		}		
+		return TRUE;
+	}
+
+	return FALSE;
+}
 
 void CGameDealerLoveLetter::NextTurn() {
 
 	//	죽을 사람이 다 죽으면 게임을 종료한다.
 	//if( !CheckDeadCount() ) { GameOver(); return; }
 
-	Player::pointer player = m_vPlayers[status.nCurTurnIndex];
-	if (player->m_bDead) {
-		status.nCurTurnIndex++;
-		if (status.nCurTurnIndex >= m_vPlayers.size()) {
-			status.nCurTurnIndex = 0;
-			NextTurn();
-			return;
-		}
+	if (CheckDead()) {
+		NextTurn();
+		return;
 	}
-
+	
+	Player::pointer player = m_vPlayers[status.nCurTurnIndex];
 	//	카드 한장 뽑기
 	player->m_bGuard = FALSE;	//	내 턴이 돌아오면 가드가 풀린다.
 	BOOL bSucceed = GetCardFromDeck(player);
@@ -415,10 +427,15 @@ void CGameDealerLoveLetter::NextTurn() {
 		status.EncodeStatus(oPacket);
 		EncodePlayerInfo(oPacket);
 		BOOL bMyTurn = IsMyTurn(m_vPlayers[i]);
-		oPacket.Encode4(bMyTurn);
-		oPacket.Encode4(m_vPlayers[i]->m_vHandCards[0]->m_nType);
-		if (bMyTurn) {
-			oPacket.Encode4(m_vPlayers[i]->m_vHandCards[1]->m_nType);
+		oPacket.Encode4(bMyTurn);		
+		if (!m_vPlayers[i]->m_bDead) {
+			oPacket.Encode4(m_vPlayers[i]->m_vHandCards[0]->m_nType);
+			if (bMyTurn) {
+				oPacket.Encode4(m_vPlayers[i]->m_vHandCards[1]->m_nType);
+			}
+		}
+		else {
+			//	죽었을 경우
 		}
 
 		CUser::pointer pUser = pRoom->GetUser(m_vPlayers[i]->nUserSN);
