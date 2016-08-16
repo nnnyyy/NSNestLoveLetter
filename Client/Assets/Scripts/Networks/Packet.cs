@@ -105,11 +105,11 @@ public class OutPacket
 	{
         this.Encode2(PacketID);
 	}
-    public OutPacket(CMP PacketID)
-		: this()
-	{
-        this.Encode2((short)PacketID);
-	}
+ //   public OutPacket(CMP PacketID)
+	//	: this()
+	//{
+ //       this.Encode2((short)PacketID);
+	//}
     
 	public int Length { get { return ((short)(this.alBuffer.Count)); } }
 	public byte[] Data { get { return this.ToSend(); } }
@@ -143,7 +143,7 @@ public class OutPacket
 
 	private byte[] ToSend()
 	{
-        CEncrypt.Encrypt(ref this.alBuffer);
+        //CEncrypt.Encrypt(ref this.alBuffer);
 		ArrayList al = new ArrayList(this.alBuffer);        
         al.InsertRange(0, BitConverter.GetBytes(this.Length));
 		byte[] data = new byte[al.Count];
