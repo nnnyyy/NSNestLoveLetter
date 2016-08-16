@@ -7,20 +7,17 @@
 #include "User.h"
 #include "Connection.h"
 #include "Server.h"
+#include "GameDealer.h"
 #include "Room.h"
 
 
 
-CUser::CUser() {
+CUser::CUser() : m_bReady(FALSE){
 
 }
 
 CUser::~CUser() {
 
-}
-
-LONG CUser::GetCharacterID() const {
-	return 0;
 }
 
 void CUser::SendPacket(OutPacket& oPacket) {		

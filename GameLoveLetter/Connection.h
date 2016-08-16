@@ -1,6 +1,6 @@
 #pragma once
 
-#define _BUFF_SIZE 128
+#define _BUFF_SIZE 256
 
 using boost::asio::ip::tcp;
 class CConnection : public boost::enable_shared_from_this<CConnection> {
@@ -10,11 +10,10 @@ public:
 	ULONG m_uSocketSN;
 private:
 	boost::array<BYTE, _BUFF_SIZE> m_RecvBuf;	
-	std::string m_sMsg;
-	std::vector<BYTE> v;
+	std::string m_sMsg;	
 	InPacket packetBuf;
 
-	CConnection(boost::asio::io_service& io) : m_Socket(io), m_uSocketSN(-1){		
+	CConnection(boost::asio::io_service& io) : m_Socket(io), m_uSocketSN(-1){
 	}
 
 	void handle_Accept(const boost::system::error_code& err, size_t byte_transferred);

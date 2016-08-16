@@ -14,3 +14,8 @@
 
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.
 #include <vector>
+#include <map>
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/assert.hpp>
+#include <boost/serialization/singleton.hpp>

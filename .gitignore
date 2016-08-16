@@ -291,3 +291,7 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
+TestCSharpServer/NSTestCSharpServer/NSTestCSharpServer/App.config
+TestCSharpServer/NSTestCSharpServer/NSTestCSharpServer/Program.cs
+TestCSharpServer/NSTestCSharpServer/NSTestCSharpServer/Properties/AssemblyInfo.cs
+TestCSharpServer/NSTestCSharpServer/NSTestCSharpServer/Server.cs

@@ -1,5 +1,28 @@
 #pragma once
 
+// A reference-counted non-modifiable buffer class.
+template<class T>
+class shared_const_buffer
+{
+public:
+	// Construct from a `shared_ptr`
+	explicit shared_const_buffer(boost::shared_ptr<std::vector<T>> const& p_data)
+		: data_(p_data),
+		buffer_(boost::asio::buffer(*data_))
+	{}
+
+	// Implement the ConstBufferSequence requirements.
+	using value_type = boost::asio::const_buffer;
+	using const_iterator = boost::asio::const_buffer const*;
+
+	boost::asio::const_buffer const* begin() const { return &buffer_; }
+	boost::asio::const_buffer const* end() const { return &buffer_ + 1; }
+
+private:
+	boost::shared_ptr<std::vector<T>> data_;
+	boost::asio::const_buffer buffer_;
+};
+
 class InPacket {
 public:
 	InPacket();
@@ -37,16 +60,15 @@ public:
 
 private:
 
-	std::vector<BYTE> m_Buf;
+	std::vector<BYTE> m_Buf;	
 	LONG m_nOffset;
 
 public:
-
 	void Encode1(BYTE n);
 	void Encode2(USHORT n);
 	void Encode4(ULONG n);
 	void Encode8(UINT64 n);	
 	void EncodeStr(std::string n);
 
-	void MakeBuf(std::vector<BYTE> &v);
+	void MakeBuf(boost::shared_ptr< std::vector<BYTE> > vData);
 };
