@@ -1,28 +1,26 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using NSNest.Common;
 
 namespace NSNest.UI
 {
-    public interface IButtonEventReceiver
-    {
-        void OnPressButton(string buttonName);
-    }
-
-    public class IntroController : MonoBehaviour, IButtonEventReceiver
+    public class IntroController : MonoBehaviour
     { 
-        void Start()
+
+        public void OnPressLogin()
         {
-            this.InitButton();
+            Debug.Log("IntroController OnPressLogin");
+            SceneLoader.Instance.Load("room");
         }
 
-        void OnDestroy()
+        public void OnPressJoin()
         {
-            this.ReleaseButton();
+            Debug.Log("IntroController OnPressJoin");
         }
 
-        public void OnPressButton(string buttonName)
+        public void OnPressRanking()
         {
-            Debug.Log("IntroController OnPressButton :" + buttonName);
+            Debug.Log("IntroController OnPressRanking");
         }
     }
 }

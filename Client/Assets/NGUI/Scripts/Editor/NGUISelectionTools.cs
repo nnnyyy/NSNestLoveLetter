@@ -1,6 +1,6 @@
 //----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2013 Tasharen Entertainment
+// Copyright © 2011-2016 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEngine;
@@ -12,19 +12,14 @@ public class NGUISelectionTools
 	[MenuItem("GameObject/Selection/Force Delete")]
 	static void ForceDelete()
 	{
-		GameObject go = Selection.activeGameObject;
+		Object[] gos = Selection.GetFiltered(typeof(GameObject), SelectionMode.TopLevel);
 
-		if (go != null)
+		if (gos != null && gos.Length > 0)
 		{
-			go.hideFlags = HideFlags.DontSave;
-
-			if (Application.isPlaying)
+			for (int i = 0; i < gos.Length; ++i)
 			{
-				GameObject.Destroy(go);
-			}
-			else
-			{
-				GameObject.DestroyImmediate(go);
+				Object go = gos[i];
+				NGUITools.DestroyImmediate(go);
 			}
 		}
 	}

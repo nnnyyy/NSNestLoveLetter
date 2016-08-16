@@ -1,6 +1,6 @@
 //----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2013 Tasharen Entertainment
+// Copyright © 2011-2016 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEngine;
@@ -11,18 +11,33 @@ using UnityEngine;
 
 [RequireComponent(typeof(UIPanel))]
 [AddComponentMenu("NGUI/Internal/Spring Panel")]
-public class SpringPanel : IgnoreTimeScale
+public class SpringPanel : MonoBehaviour
 {
+	static public SpringPanel current;
+
+	/// <summary>
+	/// Target position to spring the panel to.
+	/// </summary>
+
 	public Vector3 target = Vector3.zero;
+
+	/// <summary>
+	/// Strength of the spring. The higher the value, the faster the movement.
+	/// </summary>
+
 	public float strength = 10f;
 
 	public delegate void OnFinished ();
+
+	/// <summary>
+	/// Delegate function to call when the operation finishes.
+	/// </summary>
+
 	public OnFinished onFinished;
 
 	UIPanel mPanel;
 	Transform mTrans;
-	float mThreshold = 0f;
-	UIDraggablePanel mDrag;
+	UIScrollView mDrag;
 
 	/// <summary>
 	/// Cache the transform.
@@ -31,7 +46,7 @@ public class SpringPanel : IgnoreTimeScale
 	void Start ()
 	{
 		mPanel = GetComponent<UIPanel>();
-		mDrag = GetComponent<UIDraggablePanel>();
+		mDrag = GetComponent<UIScrollView>();
 		mTrans = transform;
 	}
 
@@ -41,19 +56,22 @@ public class SpringPanel : IgnoreTimeScale
 
 	void Update ()
 	{
-		float delta = UpdateRealTimeDelta();
+	    AdvanceTowardsPosition();
+	}
 
-		if (mThreshold == 0f)
-		{
-			mThreshold = (target - mTrans.localPosition).magnitude * 0.005f;
-			mThreshold = Mathf.Max(mThreshold, 0.00001f);
-		}
+    /// <summary>
+    /// Advance toward the target position.
+	/// </summary>
+
+	protected virtual void AdvanceTowardsPosition ()
+	{
+		float delta = RealTime.deltaTime;
 
 		bool trigger = false;
 		Vector3 before = mTrans.localPosition;
 		Vector3 after = NGUIMath.SpringLerp(mTrans.localPosition, target, strength, delta);
 
-		if (mThreshold >= Vector3.Magnitude(after - target))
+		if ((after - target).sqrMagnitude < 0.01f)
 		{
 			after = target;
 			enabled = false;
@@ -62,14 +80,20 @@ public class SpringPanel : IgnoreTimeScale
 		mTrans.localPosition = after;
 
 		Vector3 offset = after - before;
-		Vector4 cr = mPanel.clipRange;
+		Vector2 cr = mPanel.clipOffset;
 		cr.x -= offset.x;
 		cr.y -= offset.y;
-		mPanel.clipRange = cr;
+		mPanel.clipOffset = cr;
 
 		if (mDrag != null) mDrag.UpdateScrollbars(false);
-		if (trigger && onFinished != null) onFinished();
-	}
+
+		if (trigger && onFinished != null)
+		{
+			current = this;
+			onFinished();
+			current = null;
+		}
+    }
 
 	/// <summary>
 	/// Start the tweening process.
@@ -82,7 +106,6 @@ public class SpringPanel : IgnoreTimeScale
 		sp.target = pos;
 		sp.strength = strength;
 		sp.onFinished = null;
-		sp.mThreshold = 0f;
 		sp.enabled = true;
 		return sp;
 	}

@@ -1,6 +1,6 @@
 //----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2012 Tasharen Entertainment
+// Copyright © 2011-2014 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEngine;
@@ -54,7 +54,7 @@ public abstract class UIItemSlot : MonoBehaviour
 
 			if (bi != null)
 			{
-				string t = "[" + NGUITools.EncodeColor(item.color) + "]" + item.name + "[-]\n";
+				string t = "[" + NGUIText.EncodeColor(item.color) + "]" + item.name + "[-]\n";
 
 				t += "[AFAFAF]Level " + item.itemLevel + " " + bi.slot;
 
@@ -80,11 +80,11 @@ public abstract class UIItemSlot : MonoBehaviour
 				}
 
 				if (!string.IsNullOrEmpty(bi.description)) t += "\n[FF9900]" + bi.description;
-				UITooltip.ShowText(t);
+				UITooltip.Show(t);
 				return;
 			}
 		}
-		UITooltip.ShowText(null);
+		UITooltip.Hide();
 	}
 
 	/// <summary>

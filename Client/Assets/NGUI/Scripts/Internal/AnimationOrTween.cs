@@ -1,6 +1,6 @@
 ﻿//----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2013 Tasharen Entertainment
+// Copyright © 2011-2016 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEngine;
@@ -36,6 +36,7 @@ namespace AnimationOrTween
 	{
 		DoNothing = 0,
 		EnableThenPlay,
+		IgnoreDisabledState,
 	}
 
 	public enum DisableCondition

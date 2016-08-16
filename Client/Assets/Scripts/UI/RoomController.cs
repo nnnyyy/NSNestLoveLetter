@@ -1,22 +1,13 @@
 ﻿using UnityEngine;
+using NSNest.Common;
 
 namespace NSNest.UI
 {
-    public class RoomController : MonoBehaviour, IButtonEventReceiver
+    public class RoomController : MonoBehaviour
     {
-        void Start()
+        public void OnPressBack(string buttonName)
         {
-            this.InitButton();
-        }
-
-        void OnDestroy()
-        {
-            this.ReleaseButton();
-        }
-
-        public void OnPressButton(string buttonName)
-        {
-            Debug.Log("RoomController OnPressButton :" + buttonName);
+            SceneLoader.Instance.Load("intro");
         }
     }
 }

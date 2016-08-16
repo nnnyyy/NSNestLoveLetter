@@ -2,7 +2,7 @@ Shader "Unlit/Premultiplied Colored"
 {
 	Properties
 	{
-		_MainTex ("Base (RGB), Alpha (A)", 2D) = "white" {}
+		_MainTex ("Base (RGB), Alpha (A)", 2D) = "black" {}
 	}
 
 	SubShader
@@ -38,30 +38,29 @@ Shader "Unlit/Premultiplied Colored"
 			struct appdata_t
 			{
 				float4 vertex : POSITION;
-				half4 color : COLOR;
 				float2 texcoord : TEXCOORD0;
+				half4 color : COLOR;
 			};
 
 			struct v2f
 			{
-				float4 vertex : POSITION;
-				half4 color : COLOR;
+				float4 vertex : SV_POSITION;
 				float2 texcoord : TEXCOORD0;
+				half4 color : COLOR;
 			};
 
 			v2f vert (appdata_t v)
 			{
 				v2f o;
 				o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
-				o.color = v.color;
 				o.texcoord = v.texcoord;
+				o.color = v.color;
 				return o;
 			}
 
-			half4 frag (v2f IN) : COLOR
+			half4 frag (v2f IN) : SV_Target
 			{
 				half4 col = tex2D(_MainTex, IN.texcoord) * IN.color;
-				//col.rgb = lerp(half3(0.0, 0.0, 0.0), col.rgb, col.a);
 				return col;
 			}
 			ENDCG
