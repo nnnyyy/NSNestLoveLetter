@@ -1,6 +1,5 @@
 #pragma once
 
-// A reference-counted non-modifiable buffer class.
 template<class T>
 class shared_const_buffer
 {
@@ -47,6 +46,7 @@ public:
 	USHORT Decode2();
 	ULONG Decode4();
 	UINT64 Decode8();
+	std::string DecodeStr();
 
 private:
 	void AppendInner(BYTE *pByte, size_t nAppendSize);
@@ -60,15 +60,16 @@ public:
 
 private:
 
-	std::vector<BYTE> m_Buf;	
+	std::vector<BYTE> m_Buf;
 	LONG m_nOffset;
 
 public:
+
 	void Encode1(BYTE n);
 	void Encode2(USHORT n);
 	void Encode4(ULONG n);
-	void Encode8(UINT64 n);	
-	void EncodeStr(std::string n);
+	void Encode8(UINT64 n);
+	void EncodeStr(std::string s);
 
 	void MakeBuf(boost::shared_ptr< std::vector<BYTE> > vData);
 };

@@ -1,0 +1,8 @@
+CREATE TABLE `game_love_letter`.`account` (
+  `SN` INT NOT NULL AUTO_INCREMENT,
+  `ID` VARCHAR(45) NOT NULL,
+  `PW` VARCHAR(200) NOT NULL,
+  `Nick` VARCHAR(45) NOT NULL,
+  `RegDate` DATETIME NULL,
+  `LastLogoutDate` DATETIME NULL,
+  PRIMARY KEY (`SN`));

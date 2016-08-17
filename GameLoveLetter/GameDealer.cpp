@@ -272,6 +272,8 @@ void CGameDealerLoveLetter::OnCompanionAction(InPacket& iPacket, CUser::pointer 
 		return;
 	}
 
+	pTurnPlayer->m_bGuard = TRUE;
+
 	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
 	OutPacket oPacket(GCP_GameLoveLetter);
 	oPacket.Encode2(GCP_LL_ActionRet);

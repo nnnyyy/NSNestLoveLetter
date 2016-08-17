@@ -11,7 +11,7 @@
 #include "Server.h"
 #include "GameDealer.h"
 #include "Room.h"
-
+#include "MysqlMan.h"
 
 using boost::asio::ip::tcp;	
 
@@ -129,9 +129,20 @@ void CConnection::OnLogin(InPacket &iPacket) {
 		SendPacket(oPacket);
 		return;
 	}
+
+	std::string sID = iPacket.DecodeStr();
+	std::string sPW = iPacket.DecodeStr();
+	LONG nSN = -1;
+	if (CMysqlManager::get_mutable_instance().Login(sID, sPW, nSN) != 0) {
+		OutPacket oPacket(GCP_LoginRet);
+		oPacket.Encode2(-1);
+		SendPacket(oPacket);
+		return;
+	}
+
 	boost::shared_ptr<CUser> pUser(new CUser());
 	pUser->SetConnection(m_uSocketSN);
-	pUser->m_nUserSN = userSN_test++;
+	pUser->m_nUserSN = nSN;
 	m_pUser = pUser;
 	Server_Wrapper::m_mUsers.insert(std::pair<ULONG, CUser::pointer >(pUser->m_nUserSN, pUser));
 	

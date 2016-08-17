@@ -90,6 +90,13 @@ UINT64 InPacket::Decode8() {
 	return n;
 }
 
+std::string InPacket::DecodeStr() {
+	USHORT uLen = Decode2();
+	std::string s(reinterpret_cast<char*>((&m_Buf[0] + m_nOffset)), uLen);
+	m_nOffset += uLen;
+	return s;
+}
+
 
 OutPacket::OutPacket(LONG nType) : m_Buf(256)  {
 	Encode2(nType);
@@ -123,8 +130,16 @@ void OutPacket::Encode8(UINT64 n) {
 	m_nOffset += sizeof(UINT64);
 }
 
-void OutPacket::MakeBuf(std::vector<BYTE> &v) {
-	v.resize(HEADER_SIZE + m_nOffset);
-	*reinterpret_cast<USHORT*>(&v[0]) = m_nOffset;
-	std::copy(m_Buf.begin(), m_Buf.begin() + m_nOffset, v.begin() + HEADER_SIZE);
+void OutPacket::EncodeStr(std::string s) {
+	LONG nSize = s.size();
+	Encode2(nSize);
+	BYTE *pSrc = (&m_Buf[0] + m_nOffset);	
+	std::memcpy(pSrc, s.c_str(), nSize);	
+	m_nOffset += nSize;
+}
+
+void OutPacket::MakeBuf(boost::shared_ptr< std::vector<BYTE> > vData) {
+	vData->resize(HEADER_SIZE + m_nOffset);
+	*reinterpret_cast<USHORT*>(&(*vData)[0]) = m_nOffset;
+	std::copy(m_Buf.begin(), m_Buf.begin() + m_nOffset, (*vData).begin() + HEADER_SIZE);
 }

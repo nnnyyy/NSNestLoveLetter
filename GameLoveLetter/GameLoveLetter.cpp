@@ -12,7 +12,7 @@
 #include "Server.h"
 #include "GameDealer.h"
 #include "Room.h"
-#include <mysql.h>
+#include "MysqlMan.h"
 
 class CThreadManager {
 public:
@@ -26,22 +26,14 @@ public:
 
 int main()
 {
-	/*
-	MYSQL *connection = NULL;
-	MYSQL conn;
-	MYSQL_RES *sql_result;
-	MYSQL_ROW sql_row;
-
-	if (mysql_init(&conn) == NULL) {
+	if (!CMysqlManager::get_mutable_instance().Connect()) {
 		return -1;
-	}
+	}	
 
-	connection = mysql_real_connect(&conn, "localhost", "root", "s1980819", "game_love_letter", 3306, (const char*)NULL, 0);
-	if (connection == NULL) {
-		std::cout << mysql_errno(&conn) << "¿¡·¯ : " << mysql_error(&conn) << std::endl;
-		return -1;
+	LONG nRet, nSN;
+	if ((nRet = CMysqlManager::get_mutable_instance().Login("nnnyyy", "s1980819", nSN)) != 0) {
+		
 	}
-	*/
 
 	try {
 		boost::asio::io_service io;

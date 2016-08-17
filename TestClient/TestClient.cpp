@@ -93,28 +93,43 @@ public:
 
 		void PrintMyCardAndAllGroundCard() {
 			if (!pLocalPlayer) return;
+			std::cout << "--------------------------------------" << std::endl;
 			if (IsMyTurn()) {
 				std::cout << "####나의 턴입니다####" << std::endl;
 			}
 			std::cout << "[" << pLocalPlayer->m_nIndex << "]";
 			if (pLocalPlayer->m_vHandCardType.size() >= 2) {
-				std::cout << (pLocalPlayer->m_bGuard ? "%Shield%" : "") << (pLocalPlayer->m_bDead ? "#Dead#" : "") << "[My Hand Card] " << pLocalPlayer->m_vHandCardType[0] << " ," << pLocalPlayer->m_vHandCardType[1] << std::endl;
+				std::cout << (pLocalPlayer->m_bGuard ? "<Shield>" : "") << (pLocalPlayer->m_bDead ? "#Dead#" : "") << "[My Hand Card] " << pLocalPlayer->m_vHandCardType[0] << " ," << pLocalPlayer->m_vHandCardType[1] << std::endl;
 			}
 			else {
-				std::cout << (pLocalPlayer->m_bGuard ? "%Shield%" : "") << "[My Hand Card] " << (pLocalPlayer->m_bDead ? -1 : pLocalPlayer->m_vHandCardType[0]) << std::endl;
+				std::cout << (pLocalPlayer->m_bGuard ? "<Shield>" : "") << "[My Hand Card] " << (pLocalPlayer->m_bDead ? -1 : pLocalPlayer->m_vHandCardType[0]) << std::endl;
 			}
+			if (pLocalPlayer->m_vGroundCardType.size()) {
+				std::cout << "[바닥 카드] ";
+				for each (LONG _nCardType in pLocalPlayer->m_vGroundCardType)
+				{
+					std::cout << " " << _nCardType << " ";
+				}
+
+				std::cout << std::endl;
+			}
+			std::cout << "--------------------------------------" << std::endl;
 			
 			for (std::vector<Player::pointer>::iterator iter = vPlayers.begin(); iter != vPlayers.end(); ++iter) {
 				Player::pointer player = *iter;					
 				if (player == pLocalPlayer) continue;
-				std::cout << (player->m_bGuard ? "%Shield%" : "");
-				std::cout << (player->m_bDead ? "#Dead#" : "");
+				std::cout << (player->m_bGuard ? "<Shield> " : "");
+				std::cout << (player->m_bDead ? "#Dead# " : "");
 				std::cout << "[" << player->m_nIndex << "]";
 				std::cout << "[" << player->m_uUserSN << "] ";
 				if (player->m_vGroundCardType.size()) {
-					LONG nCardType = player->m_vGroundCardType.back();
-					std::cout << "Last Ground Card : " << nCardType << std::endl;
-				}
+					std::cout << "[바닥 카드] ";
+					for each (LONG _nCardType in player->m_vGroundCardType)
+					{
+						std::cout << " " << _nCardType << " ";
+					}
+					std::cout << std::endl;
+				}				
 				else {
 					std::cout << std::endl;
 				}
@@ -267,8 +282,10 @@ public:
 	}
 
 	void SendPacket(OutPacket& oPacket) {
-		oPacket.MakeBuf(buf);
-		boost::asio::async_write(m_Socket, boost::asio::buffer(buf),
+		boost::shared_ptr< std::vector<BYTE> > p(new std::vector<BYTE>());
+		oPacket.MakeBuf(p);
+		shared_const_buffer<BYTE> buffer(p);
+		boost::asio::async_write(m_Socket, buffer,
 			boost::bind(&CProtocol::handle_Write, this , boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred
 				));
 	}
@@ -314,7 +331,7 @@ public:
 	void OnLoginRet(InPacket& iPacket) {		
 		LONG nRet = iPacket.Decode2();
 		if (nRet == -1) {
-			std::cout << "[Login] 이미 로그인 되어있습니다." << std::endl;
+			std::cout << "[Login] 로그인 실패" << std::endl;
 			return;
 		}
 		else if (nRet == 0) {
@@ -796,7 +813,20 @@ void ProcMenu(CProtocol& client, LONG n) {
 	switch (n) {
 	case 0: {
 		std::cout << "로그인 시도" << std::endl;
-		OutPacket oPacket(CGP_Login);
+		OutPacket oPacket(CGP_Login);		
+		std::cout << "ID : ";
+		std::cin.getline(line, 128);
+		std::string sID(line);
+		HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+		DWORD mode = 0;
+		GetConsoleMode(hStdin, &mode);
+		SetConsoleMode(hStdin, mode & (~ENABLE_ECHO_INPUT));
+		std::cout << "PW : ";
+		std::cin.getline(line, 128);
+		SetConsoleMode(hStdin, mode);
+		std::string sPW(line);
+		oPacket.EncodeStr(sID);
+		oPacket.EncodeStr(sPW);
 		client.SendPacket(oPacket);
 	}
 			break;
@@ -810,7 +840,7 @@ void ProcMenu(CProtocol& client, LONG n) {
 
 	case 2: {
 		std::cout << "방 입장 시도" << std::endl;
-		std::cout << "몇번방 접속 : " << std::endl;
+		std::cout << "몇번방 접속 : ";
 		std::cin.getline(line, 128);
 		int n2 = atoi(line);
 		OutPacket oPacket(CGP_EnterRoom);
