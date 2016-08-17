@@ -127,7 +127,7 @@ void CRoom::Start(CUser::pointer pUser) {
 	m_pDealer->EncodePlayerIndexList(oPacket);
 	BroadcastPacket(oPacket);
 
-	m_pDealer->NextTurn();
+	m_pDealer->Process();
 }
 
 LONG CRoom::GetUserCount() {

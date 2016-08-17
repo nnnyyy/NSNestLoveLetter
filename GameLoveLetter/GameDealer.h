@@ -20,8 +20,15 @@ enum {
 	LOVELETTER_PRINCESS = 8
 };
 
+
+
 class CGameDealerLoveLetter : public CGameDealer {
 public:
+
+	enum {
+		GAMEOVER_DECK_IS_EMPTY = 0,
+		GAMEOVER_ALL_DEAD
+	};
 
 	class Card : public boost::enable_shared_from_this<Card> {
 	public:
@@ -34,6 +41,7 @@ public:
 	class Player : public boost::enable_shared_from_this<Player> {
 	public:
 		ULONG nUserSN;
+		LONG m_nIndex;
 		BOOL m_bDead;
 		BOOL m_bGuard;
 		std::vector<Card::pointer> m_vHandCards;
@@ -47,8 +55,11 @@ public:
 	class GameStatus {
 	public:
 		GameStatus() : nPrevRoundWinIndex(-1), nCurTurnIndex(0) {}
-		LONG nPrevRoundWinIndex;	//	이전 경기 승리 플레이어
+		LONG nPrevRoundWinIndex;	//	이전 경기 승리 플레이어		
 		LONG nCurTurnIndex;			//	현재 턴 플레이어
+		BOOL bRoundOver;			//	현재 라운드가 종료 되었는지
+		boost::chrono::system_clock::time_point tRoundOverStart;		//	다음 라운드까지 중간에 티타임을 가지기 위함.
+		enum { WAIT_NEXT_ROUND_TIME = 5 * 1000, };
 
 		void EncodeStatus(OutPacket& oPacket);
 	};
@@ -68,16 +79,20 @@ public:
 	virtual void Update();	
 
 	void InitGame();
-	void NextTurn();
-	void GameOver();
+	void Next();
+	void Process();
+	void GameOver(LONG nReason);
 	BOOL CheckDead();
+	BOOL CheckGameOver();
 	void EncodePlayerInfo(OutPacket& oPacket);
 	void EncodePlayerIndexList(OutPacket& oPacket);
 
 protected:
 	BOOL GetCardFromDeck(Player::pointer pPlayer);
 	BOOL IsMyTurn(Player::pointer pPlayer);
+	LONG DropAndGetNewCardByHero(Player::pointer pPlayer);
 	BOOL DropCard(Player::pointer pPlayer, LONG nCardType);
+	void ExchangeCard(Player::pointer pPlayer1, Player::pointer pPlayer2);
 	void Dead(Player::pointer pPlayer);
 
 public:

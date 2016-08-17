@@ -25,15 +25,16 @@ void ProcMenu(CProtocol& client, LONG n);
 void ProcGameMenu(CProtocol& client, LONG n);
 void ProcCardCommand(CProtocol& client, LONG n);
 
-std::vector< std::string> g_vMessages;
-void AddMessage(std::string sMsg) {
-	g_vMessages.push_back(sMsg);
-}
-
 using boost::asio::ip::tcp;
 
 std::vector<BYTE> buf;
 boost::mutex g_mutex;
+
+std::vector< std::string> g_vMessages;
+void AddMessage(std::string sMsg) {
+	boost::lock_guard<boost::mutex> lock(g_mutex);
+	g_vMessages.push_back(sMsg);
+}
 
 class CContext : public boost::serialization::singleton<CContext> {
 public:
@@ -440,6 +441,10 @@ public:
 		case GCP_LL_ActionRet:
 			OnActionRet(iPacket);
 			break;
+
+		case GCP_LL_RoundResult:
+			OnRoundRet(iPacket);
+			break;
 		}
 	}
 
@@ -522,11 +527,11 @@ public:
 			LONG nAliveIndex = iPacket.Decode4();
 			if (bSucceed) {
 				LONG nDeadIndex = iPacket.Decode4();				
-				std::string sMsg = boost::str(boost::format("[험담가] player[%] 가 player[%] 를 이겼습니다.") % nAliveIndex % nDeadIndex);
+				std::string sMsg = boost::str(boost::format("[험담가] player[%d] 가 player[%d] 를 이겼습니다.") % nAliveIndex % nDeadIndex);
 				AddMessage(sMsg);
 			}
 			else {
-				std::string sMsg = boost::str(boost::format("[험담가] player[%] 와 아무 일도 없었습니다.") % nAliveIndex );
+				std::string sMsg = boost::str(boost::format("[험담가] player[%d] 와 아무 일도 없었습니다.") % nAliveIndex );
 				AddMessage(sMsg);
 			}
 		}
@@ -539,8 +544,32 @@ public:
 			AddMessage(sMsg);
 		}
 		break;
-		}				
+		case 5:
+		{
+			//	영웅 사용 결과
+			LONG nFromUserIdx = iPacket.Decode4();
+			LONG nToUserIdx = iPacket.Decode4();
+			BOOL bKill = iPacket.Decode4();
+			std::string sMsg = boost::str(boost::format("[영웅] player[%d]가 player[%d]에게 사용했습니다.") % nFromUserIdx % nToUserIdx );
+			AddMessage(sMsg);
+			if (bKill) {
+				std::string sMsg = boost::str(boost::format("[영웅] player[%d]가 공주 카드를 드롭하여 죽었습니다.") % nToUserIdx);
+				AddMessage(sMsg);
+			}			
+		}
+		break;
+		}
 	}	
+
+	void OnRoundRet(InPacket& iPacket) {
+		LONG nWinnerIdx = iPacket.Decode4();
+		//	좋겠다 이겨서
+		system("cls");
+		std::string sMsg = boost::str(boost::format("[라운드 결과] player[%d]가 승리하였습니다.") % nWinnerIdx);
+		std::cout << sMsg << std::endl;
+		Sleep(3000);
+		PrintMenu();
+	}
 
 	void PrintRoomList() {
 		if (m_vRoomInfo.size() <= 0) {
@@ -638,7 +667,10 @@ void PrintActionLog() {
 		}
 	}
 	else {
-		for (int i = g_vMessages.size() - 1; (g_vMessages.size() - 3) < i; --i) {
+		for (int i = 2; i >= 0; --i) {
+			
+		}
+		for (LONG i = g_vMessages.size() - 1; (LONG)(g_vMessages.size() - 3) < i; --i) {
 			std::cout << g_vMessages[i] << std::endl;
 		}
 	}
