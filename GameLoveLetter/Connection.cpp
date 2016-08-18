@@ -68,9 +68,6 @@ void CConnection::start() {
 
 void CConnection::ProcessPacket(InPacket &iPacket) {
 	LONG nType = iPacket.Decode2();
-
-	std::cout << "Processs Packet - Type : " << nType << std::endl;
-
 	if (nType >= CGP_User_Start && nType < CGP_User_End) {
 		ProcessUserPacket(nType, iPacket);
 		return;
@@ -121,8 +118,7 @@ void CConnection::SendPacket(OutPacket &oPacket) {
 }
 
 
-void CConnection::OnLogin(InPacket &iPacket) {
-	static ULONG userSN_test = 1000;
+void CConnection::OnLogin(InPacket &iPacket) {	
 	if (m_pUser) {
 		//Disconnect();
 		OutPacket oPacket(GCP_LoginRet);

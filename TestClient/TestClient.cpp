@@ -163,8 +163,8 @@ public:
 
 	void Connect() {
 		tcp::resolver resolver(m_Socket.get_io_service());
-		tcp::resolver::query query(_MY_IP, _PORT);
-		//tcp::resolver::query query(_AWS_IP, _PORT);	//	실제 서비스 할 서버
+		//tcp::resolver::query query(_MY_IP, _PORT);
+		tcp::resolver::query query(_AWS_IP, _PORT);	//	실제 서비스 할 서버
 		tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 		tcp::resolver::iterator end;
 
