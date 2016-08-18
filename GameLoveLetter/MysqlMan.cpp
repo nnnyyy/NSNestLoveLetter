@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <random>
 #include <boost/format.hpp>
+
 #include "PacketProtocol.h"
 #include "Packet.h"
 #include "User.h"
@@ -18,56 +19,57 @@
 #define MYSQL_LL_PORT (3306)
 
 BOOL CMysqlManager::Connect() {
-	if (mysql_init(&conn) == NULL) {
-		return FALSE;
+
+	try {
+		sql::Driver *driver;
+		driver = get_driver_instance();
+		//conn = boost::shared_ptr<sql::Connection>(driver->connect("tcp://52.79.205.198:3306", MYSQL_ID, MYSQL_PW));
+		conn = boost::shared_ptr<sql::Connection>(driver->connect("tcp://127.0.0.1:3306", MYSQL_ID, MYSQL_PW));
+		conn->setSchema(MYSQL_DATABASE);
 	}
-
-	connection = mysql_real_connect(&conn, MYSQL_SERVER_IP, MYSQL_ID, MYSQL_PW, MYSQL_DATABASE, MYSQL_PORT, (const char*)NULL, 0);
-	if (connection == NULL) {
-		std::cout << mysql_errno(&conn) << "Error : " << mysql_error(&conn) << std::endl;
-		return FALSE;
+	catch (sql::SQLException& e) {
+		std::cout << "MySql Exception : " << e.getErrorCode() << std::endl;
 	}
+	
 
-	std::cout << "[Mysql] Connected" << std::endl;
-	m_bConnect = TRUE;
-
-	return TRUE;
-}
-
-BOOL CMysqlManager::Query(std::string sQuery) {
-	if (!IsConnect()) {
-		return FALSE;
-	}
-
-	if (mysql_query(&conn, sQuery.c_str())) {
-		return FALSE;
-	}
-
-	sql_result = mysql_store_result(&conn);
-	if (sql_result == NULL) {
-		if (mysql_field_count(&conn) == NULL) {
-			
-		}
-		else {
-			std::cout << "Error : " << mysql_error(&conn) << std::endl;
-		}
-		return FALSE;
-	}
 	return TRUE;
 }
 
 
 LONG CMysqlManager::Login(std::string sID, std::string sPW, LONG& nSN) {
-	std::string sQuery = boost::str(boost::format("SELECT SN FROM account WHERE ID='%s' AND PW= PASSWORD('%s')") % sID % sPW);
-	if (!Query(sQuery)) {
+	
+	LONG nRet;
+	try {
+		stmt.reset(conn->createStatement());
+		pstmt.reset(conn->prepareStatement("CALL Login(?,?,@nRet,@nSN)"));
+		pstmt->setString(1, sID);
+		pstmt->setString(2, sPW);
+		pstmt->execute();
+
+		rs.reset(stmt->executeQuery("SELECT @nRet AS nRet, @nSN AS nSN"));		
+		while (rs->next()) {
+			nRet = rs->getInt("nRet");
+			nSN = rs->getInt("nSN");
+		}
+	}
+	catch (sql::SQLException& e) {
+		std::cout << e.getErrorCode() << std::endl;
+	}
+
+	return nRet;
+}
+
+LONG CMysqlManager::Logout(LONG nSN) {
+	try{
+		stmt.reset(conn->createStatement());
+		pstmt.reset(conn->prepareStatement("CALL SetLoginStatus(?,0)"));
+		pstmt->setInt(1, nSN);
+		pstmt->execute();
+	}
+	catch (sql::SQLException& e) {
+		std::cout << e.getErrorCode() << std::endl;
 		return -1;
-	}
+	}	
 
-	sql_row = mysql_fetch_row(sql_result);
-	if (sql_row) {
-		nSN = atoi(sql_row[0]);
-		return 0;
-	}
-
-	return -1;
+	return 0;
 }

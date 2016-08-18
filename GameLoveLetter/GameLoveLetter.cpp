@@ -30,10 +30,8 @@ int main()
 		return -1;
 	}	
 
-	LONG nRet, nSN;
-	if ((nRet = CMysqlManager::get_mutable_instance().Login("nnnyyy", "s1980819", nSN)) != 0) {
-		
-	}
+	LONG nSN;
+	CMysqlManager::get_mutable_instance().Login("nnnyyy", "s1980819", nSN);	
 
 	try {
 		boost::asio::io_service io;

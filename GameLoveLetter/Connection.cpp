@@ -46,6 +46,7 @@ void CConnection::handle_Read(const boost::system::error_code& err, size_t byte_
 		Server_Wrapper::get_mutable_instance().m_pServer->RemoveSocket(shared_from_this());		
 		if (m_pUser) {
 			Server_Wrapper::m_mUsers.erase(m_pUser->m_nUserSN);
+			CMysqlManager::get_mutable_instance().Logout(m_pUser->m_nUserSN);
 			m_pUser->PostDisconnect();
 			m_pUser = NULL;
 		}		
@@ -132,10 +133,10 @@ void CConnection::OnLogin(InPacket &iPacket) {
 
 	std::string sID = iPacket.DecodeStr();
 	std::string sPW = iPacket.DecodeStr();
-	LONG nSN = -1;
-	if (CMysqlManager::get_mutable_instance().Login(sID, sPW, nSN) != 0) {
+	LONG nSN = -1, nRet = 0;
+	if ((nRet = CMysqlManager::get_mutable_instance().Login(sID, sPW, nSN)) != 0) {
 		OutPacket oPacket(GCP_LoginRet);
-		oPacket.Encode2(-1);
+		oPacket.Encode2(nRet);
 		SendPacket(oPacket);
 		return;
 	}

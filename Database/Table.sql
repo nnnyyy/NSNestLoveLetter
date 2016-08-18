@@ -12,6 +12,6 @@ CREATE TABLE `game_love_letter`.`account` (
 -- 중복 로그인을 막기 위한 테이블
 CREATE TABLE `game_love_letter`.`connect_status` (
 `SN` INT NOT NULL,  
-`Staus` INT NOT NULL DEFAULT '0',
+`Status` INT NOT NULL DEFAULT '0',
 `LoginDate` DATETIME NULL,  
 PRIMARY KEY (`SN`));
