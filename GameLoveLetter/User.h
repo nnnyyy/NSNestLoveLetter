@@ -31,6 +31,7 @@ public:
 
 protected:
 	Object::pointer m_pRoom;
+	//GameData m_UserData;		// DB에 플러싱 해야 할 기록들(최종 승리 횟수, 험담가 시도 수, 험담가 적중 횟수, )
 public:
 	Object::pointer GetRoom() const { return m_pRoom; }
 };
