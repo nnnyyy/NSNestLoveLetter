@@ -4,6 +4,7 @@ using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 
+/*
 static class CVT
 {
     public static short ToShort(byte byte1, byte byte2) { return (short)((byte2 << 8) | (byte1 << 0)); }
@@ -161,3 +162,4 @@ public class OutPacket
 		return data;
 	}
 }
+*/
