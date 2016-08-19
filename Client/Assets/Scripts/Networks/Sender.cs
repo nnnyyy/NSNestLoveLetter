@@ -5,10 +5,9 @@ namespace NSNetwork
 {
     public class Sender
     {
-        public static void Login(string id, string pw, Receiver.LoginDelegate onLoginCallback = null)
+        public static void Login(string id, string pw)
         {
             CGPLogin login = new CGPLogin(id, pw);
-            Receiver.onLoginCallback = onLoginCallback;
             NetworkUnityEvent.Instance.Send(login);
         }
 
