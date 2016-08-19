@@ -13,6 +13,7 @@ protected:
 public:
 	ULONG m_nUserSN;
 	BOOL m_bReady;
+	std::string m_sNick;
 
 public:
 	typedef boost::shared_ptr<CUser> pointer;

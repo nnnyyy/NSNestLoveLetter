@@ -56,6 +56,7 @@ void CRoom::BroadcastRoomState(DWORD dwFlag) {
 	oPacket.Encode1(nCnt);
 	for (int i = 0; i < nCnt; ++i) {
 		oPacket.Encode4(m_vUsers[i]->m_nUserSN);
+		oPacket.EncodeStr(m_vUsers[i]->m_sNick);
 		oPacket.Encode1(m_vUsers[i]->m_bReady);
 	}
 	BroadcastPacket(oPacket);
@@ -163,6 +164,7 @@ void CRoom::RemoveUser(CUser::pointer pUser) {
 }
 
 void CRoom::ResetReady() {
+	m_bGameStart = FALSE;
 	for each (CUser::pointer pUser in m_vUsers)
 	{
 		if (pUser == m_pMaster) {

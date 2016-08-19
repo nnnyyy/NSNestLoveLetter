@@ -51,6 +51,12 @@
     <ClInclude Include="MysqlMan.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="MinidumpHelp.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="LogMan.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -81,6 +87,12 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="MysqlMan.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="MinidumpHelp.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="LogMan.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

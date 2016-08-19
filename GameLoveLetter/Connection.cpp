@@ -61,6 +61,7 @@ void CConnection::handle_Write(const boost::system::error_code& err, size_t byte
 void CConnection::start() {	
 	time_t now = time(0);	
 	m_sMsg = "Hello";
+	std::cout << "Scoket Connected : " << m_Socket.remote_endpoint().address().to_string() << std::endl;
 	boost::asio::async_write(m_Socket, boost::asio::buffer(m_sMsg), 
 		boost::bind(&CConnection::handle_Accept, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred
 		));
@@ -130,7 +131,8 @@ void CConnection::OnLogin(InPacket &iPacket) {
 	std::string sID = iPacket.DecodeStr();
 	std::string sPW = iPacket.DecodeStr();
 	LONG nSN = -1, nRet = 0;
-	if ((nRet = CMysqlManager::get_mutable_instance().Login(sID, sPW, nSN)) != 0) {
+	std::string sNick;
+	if ((nRet = CMysqlManager::get_mutable_instance().Login(sID, sPW, nSN, sNick)) != 0) {
 		OutPacket oPacket(GCP_LoginRet);
 		oPacket.Encode2(nRet);
 		SendPacket(oPacket);
@@ -140,11 +142,15 @@ void CConnection::OnLogin(InPacket &iPacket) {
 	boost::shared_ptr<CUser> pUser(new CUser());
 	pUser->SetConnection(m_uSocketSN);
 	pUser->m_nUserSN = nSN;
+	pUser->m_sNick = sNick;
 	m_pUser = pUser;
 	Server_Wrapper::m_mUsers.insert(std::pair<ULONG, CUser::pointer >(pUser->m_nUserSN, pUser));
 	
 	OutPacket oPacket(GCP_LoginRet);
 	oPacket.Encode2(0);
 	oPacket.Encode4(pUser->m_nUserSN);	
+	oPacket.EncodeStr(pUser->m_sNick);
 	SendPacket(oPacket);
+
+	std::cout << "Logined : " << sID << ", " << pUser->m_nUserSN << ", " << pUser->m_sNick << std::endl;
 }

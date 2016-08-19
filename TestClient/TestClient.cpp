@@ -13,6 +13,8 @@
 #include "Packet.h"
 #include "../GameLoveLetter/PacketProtocol.h"
 
+#define LOCAL_CONNECT
+
 #define _BUFF_SIZE 128 
 #define _MY_IP "127.0.0.1" 
 #define _AWS_IP "52.79.205.198" 
@@ -43,6 +45,7 @@ public:
 
 public:
 	ULONG	m_uUserSN;
+	std::string m_sNick;
 	BOOL	m_bLogined;
 
 	LONG	m_nRoom;
@@ -55,6 +58,7 @@ public:
 		BOOL m_bGuard;
 		BOOL m_bDead;
 		LONG m_nIndex;
+		std::string m_sNick;
 		std::vector<LONG> m_vHandCardType;
 		std::vector<LONG> m_vGroundCardType;
 		typedef boost::shared_ptr<Player> pointer;
@@ -78,15 +82,15 @@ public:
 		}
 
 		void PrintInfo() {
-			std::cout << "Me" << CContext::get_mutable_instance().m_uUserSN << std::endl;
+			std::cout << "Me " << CContext::get_mutable_instance().m_uUserSN << std::endl;
 			std::cout << "Room Sn : " << nSN << " User Cnt : " << nUserCnt << std::endl;
 			for (int i = 0; i < vPlayers.size(); ++i) {
 				BOOL bLocal = (CContext::get_mutable_instance().m_uUserSN == vPlayers[i]->m_uUserSN);
 				if (bLocal) {
-					std::cout << "Me [" << vPlayers[i]->m_uUserSN << "] - " << (vPlayers[i]->m_bReady ? "Ready" : "Not Ready") << std::endl;
+					std::cout << "Me [" << vPlayers[i]->m_sNick << "] - " << (vPlayers[i]->m_bReady ? "Ready" : "Not Ready") << std::endl;
 				}	
 				else {
-					std::cout << "[" << vPlayers[i]->m_uUserSN << "] - " << (vPlayers[i]->m_bReady ? "Ready" : "Not Ready") << std::endl;
+					std::cout << "[" << vPlayers[i]->m_sNick << "] - " << (vPlayers[i]->m_bReady ? "Ready" : "Not Ready") << std::endl;
 				}
 			}
 		}
@@ -121,7 +125,7 @@ public:
 				std::cout << (player->m_bGuard ? "<Shield> " : "");
 				std::cout << (player->m_bDead ? "#Dead# " : "");
 				std::cout << "[" << player->m_nIndex << "]";
-				std::cout << "[" << player->m_uUserSN << "] ";
+				std::cout << "[" << player->m_sNick << "] ";
 				if (player->m_vGroundCardType.size()) {
 					std::cout << "[바닥 카드] ";
 					for each (LONG _nCardType in player->m_vGroundCardType)
@@ -163,8 +167,11 @@ public:
 
 	void Connect() {
 		tcp::resolver resolver(m_Socket.get_io_service());
-		//tcp::resolver::query query(_MY_IP, _PORT);
+#if defined(LOCAL_CONNECT)
+		tcp::resolver::query query(_MY_IP, _PORT);
+#else
 		tcp::resolver::query query(_AWS_IP, _PORT);	//	실제 서비스 할 서버
+#endif
 		tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 		tcp::resolver::iterator end;
 
@@ -338,6 +345,7 @@ public:
 			std::cout << "[Login] 로그인 되었습니다." << std::endl;
 			CContext::get_mutable_instance().m_bLogined = TRUE;
 			CContext::get_mutable_instance().m_uUserSN = iPacket.Decode4();	
+			CContext::get_mutable_instance().m_sNick = iPacket.DecodeStr();
 
 			OutPacket oPacket(CGP_RoomListRequest);
 			SendPacket(oPacket);
@@ -403,6 +411,7 @@ public:
 			CContext::Player::pointer pPlayer(new CContext::Player());
 			pRoom->vPlayers.push_back(pPlayer);			
 			pPlayer->m_uUserSN = iPacket.Decode4();
+			pPlayer->m_sNick = iPacket.DecodeStr();
 			pPlayer->m_bReady = iPacket.Decode1();			
 			pRoom->mPlayers.insert(std::pair< ULONG, CContext::Player::pointer >(pPlayer->m_uUserSN, pPlayer));
 		}		
@@ -461,6 +470,10 @@ public:
 
 		case GCP_LL_RoundResult:
 			OnRoundRet(iPacket);
+			break;
+
+		case GCP_LL_FinalResult:
+			OnFinalRoundRet(iPacket);
 			break;
 		}
 	}
@@ -588,6 +601,17 @@ public:
 		PrintMenu();
 	}
 
+	void OnFinalRoundRet(InPacket& iPacket) {
+		CContext::get_mutable_instance().m_pRoom->m_bGameStart = FALSE;
+		LONG nWinnerIdx = iPacket.Decode4();
+		//	좋겠다 이겨서
+		system("cls");
+		std::string sMsg = boost::str(boost::format("[최종 결과] player[%d]가 승리하였습니다.") % nWinnerIdx);
+		std::cout << sMsg << std::endl;
+		Sleep(3000);
+		PrintMenu();
+	}
+
 	void PrintRoomList() {
 		if (m_vRoomInfo.size() <= 0) {
 			std::cout << "생성된 방이 없습니다." << std::endl;
@@ -708,7 +732,7 @@ void ProcGameMenu(CProtocol& client, LONG n) {
 	}
 }
 
-void ProcCardCommand(CProtocol& client, LONG n) {	
+void ProcCardCommand(CProtocol& client, LONG n) {		
 	char line[128 + 1];
 	CContext::Player::pointer pLocalPlayer = CContext::get_mutable_instance().m_pRoom->pLocalPlayer;
 	std::vector<LONG>::iterator iter = pLocalPlayer->m_vHandCardType.begin();

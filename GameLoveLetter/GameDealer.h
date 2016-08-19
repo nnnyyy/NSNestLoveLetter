@@ -105,7 +105,9 @@ protected:
 	BOOL FindTarget(Player::pointer pTurnPlayer);
 
 	void AllReset();
-	void SendFinalRoundOver();
+	void SendFinalRoundOver(Player::pointer pWinner);
+
+	BOOL IsGameRunning();
 
 public:
 	typedef boost::shared_ptr<CGameDealerLoveLetter> pointer;

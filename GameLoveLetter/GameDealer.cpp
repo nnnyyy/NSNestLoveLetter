@@ -54,13 +54,17 @@ CGameDealerLoveLetter::~CGameDealerLoveLetter() {
 
 void CGameDealerLoveLetter::OnPacket(InPacket& iPacket, CUser::pointer pUser) {
 
-	if (status.bRoundOver) {
+	if (status.bRoundOver || status.bFinalOver) {
 		//	라운드가 끝나게 되면 게임 액션 패킷은 받지 않는다.
 		return;
 	}
 	
 	LONG nSubType = iPacket.Decode2();
 
+	if (!IsGameRunning()) {
+		return;
+	}
+	 
 	switch (nSubType) {
 	case CGP_LL_GuardCheck: OnGuardAction(iPacket, pUser); break;
 	case CGP_LL_RoyalSubject: OnRoyalSubjectAction(iPacket, pUser); break;
@@ -73,7 +77,7 @@ void CGameDealerLoveLetter::OnPacket(InPacket& iPacket, CUser::pointer pUser) {
 	}
 }
 
-void CGameDealerLoveLetter::OnGuardAction(InPacket& iPacket, CUser::pointer pUser) {
+void CGameDealerLoveLetter::OnGuardAction(InPacket& iPacket, CUser::pointer pUser) {	 
 	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
 	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
 		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
@@ -622,9 +626,9 @@ void CGameDealerLoveLetter::GameOver(LONG nReason) {
 		status.bRoundOver = TRUE;
 		status.tRoundOverStart = system_clock::now();
 
-		if (pWinner->m_nRoundWin >= 3 /* 4명이면 보석 3개 모으기 */) {
+		if (pWinner->m_nRoundWin >= 1 /* 4명이면 보석 3개 모으기 */) {
 			status.bFinalOver = TRUE;
-			SendFinalRoundOver();			
+			SendFinalRoundOver(pWinner);
 			return;
 		}
 		else {			
@@ -757,11 +761,19 @@ void CGameDealerLoveLetter::AllReset() {
 
 }
 
-void CGameDealerLoveLetter::SendFinalRoundOver() {
+void CGameDealerLoveLetter::SendFinalRoundOver(Player::pointer pWinner) {
 	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
 	OutPacket oPacket(GCP_GameLoveLetter);
 	oPacket.Encode2(GCP_LL_FinalResult);
+	oPacket.Encode4(pWinner->m_nIndex);
 	pRoom->BroadcastPacket(oPacket);
 	pRoom->ResetReady();
 	pRoom->BroadcastRoomState();
+}
+
+BOOL CGameDealerLoveLetter::IsGameRunning() {
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+	if (!pRoom) return FALSE;
+	
+	return pRoom->IsGameRunning();
 }

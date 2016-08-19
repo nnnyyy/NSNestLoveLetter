@@ -1,8 +1,8 @@
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `Login`(IN sID VARCHAR(45), IN sPW VARCHAR(45),
-							OUT nRet INTEGER, OUT nSN INTEGER)
+							OUT nRet INTEGER, OUT nSN INTEGER, OUT sNick VARCHAR(45))
 BEGIN
-	DECLARE nCount INTEGER DEFAULT 0;    
+	DECLARE nCount INTEGER DEFAULT 0;    	
     SELECT SN INTO nSN FROM `game_love_letter`.`account` WHERE ID=sID;    
     IF ROW_COUNT() <= 0 THEN
 		-- 유저가 ACCOUNT에 없는 상태.
@@ -14,7 +14,8 @@ BEGIN
         ELSE        
 			SELECT COUNT(*) INTO nCount FROM `game_love_letter`.`account` WHERE ID=sID AND PW=PASSWORD(sPW);
 			IF nCount > 0 THEN
-				SELECT SN INTO nSN FROM `game_love_letter`.`account` WHERE ID=sID;
+			-- Success Login
+				SELECT SN, Nick INTO nSN, sNick FROM `game_love_letter`.`account` WHERE ID=sID;
 				SET nRet = 0;
 				CALL SetLoginStatus(nSN,1);
 			ELSE 
