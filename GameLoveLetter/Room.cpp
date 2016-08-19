@@ -10,6 +10,7 @@
 #include "Server.h"
 #include "GameDealer.h"
 #include "Room.h"
+#include "LogMan.h"
 
 LONG CRoom::s_nSN = 0;
 
@@ -36,6 +37,7 @@ void CRoom::Enter(CUser::pointer pUser) {
 	if (m_vUsers.size() == 1) {
 		m_pMaster = pUser;
 		m_pMaster->m_bReady = TRUE;
+		LogAdd(boost::str(boost::format("[Room:%d] Created") % m_nSN));
 	}
 	SendEnterPacket(pUser);
 }
@@ -122,6 +124,7 @@ void CRoom::Start(CUser::pointer pUser) {
 	m_pDealer->InitGame();
 	m_bGameStart = TRUE;
 
+	LogAdd(boost::str(boost::format("[Room:%d] Game Start")%m_nSN));
 	OutPacket oPacket(GCP_GameStartRet);
 	oPacket.Encode4(0);	//	정상
 	//	유저별 게임 인덱스 정보 전송
@@ -142,8 +145,8 @@ void CRoom::RemoveUser(CUser::pointer pUser) {
 	BOOL bFind = FALSE;
 	for (std::vector<CUser::pointer>::iterator iter = m_vUsers.begin(); iter != m_vUsers.end(); ++iter) {
 		if (*iter == pUser) {
-			m_vUsers.erase(iter);
-			std::cout << "User Removed : " << pUser->m_nUserSN << std::endl;			
+			m_vUsers.erase(iter);			
+			LogAdd(boost::str(boost::format("[Room:%d] User Removed : %s(sn:%d)") % m_nSN % pUser->m_sNick % pUser->m_nUserSN));
 			bFind = TRUE;
 			break;
 		}

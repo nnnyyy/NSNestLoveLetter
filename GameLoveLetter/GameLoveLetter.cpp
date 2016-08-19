@@ -14,6 +14,7 @@
 #include "Room.h"
 #include "MysqlMan.h"
 #include "MinidumpHelp.h"
+#include "LogMan.h"
 
 MinidumpHelp g_miniDump;
 
@@ -31,9 +32,6 @@ int main()
 {
 	g_miniDump.install_self_mini_dump();
 
-	int *p = NULL;
-	*p = 10;
-
 	if (!CMysqlManager::get_mutable_instance().Connect()) {
 		return -1;
 	}
@@ -43,7 +41,8 @@ int main()
 		boost::shared_ptr<Server> pServer = boost::shared_ptr<Server>(new Server(io));
 		Server_Wrapper::get_mutable_instance().m_pServer = pServer;
 		CThreadManager manager;
-		boost::thread thread(boost::bind(&CThreadManager::handle_timer, &manager));
+		boost::thread thread(boost::bind(&CThreadManager::handle_timer, &manager));		
+		CLogMan::get_mutable_instance().RunThread();
 		io.run();
 
 		thread.join();

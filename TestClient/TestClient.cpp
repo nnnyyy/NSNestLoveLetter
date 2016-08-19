@@ -188,7 +188,7 @@ public:
 
 		m_bConnect = true;
 
-		boost::array<CHAR, _BUFF_SIZE> buf;
+		/*boost::array<CHAR, _BUFF_SIZE> buf;
 		size_t len = m_Socket.read_some(boost::asio::buffer(buf), err);
 		if (err == boost::asio::error::eof) {
 			m_bConnect = false;
@@ -198,7 +198,7 @@ public:
 			throw boost::system::system_error(err);
 		}
 
-		std::cout.write(buf.data(), len);
+		std::cout.write(buf.data(), len);*/
 	}
 
 	bool IsRun() { return m_bConnect;}

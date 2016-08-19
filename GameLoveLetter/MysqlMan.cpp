@@ -60,7 +60,9 @@ LONG CMysqlManager::Login(std::string sID, std::string sPW, LONG& nSN, std::stri
 		}
 	}
 	catch (sql::SQLException& e) {
-		std::cout << e.getErrorCode() << std::endl;
+		std::cout << "MySql Exception : " << e.getErrorCode() << std::endl;
+		if(e.getErrorCode() == 2006) Connect();
+		return -99;
 	}
 
 	return nRet;
@@ -75,7 +77,8 @@ LONG CMysqlManager::Logout(LONG nSN) {
 	}
 	catch (sql::SQLException& e) {
 		std::cout << e.getErrorCode() << std::endl;
-		return -1;
+		if (e.getErrorCode() == 2006) Connect();
+		return -99;
 	}	
 
 	return 0;

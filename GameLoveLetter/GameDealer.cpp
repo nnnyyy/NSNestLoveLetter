@@ -626,7 +626,7 @@ void CGameDealerLoveLetter::GameOver(LONG nReason) {
 		status.bRoundOver = TRUE;
 		status.tRoundOverStart = system_clock::now();
 
-		if (pWinner->m_nRoundWin >= 1 /* 4명이면 보석 3개 모으기 */) {
+		if (pWinner->m_nRoundWin >= 3 /* 4명이면 보석 3개 모으기 */) {
 			status.bFinalOver = TRUE;
 			SendFinalRoundOver(pWinner);
 			return;

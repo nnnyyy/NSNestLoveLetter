@@ -12,6 +12,7 @@
 #include "GameDealer.h"
 #include "Room.h"
 #include "MysqlMan.h"
+#include "LogMan.h"
 
 using boost::asio::ip::tcp;	
 
@@ -42,7 +43,7 @@ void CConnection::handle_Read(const boost::system::error_code& err, size_t byte_
 				));
 	}
 	else {		
-		std::cout << m_uSocketSN << " - Disconnect(Write) : " << err.message() << std::endl;
+		LogAdd(boost::str(boost::format("[Disconnected] SocketSN : %d, pUser : %d") % m_uSocketSN % m_pUser));
 		Server_Wrapper::get_mutable_instance().m_pServer->RemoveSocket(shared_from_this());		
 		if (m_pUser) {
 			Server_Wrapper::m_mUsers.erase(m_pUser->m_nUserSN);
@@ -60,11 +61,13 @@ void CConnection::handle_Write(const boost::system::error_code& err, size_t byte
 
 void CConnection::start() {	
 	time_t now = time(0);	
-	m_sMsg = "Hello";
-	std::cout << "Scoket Connected : " << m_Socket.remote_endpoint().address().to_string() << std::endl;
-	boost::asio::async_write(m_Socket, boost::asio::buffer(m_sMsg), 
-		boost::bind(&CConnection::handle_Accept, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred
-		));
+	LogAdd(boost::str(boost::format("Scoket Connected : %s") 
+		% m_Socket.remote_endpoint().address().to_string()));
+
+	m_Socket.async_read_some(
+		boost::asio::buffer(m_RecvBuf),
+		boost::bind(&CConnection::handle_Read, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred
+			));
 }
 
 void CConnection::ProcessPacket(InPacket &iPacket) {
@@ -133,6 +136,7 @@ void CConnection::OnLogin(InPacket &iPacket) {
 	LONG nSN = -1, nRet = 0;
 	std::string sNick;
 	if ((nRet = CMysqlManager::get_mutable_instance().Login(sID, sPW, nSN, sNick)) != 0) {
+		LogAdd(boost::str(boost::format("[Login] Error id: %s, Ret: %d") % sID % nRet));
 		OutPacket oPacket(GCP_LoginRet);
 		oPacket.Encode2(nRet);
 		SendPacket(oPacket);
@@ -150,7 +154,6 @@ void CConnection::OnLogin(InPacket &iPacket) {
 	oPacket.Encode2(0);
 	oPacket.Encode4(pUser->m_nUserSN);	
 	oPacket.EncodeStr(pUser->m_sNick);
-	SendPacket(oPacket);
-
-	std::cout << "Logined : " << sID << ", " << pUser->m_nUserSN << ", " << pUser->m_sNick << std::endl;
+	SendPacket(oPacket);	
+	LogAdd(boost::str(boost::format("Logined : %s, %d, %s") % sID % pUser->m_nUserSN % pUser->m_sNick));
 }
