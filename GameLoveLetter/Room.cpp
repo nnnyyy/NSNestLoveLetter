@@ -185,11 +185,13 @@ CRoom::pointer CRoomManager::MakeRoom() {
 }
 
 void CRoomManager::Register(CRoom::pointer pRoom) {
+	boost::lock_guard<boost::mutex> lock(m_LockMutex);
 	m_vRooms.push_back(pRoom);
 	m_mRooms.insert(std::pair<LONG, CRoom::pointer >(pRoom->GetSN(),pRoom));
 }
 
 CRoom::pointer CRoomManager::GetRoom(LONG nSN) {
+	boost::lock_guard<boost::mutex> lock(m_LockMutex);
 	if (m_mRooms.find(nSN) == m_mRooms.end()) return NULL;
 	return m_mRooms.at(nSN);
 }
@@ -198,8 +200,10 @@ void CRoomManager::Update() {
 	for (std::vector<CRoom::pointer>::iterator iter = m_vRooms.begin(); iter != m_vRooms.end(); ) {
 		if ((*iter)->GetUserCount() <= 0 ) {
 			(*iter)->Destroy();
-			m_mRooms.erase((*iter)->GetSN());
-			iter = m_vRooms.erase(iter);			
+			m_LockMutex.lock();
+			m_mRooms.erase((*iter)->GetSN());			
+			iter = m_vRooms.erase(iter);
+			m_LockMutex.unlock();
 			continue;
 		}
 		(*iter)->Update(0);
@@ -208,6 +212,7 @@ void CRoomManager::Update() {
 }
 
 void CRoomManager::MakeRoomListPacket(OutPacket& oPacket) {
+	boost::lock_guard<boost::mutex> lock(m_LockMutex);
 	oPacket.Encode4(m_vRooms.size());
 	for (std::vector<CRoom::pointer>::iterator iter = m_vRooms.begin(); iter != m_vRooms.end(); ++iter) {
 		CRoom::pointer pRoom = *iter;
