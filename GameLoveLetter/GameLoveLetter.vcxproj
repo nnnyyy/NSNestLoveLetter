@@ -159,6 +159,8 @@
   <ItemGroup>
     <ClInclude Include="Connection.h" />
     <ClInclude Include="GameDealer.h" />
+    <ClInclude Include="LogMan.h" />
+    <ClInclude Include="MinidumpHelp.h" />
     <ClInclude Include="MysqlMan.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="Packet.h" />
@@ -173,6 +175,8 @@
     <ClCompile Include="Connection.cpp" />
     <ClCompile Include="GameDealer.cpp" />
     <ClCompile Include="GameLoveLetter.cpp" />
+    <ClCompile Include="LogMan.cpp" />
+    <ClCompile Include="MinidumpHelp.cpp" />
     <ClCompile Include="MysqlMan.cpp" />
     <ClCompile Include="Packet.cpp" />
     <ClCompile Include="Room.cpp" />

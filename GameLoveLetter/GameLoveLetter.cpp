@@ -13,6 +13,9 @@
 #include "GameDealer.h"
 #include "Room.h"
 #include "MysqlMan.h"
+#include "MinidumpHelp.h"
+
+MinidumpHelp g_miniDump;
 
 class CThreadManager {
 public:
@@ -26,12 +29,14 @@ public:
 
 int main()
 {
+	g_miniDump.install_self_mini_dump();
+
+	int *p = NULL;
+	*p = 10;
+
 	if (!CMysqlManager::get_mutable_instance().Connect()) {
 		return -1;
-	}	
-
-	LONG nSN;
-	CMysqlManager::get_mutable_instance().Login("nnnyyy", "s1980819", nSN);	
+	}
 
 	try {
 		boost::asio::io_service io;

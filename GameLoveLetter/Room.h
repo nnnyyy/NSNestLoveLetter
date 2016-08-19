@@ -51,6 +51,7 @@ public:
 	typedef boost::shared_ptr<CRoom> pointer;
 	LONG GetSN() const { return m_nSN; }
 	void ResetReady();
+	BOOL IsGameRunning() const { return m_bGameStart; }
 };
 
 class CRoomManager : public boost::serialization::singleton<CRoomManager> {

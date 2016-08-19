@@ -18,13 +18,19 @@
 #define MYSQL_DATABASE "game_love_letter"
 #define MYSQL_LL_PORT (3306)
 
+#define LOCAL_DB_CONNECT
+
 BOOL CMysqlManager::Connect() {
 
 	try {
 		sql::Driver *driver;
 		driver = get_driver_instance();
-		//conn = boost::shared_ptr<sql::Connection>(driver->connect("tcp://52.79.205.198:3306", MYSQL_ID, MYSQL_PW));
+#if defined(LOCAL_DB_CONNECT)
 		conn = boost::shared_ptr<sql::Connection>(driver->connect("tcp://127.0.0.1:3306", MYSQL_ID, MYSQL_PW));
+#else
+		conn = boost::shared_ptr<sql::Connection>(driver->connect("tcp://52.79.205.198:3306", MYSQL_ID, MYSQL_PW));
+#endif
+		
 		conn->setSchema(MYSQL_DATABASE);
 	}
 	catch (sql::SQLException& e) {
@@ -36,20 +42,21 @@ BOOL CMysqlManager::Connect() {
 }
 
 
-LONG CMysqlManager::Login(std::string sID, std::string sPW, LONG& nSN) {
+LONG CMysqlManager::Login(std::string sID, std::string sPW, LONG& nSN, std::string &sNick) {
 	
 	LONG nRet;
 	try {
 		stmt.reset(conn->createStatement());
-		pstmt.reset(conn->prepareStatement("CALL Login(?,?,@nRet,@nSN)"));
+		pstmt.reset(conn->prepareStatement("CALL Login(?,?,@nRet,@nSN, @sNick)"));
 		pstmt->setString(1, sID);
 		pstmt->setString(2, sPW);
 		pstmt->execute();
 
-		rs.reset(stmt->executeQuery("SELECT @nRet AS nRet, @nSN AS nSN"));		
+		rs.reset(stmt->executeQuery("SELECT @nRet AS nRet, @nSN AS nSN, @sNick AS sNick"));
 		while (rs->next()) {
 			nRet = rs->getInt("nRet");
 			nSN = rs->getInt("nSN");
+			sNick = rs->getString("sNick");
 		}
 	}
 	catch (sql::SQLException& e) {

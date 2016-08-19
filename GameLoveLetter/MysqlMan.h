@@ -14,7 +14,7 @@ public:
 	BOOL Connect();
 	BOOL IsConnect() const { return m_bConnect; }	
 
-	LONG Login(std::string sID, std::string sPW, LONG& nSN);
+	LONG Login(std::string sID, std::string sPW, LONG& nSN, std::string &sNick);
 	LONG Logout(LONG nSN);
 
 protected:
