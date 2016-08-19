@@ -102,6 +102,7 @@ protected:
 	BOOL DropCard(Player::pointer pPlayer, LONG nCardType);
 	void ExchangeCard(Player::pointer pPlayer1, Player::pointer pPlayer2);
 	void Dead(Player::pointer pPlayer);
+	BOOL FindTarget(Player::pointer pTurnPlayer);
 
 	void AllReset();
 	void SendFinalRoundOver();

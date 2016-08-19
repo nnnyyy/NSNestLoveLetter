@@ -93,8 +93,8 @@ void CGameDealerLoveLetter::OnGuardAction(InPacket& iPacket, CUser::pointer pUse
 		//	경비병을 직접 지목할 수 없다.
 		return;
 	}
-
-	if (nTargetIdx == status.nCurTurnIndex) {
+	
+	if (FindTarget(pTurnPlayer) && nTargetIdx == status.nCurTurnIndex) {
 		//	내 자신을 지목할 수 없다.
 		return;
 	}
@@ -151,7 +151,7 @@ void CGameDealerLoveLetter::OnRoyalSubjectAction(InPacket& iPacket, CUser::point
 	if (m_vPlayers.size() <= nTargetIdx) return;
 	Player::pointer pTargetPlayer = m_vPlayers[nTargetIdx];
 
-	if (nTargetIdx == status.nCurTurnIndex) {
+	if (FindTarget(pTurnPlayer) && nTargetIdx == status.nCurTurnIndex) {
 		//	내 자신을 지목할 수 없다.
 		return;
 	}
@@ -342,6 +342,11 @@ void CGameDealerLoveLetter::OnWizardAction(InPacket& iPacket, CUser::pointer pUs
 		return;
 	}	
 
+	if (FindTarget(pTurnPlayer) && nWho == status.nCurTurnIndex) {
+		//	타겟이 남아있는데 나에게 쓰는건 안됨
+		return;
+	}
+
 	BOOL bDrop = DropCard(pTurnPlayer, LOVELETTER_WIZARD);
 	if (!bDrop) {
 		//	오류
@@ -461,6 +466,17 @@ void CGameDealerLoveLetter::Dead(Player::pointer pPlayer) {
 		BOOST_ASSERT(pPlayer->m_vHandCards.empty());		
 		pPlayer->m_vGroundCards.push_back(pCard);
 	}	
+}
+
+BOOL CGameDealerLoveLetter::FindTarget(Player::pointer pTurnPlayer) {
+	for each (Player::pointer p in m_vPlayers)
+	{
+		if (p != pTurnPlayer && !p->m_bDead && !p->m_bGuard) {
+			return TRUE;
+		}
+	}
+
+	return FALSE;
 }
 
 void CGameDealerLoveLetter::Update() {		
