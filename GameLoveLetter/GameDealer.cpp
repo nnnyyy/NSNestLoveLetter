@@ -466,8 +466,13 @@ void CGameDealerLoveLetter::Dead(Player::pointer pPlayer) {
 void CGameDealerLoveLetter::Update() {		
 	if (status.bRoundOver && 
 		duration_cast<milliseconds>(system_clock::now() - status.tRoundOverStart).count() >= GameStatus::WAIT_NEXT_ROUND_TIME ) {
-		InitGame();
-		Process();
+		if (status.bFinalOver) {
+			AllReset();
+		}
+		else {
+			InitGame();
+			Process();
+		}		
 		return;
 	}
 }
@@ -479,6 +484,7 @@ void CGameDealerLoveLetter::InitGame() {
 	status.bRoundOver = FALSE;
 	if (status.nPrevRoundWinIndex != -1) {
 		status.nCurTurnIndex = status.nPrevRoundWinIndex;
+		status.bFinalOver = FALSE;
 	}
 	else {
 		status.nCurTurnIndex = 0;
@@ -564,8 +570,7 @@ void CGameDealerLoveLetter::GameOver(LONG nReason) {
 	//	이 함수 내에서 더 이상 게임 패킷을 받지 않게 플래그를 설정하고,
 	//	누가 이겼는지 게임 결과를 보내도록 한다.
 	//	라운드가 남아 있다면 다음 라운드를 진행하고
-	//	그것도 다 이겼으면 최종 결과 처리를 한다.
-	status.bRoundOver = TRUE;
+	//	그것도 다 이겼으면 최종 결과 처리를 한다.	
 	Player::pointer pWinner;
 	if (nReason == GAMEOVER_DECK_IS_EMPTY) {		
 		for each (Player::pointer p in m_vPlayers)
@@ -597,13 +602,26 @@ void CGameDealerLoveLetter::GameOver(LONG nReason) {
 
 	if (pWinner) {
 		//	이 분이 이 라운드의 승자임
-		//pWinner->m_nRoundWin++;
-		//	만약 모든 라운드를 다 이겼으면 한 게임 종료
-		CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
-		OutPacket oPacket(GCP_GameLoveLetter);
-		oPacket.Encode2(GCP_LL_RoundResult);
-		oPacket.Encode4(pWinner->m_nIndex);
-		pRoom->BroadcastPacket(oPacket);
+		pWinner->m_nRoundWin++;
+		status.bRoundOver = TRUE;
+		status.tRoundOverStart = system_clock::now();
+
+		if (pWinner->m_nRoundWin >= 3 /* 4명이면 보석 3개 모으기 */) {
+			status.bFinalOver = TRUE;
+			SendFinalRoundOver();			
+			return;
+		}
+		else {			
+			CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+			OutPacket oPacket(GCP_GameLoveLetter);
+			oPacket.Encode2(GCP_LL_RoundResult);
+			oPacket.Encode4(pWinner->m_nIndex);
+			pRoom->BroadcastPacket(oPacket);
+		}		
+	}
+	else {
+		//	말도 안됨.
+		//	방폭이나 리셋을 하자.
 	}
 }
 
@@ -714,4 +732,20 @@ void CGameDealerLoveLetter::Player::Encode(OutPacket& oPacket) {
 	oPacket.Encode1(m_vGroundCards.size());
 	oPacket.Encode1(m_bDead);
 	oPacket.Encode1(m_bGuard);
+}
+
+void CGameDealerLoveLetter::AllReset() {
+	//	
+	status.Reset();
+	m_vPlayers.clear();
+
+}
+
+void CGameDealerLoveLetter::SendFinalRoundOver() {
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+	OutPacket oPacket(GCP_GameLoveLetter);
+	oPacket.Encode2(GCP_LL_FinalResult);
+	pRoom->BroadcastPacket(oPacket);
+	pRoom->ResetReady();
+	pRoom->BroadcastRoomState();
 }

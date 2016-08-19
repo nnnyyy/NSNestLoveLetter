@@ -46,4 +46,5 @@ enum {
 	GCP_LL_Status,		//	방 상태 정보			
 	GCP_LL_ActionRet,	//	카드 사용 결과
 	GCP_LL_RoundResult,	//	한 라운드 결과
+	GCP_LL_FinalResult,	//	최종 결과
 };

@@ -40,12 +40,14 @@ public:
 
 	class Player : public boost::enable_shared_from_this<Player> {
 	public:
+		Player() : m_nRoundWin(0) {}
 		ULONG nUserSN;
 		LONG m_nIndex;
 		BOOL m_bDead;
 		BOOL m_bGuard;
 		std::vector<Card::pointer> m_vHandCards;
 		std::vector<Card::pointer> m_vGroundCards;
+		LONG m_nRoundWin;
 
 		void Init();
 		void Encode(OutPacket& oPacket);
@@ -54,14 +56,20 @@ public:
 
 	class GameStatus {
 	public:
-		GameStatus() : nPrevRoundWinIndex(-1), nCurTurnIndex(0) {}
+		GameStatus() : nPrevRoundWinIndex(-1), nCurTurnIndex(0), bFinalOver(FALSE), bRoundOver(FALSE) {}
 		LONG nPrevRoundWinIndex;	//	이전 경기 승리 플레이어		
 		LONG nCurTurnIndex;			//	현재 턴 플레이어
 		BOOL bRoundOver;			//	현재 라운드가 종료 되었는지
+		BOOL bFinalOver;
 		boost::chrono::system_clock::time_point tRoundOverStart;		//	다음 라운드까지 중간에 티타임을 가지기 위함.
 		enum { WAIT_NEXT_ROUND_TIME = 5 * 1000, };
 
 		void EncodeStatus(OutPacket& oPacket);
+		void Reset() {
+			nPrevRoundWinIndex = -1;
+			nCurTurnIndex = 0;
+			bRoundOver = FALSE;			
+		}
 	};
 
 	CGameDealerLoveLetter();
@@ -94,6 +102,9 @@ protected:
 	BOOL DropCard(Player::pointer pPlayer, LONG nCardType);
 	void ExchangeCard(Player::pointer pPlayer1, Player::pointer pPlayer2);
 	void Dead(Player::pointer pPlayer);
+
+	void AllReset();
+	void SendFinalRoundOver();
 
 public:
 	typedef boost::shared_ptr<CGameDealerLoveLetter> pointer;

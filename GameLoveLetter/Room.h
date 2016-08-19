@@ -50,6 +50,7 @@ private:
 public:
 	typedef boost::shared_ptr<CRoom> pointer;
 	LONG GetSN() const { return m_nSN; }
+	void ResetReady();
 };
 
 class CRoomManager : public boost::serialization::singleton<CRoomManager> {
@@ -64,7 +65,7 @@ public:
 
 	void Update();	
 
-	void MakeRoomListPacket(OutPacket& oPacket);
+	void MakeRoomListPacket(OutPacket& oPacket);	
 
 protected:
 	std::vector<CRoom::pointer> m_vRooms;

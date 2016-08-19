@@ -162,6 +162,18 @@ void CRoom::RemoveUser(CUser::pointer pUser) {
 	BroadcastRoomState();
 }
 
+void CRoom::ResetReady() {
+	for each (CUser::pointer pUser in m_vUsers)
+	{
+		if (pUser == m_pMaster) {
+			m_pMaster->m_bReady = TRUE;
+		}
+		else {
+			pUser->m_bReady = FALSE;
+		}
+	}
+}
+
 CRoom::pointer CRoomManager::MakeRoom() {
 	CRoom::pointer pRoom(new CRoom);	
 	return pRoom;
