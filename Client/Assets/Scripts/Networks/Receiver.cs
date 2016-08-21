@@ -21,6 +21,7 @@ namespace NSNetwork
                 case eGCP.GCP_EnterRoomRet:     Receiver.OnEnterRoomRet(new GCPEnterRoomRet(data));         break;
                 case eGCP.GCP_LeaveRoomRet:     Receiver.OnLeaveRoomRet(new GCPLeaveRoomRet(data));         break;
                 case eGCP.GCP_RoomState:        Receiver.OnRoomState(new GCPRoomState(data));               break;
+                case eGCP.GCP_GameStartRet:     Receiver.OnGameStartRet(new GCPGameStartRet(data));         break;
                 case eGCP.GCP_GameLoveLetter:   Receiver.OnReceiveGameLoveLetter(packet);                   break;
             }
         }
@@ -39,6 +40,7 @@ namespace NSNetwork
                 case eGCP_LoveLetter.GCP_LL_Status:         Receiver.OnLLStatus(new GCPLLStatus(data));             break;
                 case eGCP_LoveLetter.GCP_LL_ActionRet:      Receiver.OnLLActionRet(new GCPLLActionRet(data));       break;
                 case eGCP_LoveLetter.GCP_LL_RoundResult:    Receiver.OnLLRoundResult(new GCPLLRoundResult(data));   break;
+                case eGCP_LoveLetter.GCP_LL_FinalResult:    Receiver.OnLLFinalResult(new GCPLLFinalResult(data));   break;
             }
         }
 
@@ -130,6 +132,16 @@ namespace NSNetwork
                 onRoomStateCallback(packet);
         }
 
+        public delegate void GameStartRestDelegate(GCPGameStartRet gameStartRet);
+        public static GameStartRestDelegate onGameStartRetCallback;
+
+        static void OnGameStartRet(GCPGameStartRet packet)
+        {
+            Debug.Log("### OnGameStartRet ###");
+            if (onGameStartRetCallback != null)
+                onGameStartRetCallback(packet);
+        }
+
 
         // Game Love Letter
         public delegate void LLStatusDelegate(GCPLLStatus llStatus);
@@ -160,6 +172,16 @@ namespace NSNetwork
             Debug.Log("### OnLLRoundResult ###");
             if (onLLRoundResultCallback != null)
                 onLLRoundResultCallback(packet);
+        }
+
+        public delegate void LLFinalResultDelagate(GCPLLFinalResult llFinalResult);
+        public static LLFinalResultDelagate onLLFinalResultCallback;
+
+        static void OnLLFinalResult(GCPLLFinalResult packet)
+        {
+            Debug.Log("### OnLLFinalResult ###");
+            if (onLLFinalResultCallback != null)
+                onLLFinalResultCallback(packet);
         }
     }
 }

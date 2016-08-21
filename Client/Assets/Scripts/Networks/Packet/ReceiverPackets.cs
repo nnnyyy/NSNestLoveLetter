@@ -17,11 +17,18 @@ namespace NSNetwork
         }
 
         public eResult result;
+        public int sn = 0;
+        public string nickName = "";
 
         public GCPLoginRet(byte[] data)
         {
             type = (eGCP)GetShort(data);
             result = (eResult)GetShort(data);
+            if(result == eResult.Success)
+            {
+                sn = GetInt(data);
+                nickName = GetString(data);
+            }
         }
     }
 
@@ -77,13 +84,15 @@ namespace NSNetwork
         }
 
         public eResult result;
-        public int sn;
+        public int sn = 0;
 
         public GCPEnterRoomRet(byte[] data)
         {
             type = (eGCP)GetShort(data);
             result = (eResult)GetShort(data);
-            sn = GetInt(data);
+
+            if(result == eResult.Success)
+                sn = GetInt(data);
         }
     }
 
@@ -101,8 +110,9 @@ namespace NSNetwork
     {
         public class UserInfo
         {
-            public int sn;
-            public char readyState;
+            public int sn = 0;
+            public string nickName = "";
+            public char readyState = (char)0;
         }
 
         public int flag;
@@ -117,9 +127,29 @@ namespace NSNetwork
             {
                 UserInfo user = new UserInfo();
                 user.sn = GetInt(data);
+                user.nickName = GetString(data);
                 user.readyState = GetChar(data);
                 listUsers.Add(user);
             }
+        }
+    }
+
+    public class GCPGameStartRet : ReceivePacket
+    {
+        public enum eResult
+        {
+            Success = 0,
+            NotEnoughUser = -1,
+            NotRoomMaster = -2,
+            NotAllReady = -3
+        }
+
+        public eResult result;
+
+        public GCPGameStartRet(byte[] data)
+        {
+            type = (eGCP)GetShort(data);
+            result = (eResult)GetInt(data);
         }
     }
 
@@ -180,6 +210,17 @@ namespace NSNetwork
         {
             type = (eGCP)GetShort(data);
             eGCP_LoveLetter llType = (eGCP_LoveLetter)GetShort(data);
+            winUserIndex = GetInt(data);
+        }
+    }
+
+    public class GCPLLFinalResult : ReceivePacket
+    {
+        public int winUserIndex;
+        public GCPLLFinalResult(byte[] data)
+        {
+            type = (eGCP)GetShort(data);
+            eGCP_LoveLetter lltype = (eGCP_LoveLetter)GetShort(data);
             winUserIndex = GetInt(data);
         }
     }
