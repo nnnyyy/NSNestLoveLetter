@@ -71,4 +71,5 @@ public:
 protected:
 	std::vector<CRoom::pointer> m_vRooms;
 	std::map<LONG, CRoom::pointer> m_mRooms;
+	boost::mutex m_LockMutex;
 };

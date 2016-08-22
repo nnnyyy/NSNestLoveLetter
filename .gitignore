@@ -295,3 +295,7 @@ TestCSharpServer/NSTestCSharpServer/NSTestCSharpServer/App.config
 TestCSharpServer/NSTestCSharpServer/NSTestCSharpServer/Program.cs
 TestCSharpServer/NSTestCSharpServer/NSTestCSharpServer/Properties/AssemblyInfo.cs
 TestCSharpServer/NSTestCSharpServer/NSTestCSharpServer/Server.cs
+Client/Assets/NGUI/Examples/Models/Orc Armor/Materials/orc.mat
+Client/Assets/NGUI/Examples/Models/Orc Armor/Materials/orc.mat.meta
+Client/Assets/NGUI/Examples/Models/Orc/Materials/orc_col_1.mat
+Client/Assets/NGUI/Examples/Models/Orc/Materials/orc_col_1.mat.meta

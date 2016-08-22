@@ -13,6 +13,7 @@
 
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <ctime>
 #include <list>
@@ -25,4 +26,5 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/chrono.hpp>
+#include <boost/format.hpp>
 #include "Object.h"
