@@ -49,6 +49,15 @@ namespace NSNetwork
             network.Connect(ip, port);
         }
 
+        public void Disconnect()
+        {
+            if (network == null)
+                return;
+
+            if (network.IsConnected() == true)
+                network.Discconnect();
+        }
+
         public void Send(SendPacket packet)
         {
             listSend.AddLast(packet);

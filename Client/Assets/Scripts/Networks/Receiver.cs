@@ -44,21 +44,20 @@ namespace NSNetwork
             }
         }
 
-        public delegate void LoginRetDelegate(GCPLoginRet.eResult result);
+        public delegate void LoginRetDelegate(GCPLoginRet loginRet);
         public static LoginRetDelegate onLoginRetCallback;
 
         static void OnLogin(GCPLoginRet packet)
         {
-            switch (packet.result)
+            Debug.Log("### OnLogin ###");
+            if (packet.result == GCPLoginRet.eResult.Success)
             {
-                case GCPLoginRet.eResult.Success:              Debug.Log("Login Success..");                   break;
-                case GCPLoginRet.eResult.ErrorIdOrPassword:    Debug.Log("Error Id Or Password..");            break;
-                case GCPLoginRet.eResult.NotJoined:            Debug.Log("Not Joinedg..");                     break;
-                case GCPLoginRet.eResult.NowConneting:         Debug.Log("Now Conneting..");                   break;
+                GlobalData.Instance.UserNickname = packet.nickName;
+                GlobalData.Instance.userSN = packet.sn;
             }
 
             if (onLoginRetCallback != null)
-                onLoginRetCallback(packet.result);
+                onLoginRetCallback(packet);
         }
 
         public delegate void RoomListRetDelegate(GCPRoomListRet roomListRet);
@@ -67,28 +66,24 @@ namespace NSNetwork
         static void OnRoomListRet(GCPRoomListRet packet)
         {
             Debug.Log("### OnRoomListRet ###");
-            for( int i = 0; i < packet.listRooms.Count; ++i )
-            {
-                Debug.Log("Room SN >> " + packet.listRooms[i].sn + ", Count >> " + (int)(packet.listRooms[i].userCount));
-            }
 
             if (onRoomListRetCallback != null)
                 onRoomListRetCallback(packet);
         }
 
-        public delegate void CreateRoomRetDelegate(GCPCreateRoomRet.eReuslt result);
+        public delegate void CreateRoomRetDelegate(GCPCreateRoomRet createRoomRet);
         public static CreateRoomRetDelegate onCreateRoomRetCallback;
 
         static void OnCreateRoomRet(GCPCreateRoomRet packet)
         {
             Debug.Log("### OnCreateRoomRet ###");
             if (packet.result == GCPCreateRoomRet.eReuslt.Success)
-                Debug.Log("Create Success >> " + packet.sn);
-            else
-                Debug.Log("Create Fail..");
+            {
+                GlobalData.Instance.roomSN = packet.sn;
+            }
 
             if (onCreateRoomRetCallback != null)
-                onCreateRoomRetCallback(packet.result);
+                onCreateRoomRetCallback(packet);
         }
 
         public delegate void EnterRoomRetDelegate(GCPEnterRoomRet enterRoomRet);
@@ -97,8 +92,10 @@ namespace NSNetwork
         static void OnEnterRoomRet(GCPEnterRoomRet packet)
         {
             Debug.Log("### OnEnterRoomRet ###");
-            Debug.Log(packet.result);
-            Debug.Log(packet.sn);
+            if (packet.result == GCPEnterRoomRet.eResult.Success)
+            {
+                GlobalData.Instance.roomSN = packet.sn;
+            }
 
             if (onEnterRoomRetCallback != null)
                 onEnterRoomRetCallback(packet);
@@ -110,7 +107,7 @@ namespace NSNetwork
         static void OnLeaveRoomRet(GCPLeaveRoomRet packet)
         {
             Debug.Log("### LeaveRoomRet ###");
-            Debug.Log(packet.sn);
+            GlobalData.Instance.roomSN = 0;
 
             if (onLeaveRoomRetCallback != null)
                 onLeaveRoomRetCallback(packet);
@@ -122,11 +119,7 @@ namespace NSNetwork
         static void OnRoomState(GCPRoomState packet)
         {
             Debug.Log("### OnRoomState ###");
-            Debug.Log(packet.flag);
-            for( int i = 0; i < packet.listUsers.Count; ++ i)
-            {
-                Debug.Log( "sn >> " + packet.listUsers[i].sn + ", ready >> " + (int)(packet.listUsers[i].readyState) );
-            }
+            GlobalData.Instance.roomUsers = packet.listUsers;
 
             if (onRoomStateCallback != null)
                 onRoomStateCallback(packet);

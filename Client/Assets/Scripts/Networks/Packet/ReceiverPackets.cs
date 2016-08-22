@@ -71,7 +71,9 @@ namespace NSNetwork
         {
             type = (eGCP)GetShort(data);
             result = (eReuslt)GetShort(data);
-            sn = GetInt(data);
+
+            if(result == eReuslt.Success)
+                sn = GetInt(data);
         }
     }
 

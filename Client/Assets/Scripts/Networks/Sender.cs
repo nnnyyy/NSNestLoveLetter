@@ -23,6 +23,12 @@ namespace NSNetwork
             NetworkUnityEvent.Instance.Send(createRoom);
         }
 
+        public static void EnterRoom(int sn)
+        {
+            CGPEnterRoom enterRoom = new CGPEnterRoom(sn);
+            NetworkUnityEvent.Instance.Send(enterRoom);
+        }
+
         public static void LeaveRoom()
         {
             CGPLeaveRoom leaveRoom = new CGPLeaveRoom();

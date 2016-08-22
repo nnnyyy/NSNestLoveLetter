@@ -32,6 +32,16 @@ namespace NSNetwork
         }
     }
 
+    public class CGPEnterRoom : SendPacket
+    {
+        public CGPEnterRoom(int sn)
+        {
+            AddShort((short)eCGP.CGP_EnterRoom);
+            AddInt(sn);
+            CreateData();
+        }
+    }
+
     public class CGPLeaveRoom : SendPacket
     {
         public CGPLeaveRoom()
