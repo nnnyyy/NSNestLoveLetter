@@ -38,14 +38,14 @@ namespace NSNest.UI
             {
                 btnOK.SetActive(true);
                 btnCancel.SetActive(false);
-                btnOK.transform.localPosition = new Vector3(0f, -110f, 0f);
+                btnOK.transform.localPosition = new Vector3(0f, -150f, 0f);
             }
             else
             {
                 btnOK.SetActive(true);
                 btnCancel.SetActive(true);
-                btnOK.transform.localPosition = new Vector3(-60f, -110f, 0f);
-                btnCancel.transform.localPosition = new Vector3(60f, -110f, 0f);
+                btnOK.transform.localPosition = new Vector3(-90f, -150f, 0f);
+                btnCancel.transform.localPosition = new Vector3(90f, -150f, 0f);
             }
         }
 

@@ -13,7 +13,7 @@ namespace NSNest.UI
         public UILabel labelRoomListIndex;
         public UILabel labelRoomCreateLeave;
 
-        protected readonly int SLOT_COUNT = 2;
+        protected readonly int SLOT_COUNT = 3;
         protected List<GCPRoomListRet.RoomInfo> listRooms;
         protected int roomlistIndex = 0;
         protected int roomListMax = 0;
@@ -42,8 +42,7 @@ namespace NSNest.UI
 
         void CreateEmptyRooms()
         {
-            float startY = 120f;
-            float gapY = -170f;
+            float gapY = -190f;
             rooms = new RoomItem[SLOT_COUNT];
             GameObject prafab = Resources.Load<GameObject>("UI/GUI_RoomItem");
             for( int i = 0; i < rooms.Length; ++i )
@@ -51,7 +50,7 @@ namespace NSNest.UI
                 GameObject obj = GameObject.Instantiate(prafab) as GameObject;
                 obj.transform.parent = rootSlot.transform;
                 obj.transform.localScale = Vector3.one;
-                obj.transform.localPosition = new Vector3(0f, startY + (gapY * i), 0f);
+                obj.transform.localPosition = new Vector3(0f, (gapY * i), 0f);
                 obj.name = "Slot_" + i.ToString("D2");
                 rooms[i] = obj.GetComponent<RoomItem>();
                 rooms[i].Show(null);
