@@ -122,7 +122,7 @@ LONG CMysqlManager::GetGameDataFromDB(LONG nSN, CGameData& _data) {
 	return 0;
 }
 
-LONG CMysqlManager::SetGameDataFromDB(LONG nSN, CGameData& _data) {
+LONG CMysqlManager::SetGameDataToDB(LONG nSN, CGameData& _data) {
 	try {
 		stmt.reset(conn->createStatement());
 		pstmt.reset(conn->prepareStatement("CALL SetGameData(?,"

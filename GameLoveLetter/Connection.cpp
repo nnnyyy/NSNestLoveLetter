@@ -47,7 +47,7 @@ void CConnection::handle_Read(const boost::system::error_code& err, size_t byte_
 		Server_Wrapper::get_mutable_instance().m_pServer->RemoveSocket(shared_from_this());		
 		if (m_pUser) {
 			Server_Wrapper::m_mUsers.erase(m_pUser->m_nUserSN);
-			CMysqlManager::get_mutable_instance().SetGameDataFromDB(m_pUser->m_nUserSN, m_pUser->gamedata);
+			CMysqlManager::get_mutable_instance().SetGameDataToDB(m_pUser->m_nUserSN, m_pUser->gamedata);
 			CMysqlManager::get_mutable_instance().Logout(m_pUser->m_nUserSN);
 			m_pUser->PostDisconnect();
 			m_pUser = NULL;
@@ -144,12 +144,12 @@ void CConnection::OnLogin(InPacket &iPacket) {
 		return;
 	}
 		
-	boost::shared_ptr<CUser> pUser(new CUser());	
-	CMysqlManager::get_mutable_instance().GetGameDataFromDB(pUser->m_nUserSN, pUser->gamedata);
+	boost::shared_ptr<CUser> pUser(new CUser());
 	pUser->SetConnection(m_uSocketSN);
 	pUser->m_nUserSN = nSN;
 	pUser->m_sNick = sNick;
 	m_pUser = pUser;
+	CMysqlManager::get_mutable_instance().GetGameDataFromDB(pUser->m_nUserSN, pUser->gamedata);
 	Server_Wrapper::m_mUsers.insert(std::pair<ULONG, CUser::pointer >(pUser->m_nUserSN, pUser));
 	
 	OutPacket oPacket(GCP_LoginRet);
