@@ -3,11 +3,11 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
+#include "GameData.h"
 #include "PacketProtocol.h"
 #include "Packet.h"
 #include "User.h"
 #include "Connection.h"
-#include "User.h"
 #include "Server.h"
 #include "GameDealer.h"
 #include "Room.h"
@@ -47,6 +47,7 @@ void CConnection::handle_Read(const boost::system::error_code& err, size_t byte_
 		Server_Wrapper::get_mutable_instance().m_pServer->RemoveSocket(shared_from_this());		
 		if (m_pUser) {
 			Server_Wrapper::m_mUsers.erase(m_pUser->m_nUserSN);
+			CMysqlManager::get_mutable_instance().SetGameDataFromDB(m_pUser->m_nUserSN, m_pUser->gamedata);
 			CMysqlManager::get_mutable_instance().Logout(m_pUser->m_nUserSN);
 			m_pUser->PostDisconnect();
 			m_pUser = NULL;
@@ -142,8 +143,9 @@ void CConnection::OnLogin(InPacket &iPacket) {
 		SendPacket(oPacket);
 		return;
 	}
-
-	boost::shared_ptr<CUser> pUser(new CUser());
+		
+	boost::shared_ptr<CUser> pUser(new CUser());	
+	CMysqlManager::get_mutable_instance().GetGameDataFromDB(pUser->m_nUserSN, pUser->gamedata);
 	pUser->SetConnection(m_uSocketSN);
 	pUser->m_nUserSN = nSN;
 	pUser->m_sNick = sNick;

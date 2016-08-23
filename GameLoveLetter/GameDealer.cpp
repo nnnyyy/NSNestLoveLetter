@@ -5,6 +5,7 @@
 #include <boost/asio.hpp>
 #include <algorithm>
 #include <random>
+#include "GameData.h"
 #include "PacketProtocol.h"
 #include "Packet.h"
 #include "User.h"

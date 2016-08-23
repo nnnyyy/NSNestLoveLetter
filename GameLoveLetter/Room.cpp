@@ -3,6 +3,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
+#include "GameData.h"
 #include "PacketProtocol.h"
 #include "Packet.h"
 #include "User.h"

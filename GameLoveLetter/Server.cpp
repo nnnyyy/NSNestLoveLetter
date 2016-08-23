@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
+#include "GameData.h"
 #include "Packet.h"
 #include "User.h"
 #include "Connection.h"

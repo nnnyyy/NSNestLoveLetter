@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <random>
 #include <boost/format.hpp>
-
+#include "GameData.h"
 #include "PacketProtocol.h"
 #include "Packet.h"
 #include "User.h"
@@ -80,6 +80,72 @@ LONG CMysqlManager::Logout(LONG nSN) {
 		if (e.getErrorCode() == 2006) Connect();
 		return -99;
 	}	
+
+	return 0;
+}
+
+LONG CMysqlManager::GetGameDataFromDB(LONG nSN, CGameData& _data) {
+	try {
+		stmt.reset(conn->createStatement());
+		pstmt.reset(conn->prepareStatement("CALL GetGameData(?, "
+			"@win,@lose,@forcedisconn,@useguard,"
+			"@successuseguard,@attackedbyguard,@usegossip,@successusegossip,"
+			"@attackedbygossip,@queenherowizard,@noroundwin)"));
+		pstmt->setInt(1, nSN);
+		pstmt->execute();
+
+		rs.reset(stmt->executeQuery("SELECT @win AS win, @lose AS lose, @forcedisconn AS fdisconn, "
+			"@useguard AS useguard, @successuseguard AS sccuseguard, @attackedbyguard AS attbyguard, "
+			"@usegossip AS usegossip, @successusegossip AS sccusegossip, @attackedbygossip AS attbygossip, "
+			"@queenherowizard AS qhw, @noroundwin AS noroundwin"
+			));
+		while (rs->next()) {
+			_data.m_nWin = rs->getInt("win");
+			_data.m_nLose = rs->getInt("lose");
+			_data.m_nForcedDisconn = rs->getInt("fdisconn");
+			_data.m_nUseGuard = rs->getInt("useguard");
+			_data.m_nSuccessUseGuard = rs->getInt("sccuseguard");
+			_data.m_nAttackedByGuard = rs->getInt("attbyguard");
+			_data.m_nUseGossip = rs->getInt("usegossip");
+			_data.m_nSuccessUseGossip = rs->getInt("sccusegossip");
+			_data.m_nAttackedByGossip = rs->getInt("attbygossip");
+			_data.m_nQueenHeroWizard = rs->getInt("qhw");
+			_data.m_nNoRoundWin = rs->getInt("noroundwin");
+		}
+	}
+	catch (sql::SQLException& e) {
+		std::cout << e.getErrorCode() << std::endl;
+		if (e.getErrorCode() == 2006) Connect();
+		return -99;
+	}
+
+	return 0;
+}
+
+LONG CMysqlManager::SetGameDataFromDB(LONG nSN, CGameData& _data) {
+	try {
+		stmt.reset(conn->createStatement());
+		pstmt.reset(conn->prepareStatement("CALL SetGameData(?,"
+			"?,?,?,?,?,?,?,?,?,?,?)"));
+		pstmt->setInt(1, nSN);
+		pstmt->setInt(2, _data.m_nWin);
+		pstmt->setInt(3, _data.m_nLose);
+		pstmt->setInt(4, _data.m_nForcedDisconn);
+		pstmt->setInt(5, _data.m_nUseGuard);
+		pstmt->setInt(6, _data.m_nSuccessUseGuard);
+		pstmt->setInt(7, _data.m_nAttackedByGuard);
+		pstmt->setInt(8, _data.m_nUseGossip);
+		pstmt->setInt(9, _data.m_nSuccessUseGossip);
+		pstmt->setInt(10, _data.m_nAttackedByGossip);
+		pstmt->setInt(11, _data.m_nQueenHeroWizard);
+		pstmt->setInt(12, _data.m_nNoRoundWin);
+		pstmt->execute();
+	}
+	catch (sql::SQLException& e) {
+		std::cout << e.getErrorCode() << std::endl;
+		if (e.getErrorCode() == 2006) Connect();
+		return -99;
+	}
 
 	return 0;
 }
