@@ -52,6 +52,7 @@ namespace NSNetwork
             Debug.Log("### OnLogin ###");
             if (packet.result == GCPLoginRet.eResult.Success)
             {
+                Debug.Log("nickname >> " + packet.nickName);
                 GlobalData.Instance.UserNickname = packet.nickName;
                 GlobalData.Instance.userSN = packet.sn;
             }
