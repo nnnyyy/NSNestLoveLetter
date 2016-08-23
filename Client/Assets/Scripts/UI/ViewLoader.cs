@@ -122,6 +122,11 @@ namespace NSNest.UI
                 requestResult(null, ViewLoadErrorCode.LoadFail);
         }
 
+        List<ViewName> m_ListRootException = new List<ViewName>()
+        {
+            ViewName.PopUpDefault
+        };
+
         Dictionary<ViewName, Queue<RequestResult>> m_DicResourceQueue = new Dictionary<ViewName, Queue<RequestResult>>();
         void LoadProcess(ViewName viewName, RequestResult requestResult)
         {
@@ -148,13 +153,16 @@ namespace NSNest.UI
                     if (trans == null)
                         ObjectAccessor.RegisterDock(viewName.Name, loadTransform);
 
-                    Transform transRoot = ObjectAccessor.GetDock("UI_ROOT");
-                    if(transRoot!=null)
+                    if(!m_ListRootException.Contains(viewName))
                     {
-                        loadTransform.parent = transRoot;
-                        loadTransform.localPosition = Vector3.zero;
-                        loadTransform.localRotation = Quaternion.identity;
-                        loadTransform.localScale = Vector3.one;
+                        Transform transRoot = ObjectAccessor.GetDock("UI_ROOT");
+                        if (transRoot != null)
+                        {
+                            loadTransform.parent = transRoot;
+                            loadTransform.localPosition = Vector3.zero;
+                            loadTransform.localRotation = Quaternion.identity;
+                            loadTransform.localScale = Vector3.one;
+                        }
                     }
 
                     Queue<RequestResult> waitQueue = null;
