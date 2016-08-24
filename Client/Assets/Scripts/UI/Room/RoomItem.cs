@@ -20,6 +20,8 @@ public class RoomItem : MonoBehaviour
     protected bool isInit = false;
     protected GCPRoomListRet.RoomInfo roomInfo;
 
+    protected readonly int MAX_PLAYER = 4;
+
     void Init()
     {
         if (isInit == true)
@@ -58,10 +60,18 @@ public class RoomItem : MonoBehaviour
         objOut.SetActive(false);
 
         var players = GlobalData.Instance.roomUsers;
-        for(int i = 0; i < players.Count; ++i)
+        for(int i = 0; i < MAX_PLAYER; ++i)
         {
-            labelPlayers[i].text = players[i].nickName;
-            labelReadys[i].text = (players[i].readyState > 0) ? "[O]" : "[X]";
+            if (i < players.Count)
+            {
+                labelPlayers[i].text = players[i].nickName;
+                labelReadys[i].text = (players[i].readyState > 0) ? "[O]" : "[X]";
+            }
+            else
+            {
+                labelPlayers[i].text = "";
+                labelReadys[i].text = "[X]";
+            }
         }
         
         //labelReadyStart.text = "준비";

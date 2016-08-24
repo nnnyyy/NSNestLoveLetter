@@ -84,6 +84,8 @@ namespace NSNest.UI
             if (roomlistIndex < 0 || roomlistIndex >= roomListMax)
                 roomlistIndex = 0;
 
+            labelRoomListIndex.text = (roomlistIndex + 1) + "/" + roomListMax;
+
             int index = roomlistIndex * SLOT_COUNT;
             for( int i = 0; i < rooms.Length; ++ i )
             {
