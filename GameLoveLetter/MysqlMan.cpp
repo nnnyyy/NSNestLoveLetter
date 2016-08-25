@@ -22,7 +22,7 @@
 
 BOOL CMysqlManager::Connect() {
 
-	try {
+	try {		
 		sql::Driver *driver;
 		driver = get_driver_instance();
 #if defined(LOCAL_DB_CONNECT)
@@ -32,6 +32,17 @@ BOOL CMysqlManager::Connect() {
 #endif
 		
 		conn->setSchema(MYSQL_DATABASE);
+
+		//For Euc-Kr
+		sql::Statement *stmt;
+		stmt = conn->createStatement();
+		{
+			//stmt->execute("set names euckr");
+
+			stmt->execute("set session character_set_connection=utf8");
+			stmt->execute("set session character_set_results=euckr");
+			stmt->execute("set session character_set_client=euckr");
+		}
 	}
 	catch (sql::SQLException& e) {
 		std::cout << "MySql Exception : " << e.getErrorCode() << std::endl;
