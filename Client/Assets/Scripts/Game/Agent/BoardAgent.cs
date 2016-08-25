@@ -8,6 +8,11 @@ namespace NSNest.Game
 {
     /// <summary>
     /// 게임을 진행하면서 카드 처리 결과를 담당 유저에게 전달합니다.
+    /// 
+    /// UserSlot의 이벤트와, Card의 이벤트를 받아
+    /// 상황에 맞는 행동을 합니다.
+    /// 
+    /// Sender와 Receiver를 통해 정보를 보내고 처리합니다.
     /// </summary>
     public class BoardAgent : MonoBehaviour
     {
@@ -29,6 +34,15 @@ namespace NSNest.Game
             }
         }
 
+        /// <summary>
+        /// 게임에 참여하는 유저의 수를 세팅합니다.
+        /// </summary>
+        int m_UserCount = 0;
+        public void SetGameUserCount(int count)
+        {
+            m_UserCount = count;
+        }
+        
         public void Init()
         {
             m_ListUserSlot.Clear();
@@ -41,7 +55,7 @@ namespace NSNest.Game
                 m_ListUserSlot.Add(userSlot);
         }
 
-        UserSlot GetUserSlot(int userNum)
+        public UserSlot GetUserSlot(int userNum)
         {
             UserSlot result = null;
             foreach (UserSlot useSlot in m_ListUserSlot)
@@ -59,14 +73,21 @@ namespace NSNest.Game
         int TurnTokenUserNumber = 0;
         void StartGame()
         {
-            TurnTokenUserNumber = 0;
-            NextTurnProcess();
+            if(m_UserCount == m_ListUserSlot.Count)
+            {
+                TurnTokenUserNumber = 0;
+                NextTurnProcess();
+            }
+            else
+            {
+                Debug.Log("게임에 맞는 유저 수가 세팅되지 않음.");
+            }
         }
 
         void NextTurnProcess()
         {
             TurnTokenUserNumber++;
-            if (TurnTokenUserNumber > 4)
+            if (TurnTokenUserNumber > m_UserCount)
                 TurnTokenUserNumber = 1;
 
             foreach (UserSlot useSlot in m_ListUserSlot)
