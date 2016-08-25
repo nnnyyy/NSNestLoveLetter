@@ -14,6 +14,18 @@ namespace NSNest.Game
     /// </summary>
     public class ComSlot : MonoBehaviour, IUserSlot
     {
+        [SerializeField]
+        GameObject m_ObjUserHand = null;
+
+        [SerializeField]
+        GameObject m_ObjUserLeft = null;
+
+        [SerializeField]
+        UILabel m_LblNick = null;
+
+        [SerializeField]
+        UILabel m_LblStatus = null;
+        
         int m_UserNumber = 0;
         public int UserNumber
         {
@@ -25,14 +37,14 @@ namespace NSNest.Game
         public string UserName
         {
             get { return m_UserName; }
-            set { m_UserName = value; }
+            set { m_UserName = value; m_LblNick.text = value; }
         }
 
         int m_UserState = 0;
         public int UserState
         {
             get { return m_UserState; }
-            set { m_UserState = value; }
+            set { m_UserState = value; m_LblStatus.text = value.ToString(); }
         }
 
         public bool m_IsShield = false;
@@ -48,13 +60,7 @@ namespace NSNest.Game
             get { return m_IsDead; }
             set { m_IsDead = value; }
         }
-
-        [SerializeField]
-        GameObject m_ObjUserHand = null;
-
-        [SerializeField]
-        GameObject m_ObjUserLeft = null;
-
+        
         List<ICardInfo> m_ListHandCard = new List<ICardInfo>();
         public List<ICardInfo> ListHandCard { get { return m_ListHandCard; } }
 
