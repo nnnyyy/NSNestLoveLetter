@@ -78,7 +78,7 @@ namespace NSNest.Game
             if (userSlot is UserSlot)
             {
                 m_UserSlot = userSlot;
-                m_UserSlot.UserName = GlobalData.Instance.UserNickname;
+                m_UserSlot.UserName = GlobalData.Instance.userNickname;
                 m_UserSlot.UserNumber = GlobalData.Instance.userSN;
 
                 return true;

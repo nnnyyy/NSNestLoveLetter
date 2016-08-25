@@ -23,7 +23,7 @@ namespace NSNest.UI
         void Start()
         {
             AttachCallbacks();
-            labelInfo.text = "[" + GlobalData.Instance.UserNickname + "] W:" + GlobalData.Instance.cntWin + ", L:" + GlobalData.Instance.cntLose;
+            labelInfo.text = "[" + GlobalData.Instance.userNickname + "] W:" + GlobalData.Instance.cntWin + ", L:" + GlobalData.Instance.cntLose;
 
             CreateEmptyRooms();
             UpdateCreateInfo();

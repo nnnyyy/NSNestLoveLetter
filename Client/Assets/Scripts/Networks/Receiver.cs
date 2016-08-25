@@ -58,7 +58,7 @@ namespace NSNetwork
             if (packet.result == GCPLoginRet.eResult.Success)
             {
                 Debug.Log("nickname >> " + packet.nickName);
-                GlobalData.Instance.UserNickname = packet.nickName;
+                GlobalData.Instance.userNickname = packet.nickName;
                 GlobalData.Instance.userSN = packet.sn;
             }
 
@@ -134,6 +134,7 @@ namespace NSNetwork
         {
             Debug.Log("### LeaveRoomRet ###");
             GlobalData.Instance.roomSN = 0;
+            GlobalData.Instance.roomMasterSN = 0;
 
             if (m_onLeaveRoomRetCallback != null)
                 m_onLeaveRoomRetCallback(packet);
@@ -150,7 +151,10 @@ namespace NSNetwork
         static void OnRoomState(GCPRoomState packet)
         {
             Debug.Log("### OnRoomState ###");
-            GlobalData.Instance.roomUsers = packet.listUsers;
+            if (packet.flagType == GCPRoomState.eFlagType.UserInfos)
+                GlobalData.Instance.roomUsers = packet.listUsers;
+            else if (packet.flagType == GCPRoomState.eFlagType.RoomMaster)
+                GlobalData.Instance.roomMasterSN = packet.masterSN;
 
             if (m_onRoomStateCallback != null)
                 m_onRoomStateCallback(packet);

@@ -74,7 +74,15 @@ public class RoomItem : MonoBehaviour
             }
         }
         
-        //labelReadyStart.text = "준비";
+        if(GlobalData.Instance.roomMasterSN == GlobalData.Instance.userSN)
+        {
+            labelReadyStart.text = "시작";
+        }
+        else
+        {
+            labelReadyStart.text = "준비";
+        }
+
     }
 
     public void HideAll()
@@ -103,5 +111,17 @@ public class RoomItem : MonoBehaviour
             return;
 
         Sender.EnterRoom(roomInfo.sn);
+    }
+
+    public void OnClickReadyStart()
+    {
+        if (GlobalData.Instance.roomMasterSN == GlobalData.Instance.userSN)
+        {
+            Sender.GameStart();
+        }
+        else
+        {
+            Sender.GameReady();
+        }
     }
 }

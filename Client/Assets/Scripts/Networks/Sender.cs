@@ -60,6 +60,15 @@ namespace NSNetwork
         }
 
         /// <summary>
+        /// 게임을 시작한다.
+        /// </summary>
+        public static void GameStart()
+        {
+            CGPGameStart gameStart = new CGPGameStart();
+            NetworkUnityEvent.Instance.Send(gameStart);
+        }
+
+        /// <summary>
         /// 가드 카드를 사용한다.
         /// </summary>
         /// <param name="userIndex">대상 유저</param>
