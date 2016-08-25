@@ -18,6 +18,11 @@ namespace NSNest.UI
             inputPW.value = PlayerPrefs.GetString("UserPW", "");
         }
 
+        void OnDestroy()
+        {
+            Receiver.OnLoginRetCallback -= OnLoginCallBack;
+        }
+
         public void OnClickCreateAccount()
         {
         }

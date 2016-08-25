@@ -40,6 +40,15 @@ namespace NSNest.UI
             Receiver.OnRoomStateCallback += OnCallbackRoomState;
         }
 
+        void OnDestroy()
+        {
+            Receiver.OnRoomListRetCallback -= OnCallbackRoomListRequest;
+            Receiver.OnCreateRoomRetCallback -= OnCallbackCreateRoomRet;
+            Receiver.OnEnterRoomRetCallback -= OnCallbackEnterRoomRet;
+            Receiver.OnLeaveRoomRetCallback -= OnCallbackLeaveRoomRet;
+            Receiver.OnRoomStateCallback -= OnCallbackRoomState;
+        }
+
         void CreateEmptyRooms()
         {
             float gapY = -190f;
