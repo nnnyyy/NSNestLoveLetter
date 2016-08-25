@@ -12,13 +12,14 @@ public:
 
 	enum {
 		FLAG_READY = 0x01,
-		FLAG_ALL = 0x7fffffff
+		FLAG_WITHOUT_ROOM_MASTER = 0x7fffffff,
+		FLAG_ROOM_MASTER = 0x80000000,
 	};
 
 	void Enter(CUser::pointer pUser);
 	void SendEnterPacket(CUser::pointer pUser);
 	void BroadcastPacket(OutPacket& oPacket);
-	void BroadcastRoomState(DWORD dwFlag = FLAG_ALL);
+	void BroadcastRoomState(DWORD dwFlag = FLAG_WITHOUT_ROOM_MASTER);
 
 	void Update(LONG tCur);
 	void Destroy();

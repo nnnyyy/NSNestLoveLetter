@@ -54,14 +54,22 @@ void CRoom::SendEnterPacket(CUser::pointer pUser) {
 
 void CRoom::BroadcastRoomState(DWORD dwFlag) {
 	OutPacket oPacket(GCP_RoomState);
-	LONG nCnt = m_vUsers.size();
 	oPacket.Encode4(dwFlag);
-	oPacket.Encode1(nCnt);
-	for (int i = 0; i < nCnt; ++i) {
-		oPacket.Encode4(m_vUsers[i]->m_nUserSN);
-		oPacket.EncodeStr(m_vUsers[i]->m_sNick);
-		oPacket.Encode1(m_vUsers[i]->m_bReady);
+	if (dwFlag & FLAG_ROOM_MASTER) {
+		oPacket.Encode4(m_pMaster->m_nUserSN);
+		BroadcastPacket(oPacket);
 	}
+
+	if (dwFlag & FLAG_WITHOUT_ROOM_MASTER) {
+		LONG nCnt = m_vUsers.size();
+		oPacket.Encode4(dwFlag);
+		oPacket.Encode1(nCnt);
+		for (int i = 0; i < nCnt; ++i) {
+			oPacket.Encode4(m_vUsers[i]->m_nUserSN);
+			oPacket.EncodeStr(m_vUsers[i]->m_sNick);
+			oPacket.Encode1(m_vUsers[i]->m_bReady);
+		}
+	}	
 	BroadcastPacket(oPacket);
 }
 
@@ -157,11 +165,10 @@ void CRoom::RemoveUser(CUser::pointer pUser) {
 		m_pMaster = m_vUsers[0];
 		m_pMaster->m_bReady = TRUE;
 		//	새 방장 알림 패킷
+		BroadcastRoomState(FLAG_ROOM_MASTER);
 		OutPacket oPacket(GCP_RoomState);
 		DWORD dwFlag = 0x80000000;	//	새 방장 알리기
-		oPacket.Encode4(dwFlag);
-		oPacket.Encode4(m_pMaster->m_nUserSN);
-		BroadcastPacket(oPacket);
+		
 	}
 
 	BroadcastRoomState();
