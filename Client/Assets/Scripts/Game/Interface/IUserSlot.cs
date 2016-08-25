@@ -14,7 +14,27 @@ namespace NSNest.Game
         /// <summary>
         /// 유저 고유 넘버
         /// </summary>
-        int UserNumber { get; }
+        int UserNumber { get; set; }
+
+        /// <summary>
+        /// 유저 이름
+        /// </summary>
+        string UserName { get; set; }
+
+        /// <summary>
+        /// 유저 이름
+        /// </summary>
+        int UserState { get; set; }
+
+        /// <summary>
+        /// 동료 방어
+        /// </summary>
+        bool IsShield { get; set; }
+
+        /// <summary>
+        /// 죽음.
+        /// </summary>
+        bool IsDead { get; set; }
 
         /// <summary>
         /// 유저 손에 가지고 있는 카드 리스트
@@ -34,16 +54,16 @@ namespace NSNest.Game
         /// <summary>
         /// 유저에게 카드를 줍니다. (해당 카드는 유저소유가 됩니다.)
         /// </summary>
-        void AddUserHandCard(ICardInfo cardInfo);
+        bool AddUserHandCard(ICardInfo cardInfo);
 
         /// <summary>
         /// 유저에게서 카드를 가져갑니다.(해당 카드는 유저소유가 더이상 아닙니다.)
         /// </summary>
-        void RemoveUserHandCard(ICardInfo cardInfo);
+        bool RemoveUserHandCard(ICardInfo cardInfo);
 
         /// <summary>
         /// 유저의 카드를 내려둡니다.(해당 카드는 유저소유가 유지됩니다.)
         /// </summary>
-        void LeftUserHandCard(ICardInfo cardInfo);
+        bool LeftUserHandCard(ICardInfo cardInfo);
     }
 }

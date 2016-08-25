@@ -14,42 +14,41 @@ namespace NSNest.Game
     /// </summary>
     public class UserSlot : ComSlot, IUserSlot
     {
-        public override void AddUserHandCard(ICardInfo cardInfo)
+        public override bool AddUserHandCard(ICardInfo cardInfo)
         {
-            base.AddUserHandCard(cardInfo);
-            ICardInfoModify cardInfoModify = cardInfo as ICardInfoModify;
-            if (cardInfoModify != null)
+            if(base.AddUserHandCard(cardInfo))
             {
-                cardInfoModify.CardStatus = CardStatus.Open;
+                ICardInfoModify cardInfoModify = cardInfo as ICardInfoModify;
+                if (cardInfoModify != null)
+                {
+                    cardInfoModify.CardStatus = CardStatus.Open;
+                }
+                cardInfo.OnPressCard += CardInfo_OnPressCard;
+                return true;
             }
-            cardInfo.OnPressCard += CardInfo_OnPressCard;
+            return false;
         }
         
-        public override void RemoveUserHandCard(ICardInfo cardInfo)
+        public override bool RemoveUserHandCard(ICardInfo cardInfo)
         {
-            base.RemoveUserHandCard(cardInfo);
-            cardInfo.OnPressCard -= CardInfo_OnPressCard;
+            if(base.RemoveUserHandCard(cardInfo))
+            {
+                cardInfo.OnPressCard -= CardInfo_OnPressCard;
+                return true;
+            }
+            return false;
         }
-
-        public override void LeftUserHandCard(ICardInfo cardInfo)
-        {
-            base.LeftUserHandCard(cardInfo);
-        }
-
+        
         private void CardInfo_OnPressCard(ICardInfo cardInfo)
         {
             if (!IsTurn)
+                return;
+
+            //TODO : 카드 타입에 따라 기능을 선택하고 처리합니다.
+            switch (cardInfo.CardType)
             {
-                //TODO : 카드 타입에 따라 기능을 선택하고 처리합니다.
-                switch (cardInfo.CardType)
-                {
-                    case CardType.Guard:
-                        break;
-                }
-            }
-            else
-            {
-                //TODO : 카드 정보를 보여줍니다.
+                case CardType.Guard:
+                    break;
             }
         }
     }

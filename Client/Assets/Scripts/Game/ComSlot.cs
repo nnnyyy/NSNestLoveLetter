@@ -14,10 +14,40 @@ namespace NSNest.Game
     /// </summary>
     public class ComSlot : MonoBehaviour, IUserSlot
     {
-        [Range(1, 10)]
-        [SerializeField]
         int m_UserNumber = 0;
-        public int UserNumber { get { return m_UserNumber; } }
+        public int UserNumber
+        {
+            get { return m_UserNumber; }
+            set { m_UserNumber = value; }
+        }
+
+        string m_UserName;
+        public string UserName
+        {
+            get { return m_UserName; }
+            set { m_UserName = value; }
+        }
+
+        int m_UserState = 0;
+        public int UserState
+        {
+            get { return m_UserState; }
+            set { m_UserState = value; }
+        }
+
+        public bool m_IsShield = false;
+        public bool IsShield
+        {
+            get { return m_IsShield; }
+            set { m_IsShield = value; }
+        }
+
+        bool m_IsDead = false;
+        public bool IsDead
+        {
+            get { return m_IsDead; }
+            set { m_IsDead = value; }
+        }
 
         [SerializeField]
         GameObject m_ObjUserHand = null;
@@ -45,18 +75,25 @@ namespace NSNest.Game
             }
         }
 
-        public virtual void AddUserHandCard(ICardInfo cardInfo)
+        public virtual bool AddUserHandCard(ICardInfo cardInfo)
         {
-            ICardInfoModify cardInfoModify = cardInfo as ICardInfoModify;
-            if (cardInfoModify!=null)
+            if(!m_ListHandCard.Contains(cardInfo))
             {
-                cardInfoModify.CardOwner = m_UserNumber;
-                cardInfoModify.CardStatus = CardStatus.Close;
-                cardInfoModify.CardPosition = CardPosition.Hand;
+                m_ListHandCard.Add(cardInfo);
+
+                ICardInfoModify cardInfoModify = cardInfo as ICardInfoModify;
+                if (cardInfoModify != null)
+                {
+                    cardInfoModify.CardOwner = m_UserNumber;
+                    cardInfoModify.CardStatus = CardStatus.Close;
+                    cardInfoModify.CardPosition = CardPosition.Hand;
+                }
+                
+                SetPositionCard();
+
+                return true;
             }
-            
-            m_ListHandCard.Add(cardInfo);
-            SetPositionCard();
+            return false;
         }
         
         void SetPositionCard()
@@ -79,34 +116,44 @@ namespace NSNest.Game
             }
         }
 
-        public virtual void RemoveUserHandCard(ICardInfo cardInfo)
+        public virtual bool RemoveUserHandCard(ICardInfo cardInfo)
         {
             //TODO : 카드 리소스 로딩하여 순서대로 추가
             if (m_ListHandCard.Contains(cardInfo))
             {
                 m_ListHandCard.Remove(cardInfo);
                 SetPositionCard();
+                return true;
             }
+            return false;
         }
 
-        public virtual void LeftUserHandCard(ICardInfo cardInfo)
+        public virtual bool LeftUserHandCard(ICardInfo cardInfo)
         {
-            m_ListHandCard.Remove(cardInfo);
-            m_ListLeftCard.Add(cardInfo);
-
-            ICardInfoModify cardInfoModify = cardInfo as ICardInfoModify;
-            if (cardInfoModify != null)
+            if(m_ListHandCard.Contains(cardInfo))
             {
-                cardInfoModify.CardStatus = CardStatus.Open;
-                cardInfoModify.CardPosition = CardPosition.Board;
+                m_ListHandCard.Remove(cardInfo);
+                m_ListLeftCard.Add(cardInfo);
+
+                ICardInfoModify cardInfoModify = cardInfo as ICardInfoModify;
+                if (cardInfoModify != null)
+                {
+                    cardInfoModify.CardStatus = CardStatus.Open;
+                    cardInfoModify.CardPosition = CardPosition.Board;
+                }
+
+                SetPositionCard();
+                return true;
             }
-                
-            SetPositionCard();
+            
+            return false;
         }
 
-        void Start()
+        IEnumerator Start()
         {
-            BoardAgent.Instance.AddUserSlot(this);
+            YieldInstruction nextFrame = new WaitForEndOfFrame();
+            while (!BoardAgent.Instance.AddUserSlot(this))
+                yield return nextFrame;
         }
 
         void SetUserSlotStatus()
