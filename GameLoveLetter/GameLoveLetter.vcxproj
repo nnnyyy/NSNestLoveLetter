@@ -163,7 +163,8 @@ copy $(SolutionDir)\mysqlcppconn.dll $(SolutionDir)\$(PlatformName)\$(Configurat
       <AdditionalDependencies>libmysql.lib;mysqlcppconn.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(SolutionDir)\libmysql.dll $(SolutionDir)\$(PlatformName)\$(ConfigurationName)\libmysql.dll</Command>
+      <Command>copy $(SolutionDir)\libmysql.dll $(SolutionDir)\$(PlatformName)\$(ConfigurationName)\libmysql.dll
+copy $(SolutionDir)\mysqlcppconn.dll $(SolutionDir)\$(PlatformName)\$(ConfigurationName)\mysqlcppconn.dll</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
