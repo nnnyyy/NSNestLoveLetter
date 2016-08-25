@@ -33,11 +33,11 @@ namespace NSNest.UI
 
         void AttachCallbacks()
         {
-            Receiver.onRoomListRetCallback = OnCallbackRoomListRequest;
-            Receiver.onCreateRoomRetCallback = OnCallbackCreateRoomRet;
-            Receiver.onEnterRoomRetCallback = OnCallbackEnterRoomRet;
-            Receiver.onLeaveRoomRetCallback = OnCallbackLeaveRoomRet;
-            Receiver.onRoomStateCallback = OnCallbackRoomState;
+            Receiver.OnRoomListRetCallback += OnCallbackRoomListRequest;
+            Receiver.OnCreateRoomRetCallback += OnCallbackCreateRoomRet;
+            Receiver.OnEnterRoomRetCallback += OnCallbackEnterRoomRet;
+            Receiver.OnLeaveRoomRetCallback += OnCallbackLeaveRoomRet;
+            Receiver.OnRoomStateCallback += OnCallbackRoomState;
         }
 
         void CreateEmptyRooms()

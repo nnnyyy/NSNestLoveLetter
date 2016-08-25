@@ -36,7 +36,7 @@ namespace NSNest.UI
                 return;
             }
 
-            Receiver.onLoginRetCallback = OnLoginCallBack;
+            Receiver.OnLoginRetCallback += OnLoginCallBack;
             Debug.Log("id >> " + inputID.value + ", pw >> " + inputPW.value);
             Sender.Login(inputID.value, inputPW.value);
         }
