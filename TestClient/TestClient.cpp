@@ -364,6 +364,11 @@ public:
 			LONG nRoomSN = iPacket.Decode4();
 			LONG nUserCnt = iPacket.Decode4();
 			std::cout << "[방번호 : " << nRoomSN << "] - 인원 : " << nUserCnt << std::endl;
+			m_vRoomInfo.clear();
+			RoomInfo info;
+			info.nSN = nRoomSN;
+			info.nUserCount = nUserCnt;
+			m_vRoomInfo.push_back(info);
 		}
 	}
 
@@ -397,23 +402,24 @@ public:
 
 		if (dwFlag & 0x80000000) {
 			ULONG uUserSN = iPacket.Decode4();
-			std::cout << "새로운 방장 : " << uUserSN << std::endl;
-			return;
+			std::cout << "새로운 방장 : " << uUserSN << std::endl;			
 		}
 
-		LONG nCnt = iPacket.Decode1();
 		boost::shared_ptr<CContext::RoomInfo> pRoom = CContext::get_mutable_instance().m_pRoom;
-		pRoom->nUserCnt = nCnt;
-		pRoom->vPlayers.clear();
-		pRoom->mPlayers.clear();
-		for (int i = 0; i < nCnt; ++i) {
-			//	유저 정보들 ( 나중에는 플래그에 따라서 갱신 정보를 정한다 )	
-			CContext::Player::pointer pPlayer(new CContext::Player());
-			pRoom->vPlayers.push_back(pPlayer);			
-			pPlayer->m_uUserSN = iPacket.Decode4();
-			pPlayer->m_sNick = iPacket.DecodeStr();
-			pPlayer->m_bReady = iPacket.Decode1();			
-			pRoom->mPlayers.insert(std::pair< ULONG, CContext::Player::pointer >(pPlayer->m_uUserSN, pPlayer));
+		if (dwFlag & 0x7fffffff) {
+			LONG nCnt = iPacket.Decode1();			
+			pRoom->nUserCnt = nCnt;
+			pRoom->vPlayers.clear();
+			pRoom->mPlayers.clear();
+			for (int i = 0; i < nCnt; ++i) {
+				//	유저 정보들 ( 나중에는 플래그에 따라서 갱신 정보를 정한다 )	
+				CContext::Player::pointer pPlayer(new CContext::Player());
+				pRoom->vPlayers.push_back(pPlayer);
+				pPlayer->m_uUserSN = iPacket.Decode4();
+				pPlayer->m_sNick = iPacket.DecodeStr();
+				pPlayer->m_bReady = iPacket.Decode1();
+				pRoom->mPlayers.insert(std::pair< ULONG, CContext::Player::pointer >(pPlayer->m_uUserSN, pPlayer));
+			}
 		}		
 
 		pRoom->PrintInfo();
@@ -688,14 +694,14 @@ void PrintMenu() {
 		if (!CContext::get_mutable_instance().m_bLogined) {
 			std::cout << "[메뉴] 0-로그인" << std::endl;
 			return;
-		}
+		}		
 
 		if (CContext::get_mutable_instance().m_pRoom) {
 			CContext::get_mutable_instance().m_pRoom->PrintInfo();
 			std::cout << "[메뉴] 3-방퇴장, 4-게임레디, 5-게임시작" << std::endl;
 		}
 		else {
-			std::cout << "[메뉴] 1-방만들기, 2-방입장" << std::endl;
+			std::cout << "[메뉴] 1-방만들기, 2-방입장, 6-방정보 요청" << std::endl;
 		}
 	}
 }
@@ -855,7 +861,6 @@ void ProcMenu(CProtocol& client, LONG n) {
 	}
 			break;
 	case 1: {
-		std::cout << "방 만들기 시도" << std::endl;
 		OutPacket oPacket(CGP_CreateRoom);
 		client.SendPacket(oPacket);
 		//	방 생성
@@ -874,14 +879,12 @@ void ProcMenu(CProtocol& client, LONG n) {
 			break;
 
 	case 3: {
-		std::cout << "방 떠나기 시도" << std::endl;
 		OutPacket oPacket(CGP_LeaveRoom);
 		client.SendPacket(oPacket);
 	}
 			break;
 
 	case 4: {
-		std::cout << "게임 레디" << std::endl;
 		OutPacket oPacket(CGP_GameReady);
 		client.SendPacket(oPacket);
 
@@ -889,8 +892,13 @@ void ProcMenu(CProtocol& client, LONG n) {
 			break;
 
 	case 5: {
-		std::cout << "게임 시작" << std::endl;
 		OutPacket oPacket(CGP_GameStart);
+		client.SendPacket(oPacket);
+	}
+			break;
+
+	case 6: {
+		OutPacket oPacket(CGP_RoomListRequest);
 		client.SendPacket(oPacket);
 	}
 			break;
