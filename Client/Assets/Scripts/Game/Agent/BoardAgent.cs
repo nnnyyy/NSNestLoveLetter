@@ -48,17 +48,17 @@ namespace NSNest.Game
             m_ListUserSlot.Clear();
         }
 
-        List<UserSlot> m_ListUserSlot = new List<UserSlot>();
-        public void AddUserSlot(UserSlot userSlot)
+        List<IUserSlot> m_ListUserSlot = new List<IUserSlot>();
+        public void AddUserSlot(IUserSlot userSlot)
         {
             if(!m_ListUserSlot.Contains(userSlot))
                 m_ListUserSlot.Add(userSlot);
         }
 
-        public UserSlot GetUserSlot(int userNum)
+        public IUserSlot GetUserSlot(int userNum)
         {
-            UserSlot result = null;
-            foreach (UserSlot useSlot in m_ListUserSlot)
+            IUserSlot result = null;
+            foreach (IUserSlot useSlot in m_ListUserSlot)
             {
                 if(useSlot.UserNumber == userNum)
                 {
@@ -90,8 +90,13 @@ namespace NSNest.Game
             if (TurnTokenUserNumber > m_UserCount)
                 TurnTokenUserNumber = 1;
 
-            foreach (UserSlot useSlot in m_ListUserSlot)
-                useSlot.IsMyTurn = (useSlot.UserNumber == TurnTokenUserNumber);
+            foreach (IUserSlot useSlot in m_ListUserSlot)
+                useSlot.IsTurn = (useSlot.UserNumber == TurnTokenUserNumber);
+        }
+
+        void CreateCard(int userNumber)
+        {
+
         }
     }
 }

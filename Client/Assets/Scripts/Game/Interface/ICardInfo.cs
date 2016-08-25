@@ -8,7 +8,7 @@ namespace NSNest.Game
 {
     public enum CardType
     {
-        Back = 0,
+        Unknown = 0,
         Guard = 1,
         RoyalSubject = 2,
         Gossip = 3,
@@ -34,8 +34,13 @@ namespace NSNest.Game
     /// <summary>
     /// 카드의 정보
     /// </summary>
-    public interface ICardInfo
+    public interface ICardInfo : ICardEvent
     {
+        /// <summary>
+        /// 카드의 Wordl Position을 조정합니다.
+        /// </summary>
+        void SetPosition(Vector3 position);
+
         /// <summary>
         /// 카드 소유자 (0은 무소유)
         /// </summary>

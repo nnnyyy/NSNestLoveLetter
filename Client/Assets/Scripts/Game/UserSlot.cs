@@ -12,64 +12,44 @@ namespace NSNest.Game
     /// 유저슬롯은 자신이 가지고 있는 카드의 상태를 바꾸기만 합니다.
     /// 나머지는 BoardAgent 에게 맡깁니다.
     /// </summary>
-    public class UserSlot : MonoBehaviour
+    public class UserSlot : ComSlot, IUserSlot
     {
-        //유저 고유 번호
-        //넘버링은 1부터..
-        [Range(1,10)]
-        public int UserNumber = 1;
-
-        List<Card> m_ListCard = new List<Card>();
-
-        bool m_IsMyTurn = false;
-        public bool IsMyTurn
+        public override void AddUserHandCard(ICardInfo cardInfo)
         {
-            get
+            base.AddUserHandCard(cardInfo);
+            ICardInfoModify cardInfoModify = cardInfo as ICardInfoModify;
+            if (cardInfoModify != null)
             {
-                return m_IsMyTurn;
+                cardInfoModify.CardStatus = CardStatus.Open;
             }
-            set
-            {
-                if (m_IsMyTurn == value)
-                    return;
-
-                m_IsMyTurn = value;
-                SetUserSlotStatus();
-            }
+            cardInfo.OnPressCard += CardInfo_OnPressCard;
         }
         
-        /// <summary>
-        /// 유저 손에 카드가 들어옵니다.
-        /// </summary>
-        public void AddCard(ICardInfo cardInfo)
+        public override void RemoveUserHandCard(ICardInfo cardInfo)
         {
-            //TODO : 카드 리소스 로딩하여 순서대로 추가
+            base.RemoveUserHandCard(cardInfo);
+            cardInfo.OnPressCard -= CardInfo_OnPressCard;
         }
 
-        /// <summary>
-        /// 유저손에서 카드가 나갑니다.
-        /// </summary>
-        public void RemoveCard(ICardInfo cardInfo)
+        public override void LeftUserHandCard(ICardInfo cardInfo)
         {
-            //TODO : 카드 리소스 로딩하여 순서대로 추가
+            base.LeftUserHandCard(cardInfo);
         }
 
-        void Start()
+        private void CardInfo_OnPressCard(ICardInfo cardInfo)
         {
-            BoardAgent.Instance.AddUserSlot(this);
-        }
-
-        void SetUserSlotStatus()
-        {
-            if(IsMyTurn)
+            if (!IsTurn)
             {
-                //TODO : 내 차례 표시!!
-                //활성화 처리
-                Debug.Log("UserNumber " + UserNumber + " is Turn!!");
+                //TODO : 카드 타입에 따라 기능을 선택하고 처리합니다.
+                switch (cardInfo.CardType)
+                {
+                    case CardType.Guard:
+                        break;
+                }
             }
             else
             {
-                //TODO : 내 차례 아님 표시..
+                //TODO : 카드 정보를 보여줍니다.
             }
         }
     }

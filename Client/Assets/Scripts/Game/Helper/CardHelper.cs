@@ -11,7 +11,7 @@ namespace NSNest.Game
     {
         static Dictionary<CardType, string> m_DicCardImage = new Dictionary<CardType, string>()
         {
-            { CardType.Back, "atlas_back" },
+            { CardType.Unknown, "atlas_back" },
             { CardType.Guard, "atlas_guard" },
             { CardType.RoyalSubject, "atlas_royal_subject" },
             { CardType.Gossip, "atlas_gossip" },

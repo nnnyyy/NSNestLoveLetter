@@ -15,7 +15,7 @@ namespace NSNest.Game
     /// 실제 카드 자신은 움직이지 않습니다. 이벤트만 발생합니다.
     /// 카드 위치 조정은 BoardAgent에게 맡깁시다.
     /// </summary>
-    public class Card : MonoBehaviour, ICardEvent, ICardInfo, ICardInfoModify
+    public class Card : MonoBehaviour, ICardInfo, ICardInfoModify
     {
         [SerializeField]
         UISprite m_SprCard = null;
@@ -47,6 +47,11 @@ namespace NSNest.Game
 
         #region ICardInfo
 
+        public void SetPosition(Vector3 position)
+        {
+            transform.position = position;
+        }
+
         int m_CardOwner = 0;
         public int CardOwner
         {
@@ -76,7 +81,7 @@ namespace NSNest.Game
                 m_OnMoveCard(this, m_CardOwner, CardPosition.Hand);
         }
 
-        CardType m_CardType = CardType.Back;
+        CardType m_CardType = CardType.Unknown;
         public CardType CardType
         {
             get { return m_CardType; }
@@ -106,7 +111,7 @@ namespace NSNest.Game
                 return;
 
             if (cardStatus == CardStatus.Close)
-                m_SprCard.spriteName = this.GetCardImageName(CardType.Back);
+                m_SprCard.spriteName = this.GetCardImageName(CardType.Unknown);
             else
                 m_SprCard.spriteName = this.GetCardImageName(CardType);
 
