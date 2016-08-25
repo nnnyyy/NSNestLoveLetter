@@ -119,8 +119,12 @@ void CGameDealerLoveLetter::OnGuardAction(InPacket& iPacket, CUser::pointer pUse
 		return;
 	}	
 
+	pTargetPlayer->m_pUser->gamedata.m_nAttackedByGuard++;
+	pTurnPlayer->m_pUser->gamedata.m_nUseGuard++;
+
 	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
 	if (m_vPlayers[nTargetIdx]->m_vHandCards[0]->m_nType == nCardTypeGuess) {
+		pTurnPlayer->m_pUser->gamedata.m_nSuccessUseGuard++;
 		Dead(m_vPlayers[nTargetIdx]);
 		//	잡았다.		
 		OutPacket oPacket(GCP_GameLoveLetter);
@@ -224,6 +228,9 @@ void CGameDealerLoveLetter::OnGossipAction(InPacket& iPacket, CUser::pointer pUs
 		return;
 	}	
 
+	pTargetPlayer->m_pUser->gamedata.m_nAttackedByGossip++;
+	pTurnPlayer->m_pUser->gamedata.m_nUseGossip++;
+
 	Card::pointer pTargetHandCard = pTargetPlayer->m_vHandCards[0];
 	Card::pointer pMyHandCard = pTurnPlayer->m_vHandCards[0];
 
@@ -239,6 +246,7 @@ void CGameDealerLoveLetter::OnGossipAction(InPacket& iPacket, CUser::pointer pUs
 	}
 	else if (pTargetHandCard->m_nType < pMyHandCard->m_nType) {
 		//	상대방이 죽음
+		pTurnPlayer->m_pUser->gamedata.m_nSuccessUseGossip++;
 		Dead(pTargetPlayer);
 		bRet = TRUE;
 		nDeadIndex = nWho;
@@ -521,6 +529,7 @@ void CGameDealerLoveLetter::InitGame() {
 			p->Init();
 			p->nUserSN = (*iter)->m_nUserSN;
 			p->m_bDead = FALSE;
+			p->m_pUser = (*iter);
 			m_vPlayers.push_back(p);
 			p->m_nIndex = idx;
 			idx++;
@@ -629,7 +638,16 @@ void CGameDealerLoveLetter::GameOver(LONG nReason) {
 		status.nPrevRoundWinIndex = pWinner->m_nIndex;
 
 		if (pWinner->m_nRoundWin >= 3 /* 4명이면 보석 3개 모으기 */) {
-			status.bFinalOver = TRUE;
+			status.bFinalOver = TRUE;			
+			for each (Player::pointer p in m_vPlayers)
+			{				
+				if (pWinner == p) {
+					pWinner->m_pUser->gamedata.m_nWin++;					
+				}
+				else {
+					p->m_pUser->gamedata.m_nLose++;
+				}
+			}
 			SendFinalRoundOver(pWinner);
 			return;
 		}
@@ -669,8 +687,6 @@ void CGameDealerLoveLetter::Process() {
 	player->m_bGuard = FALSE;	//	내 턴이 돌아오면 가드가 풀린다.
 	BOOL bSucceed = GetCardFromDeck(player);
 	if (!bSucceed) {
-		//	카드가 없다.
-		//	GameOver(); 
 		return;
 	}
 

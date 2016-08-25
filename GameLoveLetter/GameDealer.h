@@ -41,6 +41,7 @@ public:
 	class Player : public boost::enable_shared_from_this<Player> {
 	public:
 		Player() : m_nRoundWin(0) {}
+		CUser::pointer m_pUser;
 		ULONG nUserSN;
 		LONG m_nIndex;
 		BOOL m_bDead;
