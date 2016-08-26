@@ -80,6 +80,7 @@ void CConnection::ProcessPacket(InPacket &iPacket) {
 
 	switch (nType) {
 	case CGP_Login: OnLogin(iPacket); break;
+	case CGP_RegisterUser: OnRegister(iPacket); break;
 	default:
 		return;
 	}
@@ -158,4 +159,23 @@ void CConnection::OnLogin(InPacket &iPacket) {
 	oPacket.EncodeStr(pUser->m_sNick);
 	SendPacket(oPacket);	
 	LogAdd(boost::str(boost::format("Logined : %s, %d, %s") % sID % pUser->m_nUserSN % pUser->m_sNick));
+}
+
+void CConnection::OnRegister(InPacket &iPacket) {
+	std::string sID = iPacket.DecodeStr();
+	std::string sPW = iPacket.DecodeStr();
+	std::string sNick = iPacket.DecodeStr();
+	LONG nRet = 0;
+	if ((nRet = CMysqlManager::get_mutable_instance().RegisterUser(sID, sPW, sNick)) != 0) {
+		LogAdd(boost::str(boost::format("[RegisterUser] Error id: %s, Ret: %d") % sID % nRet));
+		OutPacket oPacket(GCP_RegisterUserRet);
+		oPacket.Encode2(nRet);
+		SendPacket(oPacket);
+		return;
+	}
+
+	LogAdd(boost::str(boost::format("[RegisterUser] Succeed id: %s, Ret: %d") % sID % nRet));
+	OutPacket oPacket(GCP_RegisterUserRet);
+	oPacket.Encode2(nRet);
+	SendPacket(oPacket);
 }

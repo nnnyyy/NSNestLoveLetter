@@ -331,6 +331,10 @@ public:
 		case GCP_GameLoveLetter:
 			OnGameLoveLetter(iPacket);
 			break;
+
+		case GCP_RegisterUserRet:
+			OnRegisterUserRet(iPacket);
+			break;
 		}
 		PrintMenu();
 	}
@@ -481,6 +485,17 @@ public:
 		case GCP_LL_FinalResult:
 			OnFinalRoundRet(iPacket);
 			break;
+		}
+	}
+
+	void OnRegisterUserRet(InPacket& iPacket) {
+		LONG nRet = iPacket.Decode2();
+
+		if (nRet == 0) {
+			AddMessage("정상등록 되었습니다");
+		}
+		else {
+			AddMessage(boost::str(boost::format("정상 등록되지 않았습니다. %d") % nRet));
 		}
 	}
 
@@ -692,7 +707,8 @@ void PrintMenu() {
 	}
 	else {
 		if (!CContext::get_mutable_instance().m_bLogined) {
-			std::cout << "[메뉴] 0-로그인" << std::endl;
+			PrintActionLog();
+			std::cout << "[메뉴] 0-로그인 9-등록" << std::endl;
 			return;
 		}		
 
@@ -902,6 +918,26 @@ void ProcMenu(CProtocol& client, LONG n) {
 		client.SendPacket(oPacket);
 	}
 			break;
+
+	case 9:
+	{
+		std::cout << "계정 등록" << std::endl;
+		std::cout << "id : ";
+		std::cin.getline(line, 128);
+		std::string sID(line);
+		std::cout << "pw : ";
+		std::cin.getline(line, 128);
+		std::string sPW(line);
+		std::cout << "nick : ";
+		std::cin.getline(line, 128);
+		std::string sNick(line);
+		OutPacket oPacket(CGP_RegisterUser);
+		oPacket.EncodeStr(sID);
+		oPacket.EncodeStr(sPW);
+		oPacket.EncodeStr(sNick);
+		client.SendPacket(oPacket);
+	}
+	break;
 
 	default:
 		std::cout << "잘못된 명령어" << std::endl;
