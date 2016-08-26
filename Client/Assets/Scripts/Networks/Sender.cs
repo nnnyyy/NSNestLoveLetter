@@ -15,6 +15,15 @@ namespace NSNetwork
         }
 
         /// <summary>
+        /// 계정 생성
+        /// </summary>
+        public static void RegisterUser(string id, string pw, string nick)
+        {
+            CGPRegisterUser registerUser = new CGPRegisterUser(id, pw, nick);
+            NetworkUnityEvent.Instance.Send(registerUser);
+        }
+
+        /// <summary>
         /// 현재 개설된 방 정보를 요청
         /// </summary>
         public static void RoomListRequest()

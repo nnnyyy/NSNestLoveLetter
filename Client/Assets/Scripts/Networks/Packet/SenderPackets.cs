@@ -14,6 +14,18 @@ namespace NSNetwork
         }
     }
 
+    public class CGPRegisterUser : SendPacket
+    {
+        public CGPRegisterUser(string id, string pw, string nick)
+        {
+            AddShort((short)eCGP.CGP_RegisterUser);
+            AddString(id);
+            AddString(pw);
+            AddString(nick);
+            CreateData();
+        }
+    }
+
     public class CGPRoomListRequest : SendPacket
     {
         public CGPRoomListRequest()

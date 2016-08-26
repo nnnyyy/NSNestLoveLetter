@@ -38,6 +38,7 @@ namespace NSNest.UI
             Receiver.OnEnterRoomRetCallback += OnCallbackEnterRoomRet;
             Receiver.OnLeaveRoomRetCallback += OnCallbackLeaveRoomRet;
             Receiver.OnRoomStateCallback += OnCallbackRoomState;
+            Receiver.OnGameStartRetCallback += OnCallbackGameStart;
         }
 
         void OnDestroy()
@@ -47,6 +48,7 @@ namespace NSNest.UI
             Receiver.OnEnterRoomRetCallback -= OnCallbackEnterRoomRet;
             Receiver.OnLeaveRoomRetCallback -= OnCallbackLeaveRoomRet;
             Receiver.OnRoomStateCallback -= OnCallbackRoomState;
+            Receiver.OnGameStartRetCallback -= OnCallbackGameStart;
         }
 
         void CreateEmptyRooms()
@@ -203,6 +205,28 @@ namespace NSNest.UI
         void OnCallbackRoomState(GCPRoomState roomState)
         {
             //UpdateRoomList();
+        }
+
+        void OnCallbackGameStart(GCPGameStartRet gameStartRet)
+        {
+            switch( gameStartRet.result ) 
+            {
+                case GCPGameStartRet.eResult.Success:
+                    // goto game
+                    break;
+
+                case GCPGameStartRet.eResult.NotAllReady:
+                    DefaultPopup.OpenPopup("GameStart", "Not All Ready", DefaultPopup.eType.OK);
+                    break;
+
+                case GCPGameStartRet.eResult.NotEnoughUser:
+                    DefaultPopup.OpenPopup("GameStart", "Not Enough User", DefaultPopup.eType.OK);
+                    break;
+
+                case GCPGameStartRet.eResult.NotRoomMaster:
+                    DefaultPopup.OpenPopup("GameStart", "Not Room Master", DefaultPopup.eType.OK);
+                    break;
+            }
         }
     }
 }

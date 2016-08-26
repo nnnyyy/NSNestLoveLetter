@@ -32,6 +32,23 @@ namespace NSNetwork
         }
     }
 
+    public class GCPRegisterUserRet : ReceivePacket
+    {
+        public enum eReuslt
+        {
+            Success = 0,
+            AlreadyRegisted = -1,
+            Error = -2
+        }
+
+        public eReuslt result;
+        public GCPRegisterUserRet(byte[] data)
+        {
+            type = (eGCP)GetShort(data);
+            result = (eReuslt)GetShort(data);
+        }
+    }
+
     public class GCPRoomListRet : ReceivePacket
     {
         public class RoomInfo
@@ -113,12 +130,14 @@ namespace NSNetwork
         public static readonly UInt32 FLAG_READY = 0x01;
         public static readonly UInt32 FLAG_WITHOUT_ROOM_MASTER = 0x7fffffff;
         public static readonly UInt32 FLAG_ROOM_MASTER = 0x80000000;
+        public static readonly UInt32 FLAG_ALL = 0xffffffff;
 
         public enum eFlagType
         {
             Ready = 0,
             RoomMaster,
-            UserInfos
+            UserInfos,
+            All
         }
 
         public class UserInfo
@@ -143,7 +162,8 @@ namespace NSNetwork
                 flagType = eFlagType.RoomMaster;
                 masterSN = GetInt(data);
             }
-            else if( (flag & FLAG_WITHOUT_ROOM_MASTER) != 0 )
+
+            if( (flag & FLAG_WITHOUT_ROOM_MASTER) != 0 )
             {
                 flagType = eFlagType.UserInfos;
 
@@ -157,6 +177,9 @@ namespace NSNetwork
                     listUsers.Add(user);
                 }
             }
+
+            if ((flag & FLAG_ALL) != 0)
+                flagType = eFlagType.All;
         }
     }
 

@@ -16,6 +16,7 @@ namespace NSNetwork
             switch (type)
             {
                 case eGCP.GCP_LoginRet:         Receiver.OnLogin(new GCPLoginRet(data));                    break;
+                case eGCP.GCP_RegisterUserRet:  Receiver.OnRegisterUserRet(new GCPRegisterUserRet(data));  break;
                 case eGCP.GCP_RoomListRet:      Receiver.OnRoomListRet(new GCPRoomListRet(data));           break;
                 case eGCP.GCP_CreateRoomRet:    Receiver.OnCreateRoomRet(new GCPCreateRoomRet(data));       break;
                 case eGCP.GCP_EnterRoomRet:     Receiver.OnEnterRoomRet(new GCPEnterRoomRet(data));         break;
@@ -64,6 +65,22 @@ namespace NSNetwork
 
             if (m_onLoginRetCallback != null)
                 m_onLoginRetCallback(packet);
+        }
+
+        public delegate void RegisterUserRetDelegate(GCPRegisterUserRet registerUserRet);
+        static RegisterUserRetDelegate m_onRegisterUserRetCallback = null;
+        public static event RegisterUserRetDelegate OnRegisterUserRetCallback
+        {
+            add { m_onRegisterUserRetCallback += value; }
+            remove { m_onRegisterUserRetCallback -= value; }
+        }
+
+        static void OnRegisterUserRet(GCPRegisterUserRet packet)
+        {
+            Debug.Log("### OnRegisterUserRest ###");
+
+            if (m_onRegisterUserRetCallback != null)
+                m_onRegisterUserRetCallback(packet);
         }
 
         public delegate void RoomListRetDelegate(GCPRoomListRet roomListRet);
@@ -155,6 +172,11 @@ namespace NSNetwork
                 GlobalData.Instance.roomUsers = packet.listUsers;
             else if (packet.flagType == GCPRoomState.eFlagType.RoomMaster)
                 GlobalData.Instance.roomMasterSN = packet.masterSN;
+            else if (packet.flagType == GCPRoomState.eFlagType.All)
+            {
+                GlobalData.Instance.roomUsers = packet.listUsers;
+                GlobalData.Instance.roomMasterSN = packet.masterSN;
+            }
 
             if (m_onRoomStateCallback != null)
                 m_onRoomStateCallback(packet);
