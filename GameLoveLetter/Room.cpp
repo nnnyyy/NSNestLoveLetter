@@ -49,7 +49,7 @@ void CRoom::SendEnterPacket(CUser::pointer pUser) {
 	oPacket.Encode4(GetSN());
 	pUser->SendPacket(oPacket);
 
-	BroadcastRoomState();
+	BroadcastRoomState(FLAG_ROOM_MASTER | FLAG_WITHOUT_ROOM_MASTER);
 }
 
 void CRoom::BroadcastRoomState(DWORD dwFlag) {
