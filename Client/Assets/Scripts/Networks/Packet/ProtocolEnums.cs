@@ -8,6 +8,7 @@ namespace NSNetwork
     {
         CGP_Login = 0,
         CGP_Logout,
+        CGP_RegisterUser,
         CGP_AliveAck,
         CGP_User_Start,
         CGP_RoomListRequest = CGP_User_Start,
@@ -25,6 +26,7 @@ namespace NSNetwork
     public enum eGCP
     {
         GCP_LoginRet = 0,
+        GCP_RegisterUserRet,
         GCP_AliveAck,
         GCP_RoomListRet,
         GCP_CreateRoomRet,

@@ -136,8 +136,7 @@ namespace NSNetwork
         public GCPRoomState(byte[] data)
         {
             type = (eGCP)GetShort(data);
-            flag = GetInt(data);
-            flag = GetInt(data);
+            flag = GetInt(data);            
 
             if ( (flag & FLAG_ROOM_MASTER) != 0 )
             {
