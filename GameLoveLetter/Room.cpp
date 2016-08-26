@@ -61,8 +61,7 @@ void CRoom::BroadcastRoomState(DWORD dwFlag) {
 	}
 
 	if (dwFlag & FLAG_WITHOUT_ROOM_MASTER) {
-		LONG nCnt = m_vUsers.size();
-		oPacket.Encode4(dwFlag);
+		LONG nCnt = m_vUsers.size();		
 		oPacket.Encode1(nCnt);
 		for (int i = 0; i < nCnt; ++i) {
 			oPacket.Encode4(m_vUsers[i]->m_nUserSN);
