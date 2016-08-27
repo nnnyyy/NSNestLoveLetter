@@ -21,6 +21,8 @@ namespace NSNest.UI
         {
             objCreatePopup.SetActive(false);
             NetworkUnityEvent.Instance.Connect(Const.SERVER_IP, Const.SERVER_PORT);
+            Receiver.OnLoginRetCallback += OnLoginCallBack;
+            Receiver.OnRegisterUserRetCallback += OnRegisterUserRetCallback;
 
             inputID.value = PlayerPrefs.GetString("UserID", "");
             inputPW.value = PlayerPrefs.GetString("UserPW", "");
@@ -51,8 +53,6 @@ namespace NSNest.UI
                 return;
             }
 
-            Receiver.OnLoginRetCallback += OnLoginCallBack;
-            Receiver.OnRegisterUserRetCallback += OnRegisterUserRetCallback;
             Debug.Log("id >> " + inputID.value + ", pw >> " + inputPW.value);
             Sender.Login(inputID.value, inputPW.value);
         }
@@ -97,7 +97,7 @@ namespace NSNest.UI
                 return;
             }
 
-            Sender.RegisterUser(inputCAId.value, inputCANickname.value, inputCAPw.value);
+            Sender.RegisterUser(inputCAId.value, inputCAPw.value, inputCANickname.value);
         }
 
         public void OnClickCloseCreateAccountPopup()
