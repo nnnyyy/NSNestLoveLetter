@@ -46,5 +46,6 @@ private:
 	std::string m_sPW;
 	CUser::pointer m_pUser;
 
-	void OnLogin(InPacket &iPacket);		
+	void OnLogin(InPacket &iPacket);
+	void OnRegister(InPacket &iPacket);
 };

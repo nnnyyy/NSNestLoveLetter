@@ -23,7 +23,7 @@ namespace NSNest.UI
         void Start()
         {
             AttachCallbacks();
-            labelInfo.text = "[" + GlobalData.Instance.UserNickname + "] W:" + GlobalData.Instance.cntWin + ", L:" + GlobalData.Instance.cntLose;
+            labelInfo.text = "[" + GlobalData.Instance.userNickname + "] W:" + GlobalData.Instance.cntWin + ", L:" + GlobalData.Instance.cntLose;
 
             CreateEmptyRooms();
             UpdateCreateInfo();
@@ -33,11 +33,22 @@ namespace NSNest.UI
 
         void AttachCallbacks()
         {
-            Receiver.onRoomListRetCallback = OnCallbackRoomListRequest;
-            Receiver.onCreateRoomRetCallback = OnCallbackCreateRoomRet;
-            Receiver.onEnterRoomRetCallback = OnCallbackEnterRoomRet;
-            Receiver.onLeaveRoomRetCallback = OnCallbackLeaveRoomRet;
-            Receiver.onRoomStateCallback = OnCallbackRoomState;
+            Receiver.OnRoomListRetCallback += OnCallbackRoomListRequest;
+            Receiver.OnCreateRoomRetCallback += OnCallbackCreateRoomRet;
+            Receiver.OnEnterRoomRetCallback += OnCallbackEnterRoomRet;
+            Receiver.OnLeaveRoomRetCallback += OnCallbackLeaveRoomRet;
+            Receiver.OnRoomStateCallback += OnCallbackRoomState;
+            Receiver.OnGameStartRetCallback += OnCallbackGameStart;
+        }
+
+        void OnDestroy()
+        {
+            Receiver.OnRoomListRetCallback -= OnCallbackRoomListRequest;
+            Receiver.OnCreateRoomRetCallback -= OnCallbackCreateRoomRet;
+            Receiver.OnEnterRoomRetCallback -= OnCallbackEnterRoomRet;
+            Receiver.OnLeaveRoomRetCallback -= OnCallbackLeaveRoomRet;
+            Receiver.OnRoomStateCallback -= OnCallbackRoomState;
+            Receiver.OnGameStartRetCallback -= OnCallbackGameStart;
         }
 
         void CreateEmptyRooms()
@@ -194,6 +205,28 @@ namespace NSNest.UI
         void OnCallbackRoomState(GCPRoomState roomState)
         {
             //UpdateRoomList();
+        }
+
+        void OnCallbackGameStart(GCPGameStartRet gameStartRet)
+        {
+            switch( gameStartRet.result ) 
+            {
+                case GCPGameStartRet.eResult.Success:
+                    // goto game
+                    break;
+
+                case GCPGameStartRet.eResult.NotAllReady:
+                    DefaultPopup.OpenPopup("GameStart", "Not All Ready", DefaultPopup.eType.OK);
+                    break;
+
+                case GCPGameStartRet.eResult.NotEnoughUser:
+                    DefaultPopup.OpenPopup("GameStart", "Not Enough User", DefaultPopup.eType.OK);
+                    break;
+
+                case GCPGameStartRet.eResult.NotRoomMaster:
+                    DefaultPopup.OpenPopup("GameStart", "Not Room Master", DefaultPopup.eType.OK);
+                    break;
+            }
         }
     }
 }

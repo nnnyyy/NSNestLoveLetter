@@ -18,6 +18,7 @@ public:
 	LONG Logout(LONG nSN);
 	LONG GetGameDataFromDB(LONG nSN, CGameData& _data);
 	LONG SetGameDataToDB(LONG nSN, CGameData& _data);
+	LONG RegisterUser(std::string sID, std::string sPW, std::string sNick);
 
 protected:
 	boost::shared_ptr<sql::Connection> conn;

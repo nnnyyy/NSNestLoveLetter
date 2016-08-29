@@ -160,3 +160,28 @@ LONG CMysqlManager::SetGameDataToDB(LONG nSN, CGameData& _data) {
 
 	return 0;
 }
+
+
+LONG CMysqlManager::RegisterUser(std::string sID, std::string sPW, std::string sNick) {
+	LONG nRet = 0;
+	try {
+		stmt.reset(conn->createStatement());
+		pstmt.reset(conn->prepareStatement("CALL RegisterUser(?,?,?,@nRet)"));
+		pstmt->setString(1, sID);
+		pstmt->setString(2, sPW);
+		pstmt->setString(3, sNick);
+		pstmt->execute();
+
+		rs.reset(stmt->executeQuery("SELECT @nRet AS nRet"));
+		while (rs->next()) {
+			nRet = rs->getInt("nRet");			
+		}
+	}
+	catch (sql::SQLException& e) {
+		std::cout << e.getErrorCode() << std::endl;
+		if (e.getErrorCode() == 2006) Connect();
+		return -99;
+	}
+
+	return nRet;
+}

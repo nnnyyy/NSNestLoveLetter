@@ -23,13 +23,26 @@ public class GlobalData : MonoBehaviour
     }
 
     public int userSN = 0;
-    public string UserNickname = "";
+    public string userNickname = "";
     public int cntWin = 0;
     public int cntLose = 0;
     public int roomSN = 0;
+    public int roomMasterSN = 0;
 
     public List<GCPRoomState.UserInfo> roomUsers;
 
 
     public bool IsInRoom() { return (roomSN > 0); }
+
+    public void ClearData()
+    {
+        userSN = 0;
+        userNickname = "";
+        cntWin = 0;
+        cntLose = 0;
+        roomSN = 0;
+        roomMasterSN = 0;
+
+        roomUsers = null;
+    }
 }

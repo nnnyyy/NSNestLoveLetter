@@ -7,36 +7,48 @@ using NSNetwork;
 namespace NSNest.Game
 {
     //유저와 1:1로 매칭되는 카드 처리스크립트
-    public class UserSlot : MonoBehaviour
+    
+    /// <summary>
+    /// 유저슬롯은 자신이 가지고 있는 카드의 상태를 바꾸기만 합니다.
+    /// 나머지는 BoardAgent 에게 맡깁니다.
+    /// </summary>
+    public class UserSlot : ComSlot, IUserSlot
     {
-        //유저 고유 번호
-        [Range(1,4)]
-        public int UserNumber = 1;
-
-        List<Card> m_ListCard = new List<Card>();
-
-        public bool IsMyTurn = false;
-        
-        public void AddCard(CardType cardType)
+        public override bool AddUserHandCard(ICardInfo cardInfo)
         {
-            //TODO : 카드 리소스 로딩하여 순서대로 추가
-        }
-
-        void Start()
-        {
-            BoardAgent.Instance.AddUserSlot(this);
-        }
-
-        void Update()
-        {
-            if(IsMyTurn)
+            if(base.AddUserHandCard(cardInfo))
             {
-                //TODO : 내 차례 표시!!
-                Debug.Log("UserNumber " + UserNumber + " is Turn!!");
+                ICardInfoModify cardInfoModify = cardInfo as ICardInfoModify;
+                if (cardInfoModify != null)
+                {
+                    cardInfoModify.CardStatus = CardStatus.Open;
+                }
+                cardInfo.OnPressCard += CardInfo_OnPressCard;
+                return true;
             }
-            else
+            return false;
+        }
+        
+        public override bool RemoveUserHandCard(ICardInfo cardInfo)
+        {
+            if(base.RemoveUserHandCard(cardInfo))
             {
-                //TODO : 내 차례 아님 표시..
+                cardInfo.OnPressCard -= CardInfo_OnPressCard;
+                return true;
+            }
+            return false;
+        }
+        
+        private void CardInfo_OnPressCard(ICardInfo cardInfo)
+        {
+            if (!IsTurn)
+                return;
+
+            //TODO : 카드 타입에 따라 기능을 선택하고 처리합니다.
+            switch (cardInfo.CardType)
+            {
+                case CardType.Guard:
+                    break;
             }
         }
     }

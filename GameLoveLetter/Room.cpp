@@ -49,20 +49,18 @@ void CRoom::SendEnterPacket(CUser::pointer pUser) {
 	oPacket.Encode4(GetSN());
 	pUser->SendPacket(oPacket);
 
-	BroadcastRoomState();
+	BroadcastRoomState(FLAG_ROOM_MASTER | FLAG_WITHOUT_ROOM_MASTER);
 }
 
 void CRoom::BroadcastRoomState(DWORD dwFlag) {
 	OutPacket oPacket(GCP_RoomState);
 	oPacket.Encode4(dwFlag);
 	if (dwFlag & FLAG_ROOM_MASTER) {
-		oPacket.Encode4(m_pMaster->m_nUserSN);
-		BroadcastPacket(oPacket);
+		oPacket.Encode4(m_pMaster->m_nUserSN);		
 	}
 
 	if (dwFlag & FLAG_WITHOUT_ROOM_MASTER) {
-		LONG nCnt = m_vUsers.size();
-		oPacket.Encode4(dwFlag);
+		LONG nCnt = m_vUsers.size();		
 		oPacket.Encode1(nCnt);
 		for (int i = 0; i < nCnt; ++i) {
 			oPacket.Encode4(m_vUsers[i]->m_nUserSN);

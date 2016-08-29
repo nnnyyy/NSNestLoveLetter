@@ -32,6 +32,23 @@ namespace NSNetwork
         }
     }
 
+    public class GCPRegisterUserRet : ReceivePacket
+    {
+        public enum eReuslt
+        {
+            Success = 0,
+            AlreadyRegisted = -1,
+            Error = -2
+        }
+
+        public eReuslt result;
+        public GCPRegisterUserRet(byte[] data)
+        {
+            type = (eGCP)GetShort(data);
+            result = (eReuslt)GetShort(data);
+        }
+    }
+
     public class GCPRoomListRet : ReceivePacket
     {
         public class RoomInfo
@@ -110,6 +127,19 @@ namespace NSNetwork
 
     public class GCPRoomState : ReceivePacket
     {
+        public static readonly UInt32 FLAG_READY = 0x01;
+        public static readonly UInt32 FLAG_WITHOUT_ROOM_MASTER = 0x7fffffff;
+        public static readonly UInt32 FLAG_ROOM_MASTER = 0x80000000;
+        public static readonly UInt32 FLAG_ALL = 0xffffffff;
+
+        public enum eFlagType
+        {
+            Ready = 0,
+            RoomMaster,
+            UserInfos,
+            All
+        }
+
         public class UserInfo
         {
             public int sn = 0;
@@ -118,21 +148,38 @@ namespace NSNetwork
         }
 
         public int flag;
+        public eFlagType flagType;
+        public int masterSN;
         public List<UserInfo> listUsers = new List<UserInfo>();
 
         public GCPRoomState(byte[] data)
         {
             type = (eGCP)GetShort(data);
-            flag = GetInt(data);
-            int userCount = (int)GetChar(data);
-            for( int i = 0; i < userCount; ++i )
+            flag = GetInt(data);            
+
+            if ( (flag & FLAG_ROOM_MASTER) != 0 )
             {
-                UserInfo user = new UserInfo();
-                user.sn = GetInt(data);
-                user.nickName = GetString(data);
-                user.readyState = GetChar(data);
-                listUsers.Add(user);
+                flagType = eFlagType.RoomMaster;
+                masterSN = GetInt(data);
             }
+
+            if( (flag & FLAG_WITHOUT_ROOM_MASTER) != 0 )
+            {
+                flagType = eFlagType.UserInfos;
+
+                int userCount = (int)GetChar(data);
+                for (int i = 0; i < userCount; ++i)
+                {
+                    UserInfo user = new UserInfo();
+                    user.sn = GetInt(data);
+                    user.nickName = GetString(data);
+                    user.readyState = GetChar(data);
+                    listUsers.Add(user);
+                }
+            }
+
+            if ((flag & FLAG_ALL) != 0)
+                flagType = eFlagType.All;
         }
     }
 
