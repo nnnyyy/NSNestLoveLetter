@@ -15,4 +15,6 @@ public class UserInfoBase : MonoBehaviour {
 	void Update () {
 	
 	}
+
+    virtual public void PutHand(Card c) { }
 }
