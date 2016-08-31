@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using NSNetwork;
+using UnityEngine.SceneManagement;
 
 public class Lobby : MonoBehaviour {
 
@@ -11,7 +13,11 @@ public class Lobby : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
         InitRoomList();
-        AddRoom(0, 1);
+        Receiver.OnRoomListRetCallback += OnRoomListRet;
+        Receiver.OnEnterRoomRetCallback += OnEnterRoomRet;
+        Receiver.OnCreateRoomRetCallback += OnCreateRoomRet;
+        Receiver.OnRoomStateCallback += OnRoomState;
+        Sender.RoomListRequest();
     }
 	
 	// Update is called once per frame
@@ -39,8 +45,8 @@ public class Lobby : MonoBehaviour {
     }
 
     public void OnBtnCreateRoom()
-    {
-
+    {        
+        Sender.CreateRoom();
     }
 
     public void OnBtnBackToLobby()
@@ -50,6 +56,41 @@ public class Lobby : MonoBehaviour {
 
     public void OnBtnRefresh()
     {
+        Sender.RoomListRequest();
+    }
 
+    public void OnCreateRoomRet(GCPCreateRoomRet createRoomRet)
+    {
+        if(createRoomRet.result == GCPCreateRoomRet.eReuslt.Success)
+        {
+            GlobalData.Instance.roomSN = createRoomRet.sn;            
+        }
+        else
+        {
+            msgBox.Show("방 생성에 실패 했습니다.");
+        }
+    }
+
+    public void OnEnterRoomRet(GCPEnterRoomRet enterRoomRet)
+    {
+        if( enterRoomRet.result == GCPEnterRoomRet.eResult.Fail)
+        {
+            msgBox.Show("방 입장에 실패 했습니다.");
+        }
+    }
+
+    public void OnRoomState(GCPRoomState roomState)
+    {
+        Receiver.OnRoomStateCallback -= OnRoomState;
+        SceneManager.LoadScene("Game");
+    }
+
+    public void OnRoomListRet(GCPRoomListRet roomListRet)
+    {
+        InitRoomList();        
+        foreach(GCPRoomListRet.RoomInfo info in roomListRet.listRooms)
+        {
+            AddRoom(info.sn, info.userCount);
+        }        
     }
 }

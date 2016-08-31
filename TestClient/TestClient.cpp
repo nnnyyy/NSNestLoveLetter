@@ -13,7 +13,7 @@
 #include "Packet.h"
 #include "../GameLoveLetter/PacketProtocol.h"
 
-#define LOCAL_CONNECT
+//#define LOCAL_CONNECT
 
 #define _BUFF_SIZE 128 
 #define _MY_IP "127.0.0.1" 

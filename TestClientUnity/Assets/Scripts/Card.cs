@@ -3,6 +3,9 @@ using System.Collections;
 using UnityEngine.UI;
 
 public class Card : MonoBehaviour {
+    public delegate void touchCardListener(Card c);
+    public event touchCardListener touchEvent;
+
     Image imgBase;    
     public Sprite[] sprites;
     public int m_nNum;
@@ -21,13 +24,13 @@ public class Card : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	
+        	
 	}
 
     public void Set(SizeType t, int nIndex)
     {
         if (!imgBase) { imgBase = GetComponent<Image>(); }
-        imgBase.sprite = sprites[nIndex];        
+        imgBase.sprite = sprites[nIndex];
     }
 }
 

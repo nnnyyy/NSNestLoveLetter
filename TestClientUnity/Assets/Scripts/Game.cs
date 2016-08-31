@@ -1,14 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
 using DG.Tweening;
+using System.Collections.Generic;
+using NSNetwork;
 
 public class Game : MonoBehaviour {
 
     delegate void touchListener(int nType, int nID, float x, float y, float dx, float dy);
-
-    event touchListener begin0, begin1;
-    event touchListener move0, move1;
-    event touchListener end0, end1;
+    event touchListener begin0;
+    event touchListener move0;
+    event touchListener end0;
     Vector2[] touchDelta = new Vector2[1];
 
     static public Transform s_tfBaseForConv;
@@ -24,54 +25,36 @@ public class Game : MonoBehaviour {
         s_tfBaseForConv.position = vSrcPos;
         return s_tfBaseForConv.position;
     }
-    public UserInfoBase[] m_InfoList;
+
+    public UserLocalInfo m_LocalUser;
+    public UserRemoteInfo[] m_aRemoteUsers;
     public Transform tfTestBase;
     public Transform tfBase;
-    public Transform tfTestRemoteHand;
-    public Transform tfTestLocalHand;
+    public Transform tfGrave;
 
-    public void OnTouch(int nType, int nID, float x, float y, float dx, float dy)
-    {
-        if(nType == 0)
-        {
-            Card c = CardManager.CreateCard(Card.SizeType.LOCAL_HAND, 1);
-            m_InfoList[0].PutHand(c);
-        }        
-    }
+    //  게임 관련
+    bool isGameRunning = false;
+    public List<GameUser> m_aUser;
+    public Dictionary<int, GameUser> m_mUser;
 
     // Use this for initialization
     void Start () {
+        Receiver.OnRoomStateCallback += OnRoomState;
         begin0 += OnTouch;
         move0 += OnTouch;
         end0 += OnTouch;
-
         s_tfBaseForConv = tfTestBase;
         s_tfRoot = tfBase;
         CardManager.Init();
-        Card c = CardManager.CreateCard(Card.SizeType.LOCAL_HAND, 1);
-        m_InfoList[0].PutHand(c);
-        Card c2 = CardManager.CreateCard(Card.SizeType.LOCAL_HAND, 1);
-        m_InfoList[0].PutHand(c2);
-        Card c3 = CardManager.CreateCard(Card.SizeType.LOCAL_HAND, 1);
-        m_InfoList[0].PutHand(c3);
-        /*
-        c.transform.SetParent(s_tfRoot);
-        Vector3 vRoot = ConvPosToRootGlobal(tfTestRemoteHand.position);
-        Sequence doSequence = DOTween.Sequence();
-        doSequence.Append(c.transform.DOMove(vRoot, 0.5f));
-        doSequence.Join(c.transform.DOScale(0.25f, 0.25f));
-        vRoot = ConvPosToRootGlobal(tfTestLocalHand.position);
-        doSequence.Append(c.transform.DOMove(vRoot, 0.5f));
-        doSequence.Join(c.transform.DOScale(0.5f, 0.5f)).OnComplete(()=> {
-            
-        });
-        */
+        m_aUser = new List<GameUser>();
+        m_mUser = new Dictionary<int, GameUser>();
+        Refresh();        
     }
 
     // Update is called once per frame
     void Update () {
         //  Define 걸어서 나누자
-        bool bMouseClicked = Input.GetMouseButton(0);
+        bool bMouseClicked = Input.GetMouseButtonDown(0);
         if (bMouseClicked)
         {
             Vector2 pos = Input.mousePosition;            
@@ -106,4 +89,71 @@ public class Game : MonoBehaviour {
             }
         }        	
 	}
+
+    public void OnTouch(int nType, int nID, float x, float y, float dx, float dy)
+    {
+        if (nType == 0)
+        {
+            Card c = CardManager.CreateCard(Card.SizeType.LOCAL_HAND, 1);
+            m_LocalUser.PutHand(c);
+        }
+    }
+
+    static int userSN = 0;
+    public void AddLocalUser()
+    {
+        
+        if( m_aUser.Count >= 4 )
+        {
+            Debug.Log("Error Add Local User - Already Max");
+            return;
+        }
+        GameUser newUser = new GameUser();
+        newUser.m_nUserSN = userSN++;
+        newUser.m_sName = "김삼돌";
+        m_aUser.Add(newUser);
+        m_mUser.Add(newUser.m_nUserSN, newUser);
+        Refresh();
+    }
+
+    void Refresh()
+    {
+        ClearUI();
+
+        int idx = 0;
+        foreach (GCPRoomState.UserInfo u in GlobalData.Instance.roomUsers)
+        {
+            if (u.sn == GlobalData.Instance.userSN)
+            {
+                m_LocalUser.m_lbName.text = u.nickName;
+                if(GlobalData.Instance.roomMasterSN == u.sn)
+                {
+                    m_LocalUser.m_lbReadyState.text = "Master";
+                }
+                else
+                {
+                    m_LocalUser.m_lbReadyState.text = u.readyState == 1 ? "Ready" : "Not Ready";
+                }                
+            }
+            else
+            {
+                m_aRemoteUsers[idx].m_lbName.text = u.nickName;
+                m_aRemoteUsers[idx].m_lbReadyState.text = u.readyState == 1 ? "Ready" : "Not Ready";
+                idx++;
+            }            
+        }
+    }
+
+    void ClearUI()
+    {
+        m_LocalUser.ClearInfo();
+        foreach (UserInfoBase uib in m_aRemoteUsers)
+        {
+            uib.ClearInfo();
+        }
+    }
+
+    public void OnRoomState(GCPRoomState roomState)
+    {        
+    }
 }

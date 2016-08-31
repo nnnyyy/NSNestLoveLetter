@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using NSNetwork;
 
 public class RoomBtn : MonoBehaviour {
 
@@ -30,5 +31,6 @@ public class RoomBtn : MonoBehaviour {
     public void OnBtnEnterRoom()
     {
         Debug.Log("OnBtnEnterRoom - " + m_nRoomIndex);
+        Sender.EnterRoom(m_nRoomIndex);               
     }
 }
