@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class Card : MonoBehaviour {
     Image imgBase;    
     public Sprite[] sprites;
+    public int m_nNum;
 
     public enum SizeType
     {
@@ -26,23 +27,7 @@ public class Card : MonoBehaviour {
     public void Set(SizeType t, int nIndex)
     {
         if (!imgBase) { imgBase = GetComponent<Image>(); }
-        imgBase.sprite = sprites[nIndex];
-        float f = 0.5f;
-        switch (t)
-        {
-            case SizeType.LOCAL_HAND:
-                f = 0.5f;
-                break;
-
-            case SizeType.LOCAL_GROUND:
-                f = 0.25f;
-                break;
-
-            case SizeType.REMOTE:
-                f = 0.25f;
-                break;
-        }
-        transform.localScale = new Vector3(f, f, f);
+        imgBase.sprite = sprites[nIndex];        
     }
 }
 
