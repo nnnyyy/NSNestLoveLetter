@@ -3,6 +3,8 @@ using System.Collections;
 using DG.Tweening;
 using System.Collections.Generic;
 using NSNetwork;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class Game : MonoBehaviour {
 
@@ -37,10 +39,12 @@ public class Game : MonoBehaviour {
     public List<GameUser> m_aUser;
     public Dictionary<int, GameUser> m_mUser;
 
+    public Text lbTitle;
+
     // Use this for initialization
     void Start () {
         Receiver.OnRoomStateCallback += OnRoomState;
-        begin0 += OnTouch;
+        begin0 += OnTouch;        
         move0 += OnTouch;
         end0 += OnTouch;
         s_tfBaseForConv = tfTestBase;
@@ -48,6 +52,7 @@ public class Game : MonoBehaviour {
         CardManager.Init();
         m_aUser = new List<GameUser>();
         m_mUser = new Dictionary<int, GameUser>();
+        lbTitle.text = "Room : " + GlobalData.Instance.roomSN;
         Refresh();        
     }
 
@@ -92,55 +97,64 @@ public class Game : MonoBehaviour {
 
     public void OnTouch(int nType, int nID, float x, float y, float dx, float dy)
     {
-        if (nType == 0)
+        Collider2D coll;
+        Vector3 ray = Camera.main.ScreenToWorldPoint(new Vector3(x, y, 1));
+        if (coll = Physics2D.OverlapPoint(new Vector2(ray.x, ray.y), 0x300))
         {
-            Card c = CardManager.CreateCard(Card.SizeType.LOCAL_HAND, 1);
-            m_LocalUser.PutHand(c);
+            if(coll.gameObject.CompareTag("Card"))
+            {
+                Debug.Log("Card Processing");
+            }
+            coll.transform.SendMessage("Selected");
         }
     }
 
-    static int userSN = 0;
-    public void AddLocalUser()
+    public void OnBtnReadyOrStart()
     {
-        
-        if( m_aUser.Count >= 4 )
-        {
-            Debug.Log("Error Add Local User - Already Max");
-            return;
-        }
-        GameUser newUser = new GameUser();
-        newUser.m_nUserSN = userSN++;
-        newUser.m_sName = "김삼돌";
-        m_aUser.Add(newUser);
-        m_mUser.Add(newUser.m_nUserSN, newUser);
-        Refresh();
+
+    }
+
+    public void OnBtnLeave()
+    {
+        Receiver.OnLeaveRoomRetCallback += OnLeaveRoomRet;
+        Sender.LeaveRoom();        
+    }
+
+    public void OnLeaveRoomRet(GCPLeaveRoomRet leaveRoomRet)
+    {
+        SceneManager.LoadScene("Lobby");
     }
 
     void Refresh()
     {
         ClearUI();
 
+        if (GlobalData.Instance.roomUsers == null) return;
         int idx = 0;
         foreach (GCPRoomState.UserInfo u in GlobalData.Instance.roomUsers)
         {
+            UserInfoBase uib;
             if (u.sn == GlobalData.Instance.userSN)
             {
-                m_LocalUser.m_lbName.text = u.nickName;
-                if(GlobalData.Instance.roomMasterSN == u.sn)
-                {
-                    m_LocalUser.m_lbReadyState.text = "Master";
-                }
-                else
-                {
-                    m_LocalUser.m_lbReadyState.text = u.readyState == 1 ? "Ready" : "Not Ready";
-                }                
+                uib = m_LocalUser;
             }
             else
             {
-                m_aRemoteUsers[idx].m_lbName.text = u.nickName;
-                m_aRemoteUsers[idx].m_lbReadyState.text = u.readyState == 1 ? "Ready" : "Not Ready";
+                uib = m_aRemoteUsers[idx];
                 idx++;
-            }            
+            }
+            
+            uib.m_lbName.text = u.nickName;
+            if(GlobalData.Instance.roomMasterSN == u.sn)
+            {
+                uib.m_lbReadyState.text = "Master";
+            }
+            else
+            {
+                uib.m_lbReadyState.text = u.readyState == 1 ? "Ready" : "Not Ready";
+            }                
+            
+            
         }
     }
 

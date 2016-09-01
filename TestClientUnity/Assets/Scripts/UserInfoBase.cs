@@ -8,6 +8,7 @@ public class UserInfoBase : MonoBehaviour {
     public GameObject m_panelGround;
     public Text m_lbName;
     public Text m_lbReadyState;
+    public Text m_lbWinLose;
 
     // Use this for initialization
     void Start () {
@@ -23,6 +24,7 @@ public class UserInfoBase : MonoBehaviour {
     {
         m_lbName.text = "";
         m_lbReadyState.text = "";
+        m_lbWinLose.text = "";
     }
 
     virtual public void PutHand(Card c) { }

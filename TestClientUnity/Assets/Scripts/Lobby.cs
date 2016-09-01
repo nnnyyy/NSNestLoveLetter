@@ -12,11 +12,10 @@ public class Lobby : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        InitRoomList();
         Receiver.OnRoomListRetCallback += OnRoomListRet;
         Receiver.OnEnterRoomRetCallback += OnEnterRoomRet;
         Receiver.OnCreateRoomRetCallback += OnCreateRoomRet;
-        Receiver.OnRoomStateCallback += OnRoomState;
+        Receiver.OnRoomStateCallback += OnRoomState;                
         Sender.RoomListRequest();
     }
 	
@@ -27,10 +26,15 @@ public class Lobby : MonoBehaviour {
 
     void InitRoomList()
     {
+        Debug.Log("InitRoomList");
         List<Transform> liDelete = new List<Transform>();
-        foreach (Transform child in ContentRoot.transform) { liDelete.Add(child); }
+        foreach (Transform child in ContentRoot.transform) {
+            Debug.Log("InitRoomList1 - " + child);
+            liDelete.Add(child);            
+        }
+        Debug.Log("InitRoomList2");
         foreach (Transform t in liDelete)
-        {
+        {            
             DestroyObject(t.gameObject);
         }
     }
@@ -87,7 +91,7 @@ public class Lobby : MonoBehaviour {
 
     public void OnRoomListRet(GCPRoomListRet roomListRet)
     {
-        InitRoomList();        
+        InitRoomList();
         foreach(GCPRoomListRet.RoomInfo info in roomListRet.listRooms)
         {
             AddRoom(info.sn, info.userCount);

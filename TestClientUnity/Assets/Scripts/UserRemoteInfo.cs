@@ -12,4 +12,9 @@ public class UserRemoteInfo : UserInfoBase {
 	void Update () {
 	
 	}
+
+    void Selected()
+    {
+        Debug.Log("Selected!");
+    }
 }

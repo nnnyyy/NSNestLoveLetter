@@ -32,6 +32,11 @@ public class Card : MonoBehaviour {
         if (!imgBase) { imgBase = GetComponent<Image>(); }
         imgBase.sprite = sprites[nIndex];
     }
+
+    void Selected()
+    {
+
+    }
 }
 
 

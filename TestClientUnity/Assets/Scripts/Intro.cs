@@ -18,7 +18,7 @@ public class Intro : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
         msgBox.gameObject.SetActive(false);
-        NetworkUnityEvent.Instance.Connect(NSNest.Common.Const.SERVER_IP, NSNest.Common.Const.SERVER_PORT);
+        NetworkUnityEvent.Instance.Connect(NSNest.Common.Const.SERVER_IP, NSNest.Common.Const.SERVER_PORT);        
     }
 	
 	// Update is called once per frame
