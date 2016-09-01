@@ -27,6 +27,21 @@ public class UserInfoBase : MonoBehaviour {
         m_lbWinLose.text = "";
     }
 
+    public void SetNickName(string s)
+    {
+        m_lbName.text = s;
+    }
+
+    public void SetReadyStateMsg(string s)
+    {
+        m_lbReadyState.text = s;
+    }
+
+    public void SetWinLoseMsg(string s)
+    {
+        m_lbWinLose.text = s;
+    }
+
     virtual public void PutHand(Card c) { }
 }
 
@@ -34,15 +49,13 @@ public class GameUser
 {
     public GameUser()
     {
-        m_sName = "";
-        m_bMaster = false;
-        m_bReady = false;
+        m_nUserSN = -1;
         m_nGameIndex = -1;
+        infoUI = null;
     }
 
-    public int m_nUserSN;
-    public string m_sName;
-    public bool m_bMaster;
-    public bool m_bReady;
+    public int m_nUserSN;    
     public int m_nGameIndex;
+    public bool m_bLocal;
+    public UserInfoBase infoUI;
 }

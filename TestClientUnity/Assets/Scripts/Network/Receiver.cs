@@ -176,7 +176,7 @@ namespace NSNetwork
             {
                 GlobalData.Instance.roomUsers = packet.listUsers;
                 GlobalData.Instance.roomMasterSN = packet.masterSN;
-            }
+            }            
 
             if (m_onRoomStateCallback != null)
                 m_onRoomStateCallback(packet);

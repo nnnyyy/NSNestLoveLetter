@@ -48,7 +48,8 @@ public class Intro : MonoBehaviour {
 
     public void OnLoginRet(GCPLoginRet loginRet)
     {
-        if( loginRet.result == 0)
+        Receiver.OnLoginRetCallback -= OnLoginRet;
+        if ( loginRet.result == 0)
         {
             SceneManager.LoadScene("Lobby");
         }

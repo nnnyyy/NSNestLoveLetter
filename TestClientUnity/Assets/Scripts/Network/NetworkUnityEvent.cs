@@ -80,6 +80,11 @@ namespace NSNetwork
         {
             return network.IsConnected();
         }
+
+        void OnApplicationQuit()
+        {
+            Disconnect();
+        }
     }
 }
 

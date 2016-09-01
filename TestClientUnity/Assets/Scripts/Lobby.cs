@@ -15,7 +15,7 @@ public class Lobby : MonoBehaviour {
         Receiver.OnRoomListRetCallback += OnRoomListRet;
         Receiver.OnEnterRoomRetCallback += OnEnterRoomRet;
         Receiver.OnCreateRoomRetCallback += OnCreateRoomRet;
-        Receiver.OnRoomStateCallback += OnRoomState;                
+        Receiver.OnRoomStateCallback += OnRoomState;        
         Sender.RoomListRequest();
     }
 	
@@ -85,6 +85,9 @@ public class Lobby : MonoBehaviour {
 
     public void OnRoomState(GCPRoomState roomState)
     {
+        Receiver.OnRoomListRetCallback -= OnRoomListRet;
+        Receiver.OnEnterRoomRetCallback -= OnEnterRoomRet;
+        Receiver.OnCreateRoomRetCallback -= OnCreateRoomRet;
         Receiver.OnRoomStateCallback -= OnRoomState;
         SceneManager.LoadScene("Game");
     }

@@ -11,6 +11,10 @@ public class UIMsgBox : MonoBehaviour {
     public Text m_lbOKMsg;
     public GameObject m_goWithoutPanel;
 
+    public Button btnOK;
+    public Button btnYes;
+    public Button btnNo;
+
     Action okCallback;
 
     // Use this for initialization
@@ -24,12 +28,28 @@ public class UIMsgBox : MonoBehaviour {
 
     public void Show(string sMsg, string sOkMsg = DEFAULT_OK_MSG, Action callback = null)
     {
+        btnOK.gameObject.SetActive(true);
+        btnYes.gameObject.SetActive(false);
+        btnNo.gameObject.SetActive(false);
         m_lbMsg.text = sMsg;
         m_goWithoutPanel.transform.DOScale(0, 0);
         this.gameObject.SetActive(true);
 
         m_lbOKMsg.text = sOkMsg;
         okCallback = callback;        
+        m_goWithoutPanel.transform.DOScale(1, 0.3f);
+    }
+
+    public void ShowYesNo(string sMsg, Action _okCallback = null)
+    {
+        btnOK.gameObject.SetActive(false);
+        btnYes.gameObject.SetActive(true);
+        btnNo.gameObject.SetActive(true);
+        m_lbMsg.text = sMsg;
+        m_goWithoutPanel.transform.DOScale(0, 0);
+        this.gameObject.SetActive(true);
+        
+        okCallback = _okCallback;
         m_goWithoutPanel.transform.DOScale(1, 0.3f);
     }
 
@@ -45,5 +65,10 @@ public class UIMsgBox : MonoBehaviour {
         {
             okCallback();
         }
+    }
+
+    public void OnBtnCancel()
+    {
+        Hide();        
     }
 }

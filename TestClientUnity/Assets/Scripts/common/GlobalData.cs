@@ -13,10 +13,11 @@ public class GlobalData : Singleton<GlobalData>
     public int roomSN = 0;
     public int roomMasterSN = 0;
 
-    public List<GCPRoomState.UserInfo> roomUsers;
+    public List<GCPRoomState.UserInfo> roomUsers;    
 
 
     public bool IsInRoom() { return (roomSN > 0); }
+    public bool IsRoomMaster() { return (roomMasterSN == userSN); }
 
     public void ClearData()
     {

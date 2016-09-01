@@ -194,11 +194,26 @@ namespace NSNetwork
         }
 
         public eResult result;
+        public Dictionary<int, int> dSN_to_GameIdx;
+        public Dictionary<int, int> dGameIdx_to_SN;
 
         public GCPGameStartRet(byte[] data)
         {
             type = (eGCP)GetShort(data);
             result = (eResult)GetInt(data);
+            dSN_to_GameIdx = new Dictionary<int, int>();
+            dGameIdx_to_SN = new Dictionary<int, int>();
+            if(result == 0)
+            {
+                int nCnt = GetInt(data);
+                for(int i = 0; i < nCnt; ++i)
+                {
+                    int nUserSN = GetInt(data);
+                    int nGameIdx = GetInt(data);
+                    dSN_to_GameIdx.Add(nUserSN, nGameIdx);
+                    dGameIdx_to_SN.Add(nGameIdx, nUserSN);
+                }                
+            }
         }
     }
 
