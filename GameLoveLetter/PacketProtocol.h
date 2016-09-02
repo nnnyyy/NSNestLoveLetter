@@ -44,8 +44,9 @@ enum {
 
 enum {
 	//	러브레터 패킷
-		
-	GCP_LL_Status,		//	방 상태 정보			
+	
+	GCP_LL_InitStatus,	//	게임 초기 상태 정보
+	GCP_LL_Status,		//	현재 턴 등을 보내줌
 	GCP_LL_ActionRet,	//	카드 사용 결과
 	GCP_LL_RoundResult,	//	한 라운드 결과
 	GCP_LL_FinalResult,	//	최종 결과

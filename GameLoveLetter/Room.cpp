@@ -138,6 +138,7 @@ void CRoom::Start(CUser::pointer pUser) {
 	m_pDealer->EncodePlayerIndexList(oPacket);
 	BroadcastPacket(oPacket);
 
+	m_pDealer->SendGameInitInfo();
 	m_pDealer->Process();
 }
 

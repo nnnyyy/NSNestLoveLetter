@@ -470,6 +470,11 @@ public:
 	void OnGameLoveLetter(InPacket& iPacket) {
 		LONG nSubType = iPacket.Decode2();
 		switch (nSubType) {
+
+		case GCP_LL_InitStatus:
+			OnLLInitStatus(iPacket);
+			break;
+
 		case GCP_LL_Status:
 			OnLLStatus(iPacket);
 			break;
@@ -499,8 +504,9 @@ public:
 		}
 	}
 
-	void OnLLStatus(InPacket& iPacket) {
+	void OnLLInitStatus(InPacket& iPacket) {
 		LONG nCurTurnIndex = iPacket.Decode4();
+		LONG nCurTurnGetCard = iPacket.Decode4();
 		LONG nUserCnt = iPacket.Decode4();
 		boost::shared_ptr<CContext::RoomInfo> pRoom = CContext::get_mutable_instance().m_pRoom;
 		pRoom->nCurTurnIndex = nCurTurnIndex;
@@ -512,31 +518,25 @@ public:
 			pPlayer->m_bDead = bDead;
 			pPlayer->m_bGuard = bGuard;
 			LONG nGroundCardSize = iPacket.Decode4();
-			pPlayer->m_vGroundCardType.clear();			
-			if (nGroundCardSize) {				
+			pPlayer->m_vGroundCardType.clear();
+			if (nGroundCardSize) {
 				for (int i = 0; i < nGroundCardSize; ++i) {
 					LONG nCardType = iPacket.Decode4();
 					pPlayer->m_vGroundCardType.push_back(nCardType);
-				}				
+				}
 			}
 		}
-		
+
 		CContext::Player::pointer pPlayer = pRoom->mPlayers.at(CContext::get_mutable_instance().m_uUserSN);
 		pPlayer->m_vHandCardType.clear();
-		BOOL bMyTurn = iPacket.Decode4();
-		if (pPlayer->m_bDead) {
-			return;
-		}
-
 		LONG nHandCardType = iPacket.Decode4();
 		pPlayer->m_vHandCardType.push_back(nHandCardType);
-		LONG nNewHandCardType;
-		if (bMyTurn) {
-			nNewHandCardType = iPacket.Decode4();
-			pPlayer->m_vHandCardType.push_back(nNewHandCardType);
-		}
-		
-		pRoom->pLocalPlayer = pPlayer;		
+		pRoom->pLocalPlayer = pPlayer;
+	}
+
+	void OnLLStatus(InPacket& iPacket) {
+		LONG nCurTurnIndex = iPacket.Decode4();
+		LONG nCurTurnGetCard = iPacket.Decode4();
 	}
 
 	void OnActionRet(InPacket& iPacket) {

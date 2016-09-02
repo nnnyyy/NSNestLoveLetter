@@ -696,19 +696,6 @@ void CGameDealerLoveLetter::Process() {
 		OutPacket oPacket(GCP_GameLoveLetter);
 		oPacket.Encode2(GCP_LL_Status);
 		status.EncodeStatus(oPacket);
-		EncodePlayerInfo(oPacket);
-		BOOL bMyTurn = IsMyTurn(m_vPlayers[i]);
-		oPacket.Encode4(bMyTurn);		
-		if (!m_vPlayers[i]->m_bDead) {
-			oPacket.Encode4(m_vPlayers[i]->m_vHandCards[0]->m_nType);
-			if (bMyTurn) {
-				oPacket.Encode4(m_vPlayers[i]->m_vHandCards[1]->m_nType);
-			}
-		}
-		else {
-			//	Á×¾úÀ» °æ¿ì
-		}
-
 		CUser::pointer pUser = pRoom->GetUser(m_vPlayers[i]->nUserSN);
 		pUser->SendPacket(oPacket);
 	}
@@ -757,6 +744,7 @@ BOOL CGameDealerLoveLetter::IsMyTurn(Player::pointer pPlayer) {
 
 void CGameDealerLoveLetter::GameStatus::EncodeStatus(OutPacket& oPacket) {
 	oPacket.Encode4(nCurTurnIndex);
+	oPacket.Encode4(nCurTurnGetCardIndex);
 }
 
 void CGameDealerLoveLetter::Player::Init() {
@@ -787,6 +775,20 @@ void CGameDealerLoveLetter::SendFinalRoundOver(Player::pointer pWinner) {
 	pRoom->BroadcastPacket(oPacket);
 	pRoom->ResetReady();
 	pRoom->BroadcastRoomState();
+}
+
+void CGameDealerLoveLetter::SendGameInitInfo() {
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+	LONG nSize = m_vPlayers.size();
+	for (int i = 0; i < nSize; ++i) {
+		OutPacket oPacket(GCP_GameLoveLetter);
+		oPacket.Encode2(GCP_LL_InitStatus);
+		status.EncodeStatus(oPacket);
+		EncodePlayerInfo(oPacket);				
+		oPacket.Encode4(m_vPlayers[i]->m_vHandCards[0]->m_nType);
+		CUser::pointer pUser = pRoom->GetUser(m_vPlayers[i]->nUserSN);
+		pUser->SendPacket(oPacket);
+	}
 }
 
 BOOL CGameDealerLoveLetter::IsGameRunning() {
