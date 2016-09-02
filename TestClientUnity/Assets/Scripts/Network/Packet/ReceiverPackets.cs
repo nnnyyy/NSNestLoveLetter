@@ -218,7 +218,7 @@ namespace NSNetwork
     }
 
     // Game Love Letter
-    public class GCPLLStatus : ReceivePacket
+    public class GCPLLInitStatus : ReceivePacket
     {
         public class PlayerInfo
         {
@@ -231,14 +231,16 @@ namespace NSNetwork
         }
 
         public int currentTurnUserIndex;
+        public int currentTurnUserGetCardIndex;
         public List<PlayerInfo> listPlayer = new List<PlayerInfo>();
 
-        public GCPLLStatus(byte[] data)
+        public GCPLLInitStatus(byte[] data)
         {
             listPlayer.Clear();
             type = (eGCP)GetShort(data);
             eGCP_LoveLetter llType = (eGCP_LoveLetter)GetShort(data);
             currentTurnUserIndex = GetInt(data);
+            currentTurnUserGetCardIndex = GetInt(data);
             int userCount = GetInt(data);
 
             PlayerInfo local = null;
@@ -262,27 +264,106 @@ namespace NSNetwork
                     local = player;
                 }  
             }
-
-            local.bMyTurn = GetInt(data) == 0 ? false : true;
+                        
             local.listHandCards.Add(GetInt(data));
-            if (local.bMyTurn)
-            {
-                local.listHandCards.Add(GetInt(data));
+        }
+    }
 
+    public class GCPLLStatus : ReceivePacket
+    {
+        public int currentTurnUserIndex;
+        public int currentTurnUserGetCardIndex;        
 
-
-                 
-            }          
+        public GCPLLStatus(byte[] data)
+        {            
+            type = (eGCP)GetShort(data);
+            eGCP_LoveLetter llType = (eGCP_LoveLetter)GetShort(data);
+            currentTurnUserIndex = GetInt(data);
+            currentTurnUserGetCardIndex = GetInt(data);         
         }
     }
 
     public class GCPLLActionRet : ReceivePacket
     {
+        public int nCardType;
+        public int nSrcIdx;
+        public int nTargetIdx;
+        public int nCardIdx;
+        public bool bSucceed;
+        public bool bMyTurn;
+        public int nRet;
+        public int nDeadCardIdx;
+        public int nDropCardIdx;
+        public bool bTargetPlayer;
+        public int nNewCard;
+        public int nSrcToTargetCardIdx;
+        public int nTargetToSrcCardIdx;
+        public bool bSrcOrTarget;
         public GCPLLActionRet(byte[] data)
         {
             Debug.Log( "### GCPLLActionRet ###" );
             type = (eGCP)GetShort(data);
             eGCP_LoveLetter llType = (eGCP_LoveLetter)GetShort(data);
+            nCardType = GetInt(data);
+            switch (nCardType)
+            {
+                case 1:
+                    nSrcIdx = GetInt(data);
+                    nTargetIdx = GetInt(data);
+                    nCardIdx = GetInt(data);
+                    bSucceed = GetInt(data) == 1 ? true : false;
+                    break;
+
+                case 2:
+                    nSrcIdx = GetInt(data);
+                    nTargetIdx = GetInt(data);
+                    bMyTurn = GetInt(data) == 1 ? true : false;
+                    if (bMyTurn)
+                    {
+                        nCardIdx = GetInt(data);
+                    }
+                    break;
+
+                case 3:
+                    nSrcIdx = GetInt(data);
+                    nTargetIdx = GetInt(data);
+                    nRet = GetInt(data);
+                    if(nRet != 0)
+                    {
+                        nDeadCardIdx = GetInt(data);
+                    }
+                    break;
+
+                case 4:
+                    nSrcIdx = GetInt(data);
+                    break;
+
+                case 5:
+                    nSrcIdx = GetInt(data);
+                    nTargetIdx = GetInt(data);
+                    nDropCardIdx = GetInt(data);
+                    bTargetPlayer = GetInt(data) == 1 ? true : false;
+                    if (bTargetPlayer)
+                    {
+                        nNewCard = GetInt(data);
+                    }
+                    break;
+
+                case 6:
+                    nSrcIdx = GetInt(data);
+                    nTargetIdx = GetInt(data);
+                    bSrcOrTarget = GetInt(data) == 1 ? true : false;
+                    if (bSrcOrTarget)
+                    {
+                        nSrcToTargetCardIdx = GetInt(data);
+                        nTargetToSrcCardIdx = GetInt(data);
+                    }
+                    break;
+
+                case 7:
+                    nSrcIdx = GetInt(data);
+                    break;                    
+            }
         }
     }
 

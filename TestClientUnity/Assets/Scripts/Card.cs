@@ -27,8 +27,9 @@ public class Card : MonoBehaviour {
         	
 	}
 
-    public void Set(SizeType t, int nIndex)
+    public void Set(int nIndex)
     {
+        m_nNum = nIndex;
         if (!imgBase) { imgBase = GetComponent<Image>(); }
         imgBase.sprite = sprites[nIndex];
     }
@@ -48,9 +49,9 @@ public class CardManager
         Prefeb = Resources.Load<Card>("Card");
     }
 
-    static public Card CreateCard(Card.SizeType t, int nIndex) {
+    static public Card CreateCard(int nIndex) {
         Card newCard = GameObject.Instantiate<Card>(Prefeb);
-        newCard.Set(t, nIndex);
+        newCard.Set(nIndex);
         return newCard;
     }
 

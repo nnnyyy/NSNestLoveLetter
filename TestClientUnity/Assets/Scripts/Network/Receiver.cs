@@ -38,6 +38,7 @@ namespace NSNetwork
 
             switch (typeLL)
             {
+                case eGCP_LoveLetter.GCP_LL_InitStatus:     Receiver.OnLLInitStatus(new GCPLLInitStatus(data)); break;
                 case eGCP_LoveLetter.GCP_LL_Status:         Receiver.OnLLStatus(new GCPLLStatus(data));             break;
                 case eGCP_LoveLetter.GCP_LL_ActionRet:      Receiver.OnLLActionRet(new GCPLLActionRet(data));       break;
                 case eGCP_LoveLetter.GCP_LL_RoundResult:    Receiver.OnLLRoundResult(new GCPLLRoundResult(data));   break;
@@ -199,6 +200,21 @@ namespace NSNetwork
 
 
         // Game Love Letter
+        public delegate void LLInitStatusDelegate(GCPLLInitStatus llStatus);
+        static LLInitStatusDelegate m_onLLInitStatusCallback;
+        public static event LLInitStatusDelegate OnLLInitStatusCallback
+        {
+            add { m_onLLInitStatusCallback += value; }
+            remove { m_onLLInitStatusCallback -= value; }
+        }
+
+        static void OnLLInitStatus(GCPLLInitStatus packet)
+        {
+            Debug.Log("### OnLLInitStatus ###");
+            if (m_onLLInitStatusCallback != null)
+                m_onLLInitStatusCallback(packet);
+        }
+
         public delegate void LLStatusDelegate(GCPLLStatus llStatus);
         static LLStatusDelegate m_onLLStatusCallback;
         public static event LLStatusDelegate OnLLStatusCallback

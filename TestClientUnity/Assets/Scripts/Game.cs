@@ -215,6 +215,8 @@ public class Game : MonoBehaviour {
         }
 
         UserLocalInfo info = m_LocalUser;
+        info.m_nGameIndex = gameIndex;
+        info.m_nUserSN = SN;
         newLocalUser.m_nGameIndex = gameIndex;
         newLocalUser.infoUI = info;
         newLocalUser.infoUI.SetNickName(userInfo.nickName);
@@ -240,6 +242,8 @@ public class Game : MonoBehaviour {
             }
 
             UserRemoteInfo infoRemote = m_aRemoteUsers[i];
+            infoRemote.m_nGameIndex = gameIndex;
+            infoRemote.m_nUserSN = SN;
             newUser.m_nGameIndex = gameIndex;
             newUser.infoUI = infoRemote;
             newUser.infoUI.SetNickName(userInfo.nickName);
@@ -250,19 +254,114 @@ public class Game : MonoBehaviour {
         }        
     }
 
-    void OnLLStatus(GCPLLStatus status)
+    void OnLLInitStatus(GCPLLInitStatus status)
     {
         Debug.Log("현재 턴 : " + status.currentTurnUserIndex);
 
-        foreach(GCPLLStatus.PlayerInfo pinfo in status.listPlayer)
+        foreach(GCPLLInitStatus.PlayerInfo pinfo in status.listPlayer)
         {
             int gidx = dSN_to_GameIdx[pinfo.userSN];
             GameUser guser = m_mUser[gidx];
             Debug.Log(guser.m_nGameIndex);
             guser.infoUI.Refresh(pinfo);
         }
-        
+    }
 
+    void OnLLStatus(GCPLLStatus status) {
+        GameUser turnUser = m_mUser[status.currentTurnUserIndex];
+        turnUser.infoUI.SetShield(false);
+        Card c = CardManager.CreateCard(turnUser.m_bLocal ? status.currentTurnUserGetCardIndex : 0);
+        turnUser.infoUI.PutHand(c);
+    }
+
+    void OnLLActionRet(GCPLLActionRet action)
+    {
+        switch (action.nCardType)
+        {
+            case 1:
+                m_mUser[action.nSrcIdx].infoUI.DropCard(1);
+                if (action.bSucceed)
+                {
+                    Debug.Log("Dead - " + action.nTargetIdx);
+                    m_mUser[action.nTargetIdx].infoUI.DropCard(action.nCardIdx);
+                    //m_mUser[action.nTargetIdx].infoUI.Dead();
+                }
+                break;
+
+            case 2:
+                m_mUser[action.nSrcIdx].infoUI.DropCard(2);
+                if (action.bMyTurn)
+                {
+                    // AddGameLog();
+                    Debug.Log("[2] - " + action.nCardIdx);
+                }
+                break;
+
+            case 3:
+                m_mUser[action.nSrcIdx].infoUI.DropCard(3);
+                if(action.nRet == 1)
+                {
+                    m_mUser[action.nTargetIdx].infoUI.DropCard(action.nDeadCardIdx);
+                    //m_mUser[action.nTargetIdx].infoUI.Dead();
+                }
+                else if(action.nRet == -1)
+                {
+                    m_mUser[action.nSrcIdx].infoUI.DropCard(action.nDeadCardIdx);
+                    //m_mUser[action.nSrcIdx].infoUI.Dead();
+                }
+                else
+                {
+
+                }
+                break;
+
+            case 4:
+                m_mUser[action.nSrcIdx].infoUI.DropCard(4);
+                m_mUser[action.nSrcIdx].infoUI.SetShield(true);
+                break;
+
+            case 5:
+                m_mUser[action.nSrcIdx].infoUI.DropCard(5);
+                m_mUser[action.nTargetIdx].infoUI.DropCard(action.nDropCardIdx);
+                if (action.nDropCardIdx == 8)
+                {
+                    //m_mUser[action.nTargetIdx].infoUI.Dead();                    
+                }
+                else
+                {
+                    if (action.bTargetPlayer)
+                    {
+                        Card c = CardManager.CreateCard(action.nNewCard);
+                        m_mUser[action.nTargetIdx].infoUI.PutHand(c);
+                    }                    
+                    else
+                    {
+                        Card c = CardManager.CreateCard(0);
+                        m_mUser[action.nTargetIdx].infoUI.PutHand(c);
+                    }
+                }
+                break;
+
+            case 6:
+                m_mUser[action.nSrcIdx].infoUI.DropCard(6);
+                if(action.nSrcIdx == action.nTargetIdx)
+                {
+                    return;
+                }
+
+                if (action.bSrcOrTarget)
+                {
+                    UserInfoBase srcUI = m_mUser[action.nSrcIdx].infoUI;
+                    UserInfoBase targetUI = m_mUser[action.nTargetIdx].infoUI;
+                    srcUI.SendCard(targetUI, action.nSrcToTargetCardIdx);
+                    targetUI.SendCard(srcUI, action.nSrcToTargetCardIdx);
+                }
+                break;
+
+            case 7:
+                m_mUser[action.nSrcIdx].infoUI.DropCard(7);
+                break;
+        }
     }
 
     void SetCallback()
@@ -270,6 +369,8 @@ public class Game : MonoBehaviour {
         Receiver.OnRoomStateCallback += OnRoomState;
         Receiver.OnLeaveRoomRetCallback += OnLeaveRoomRet;
         Receiver.OnGameStartRetCallback += OnGameStartRet;
+        Receiver.OnLLInitStatusCallback += OnLLInitStatus;
+        Receiver.OnLLActionRetCallback += OnLLActionRet;
         Receiver.OnLLStatusCallback += OnLLStatus;
         TouchMan.Instance.ResetEvent();
         TouchMan.Instance.begin0 += OnTouch;
@@ -285,6 +386,8 @@ public class Game : MonoBehaviour {
         Receiver.OnRoomStateCallback -= OnRoomState;
         Receiver.OnLeaveRoomRetCallback -= OnLeaveRoomRet;
         Receiver.OnGameStartRetCallback -= OnGameStartRet;
+        Receiver.OnLLInitStatusCallback -= OnLLInitStatus;
+        Receiver.OnLLActionRetCallback -= OnLLActionRet;
         Receiver.OnLLStatusCallback -= OnLLStatus;
         TouchMan.Instance.ResetEvent();
         TouchMan.Instance.begin0 -= OnTouch;

@@ -319,21 +319,39 @@ void CGameDealerLoveLetter::OnHeroAction(InPacket& iPacket, CUser::pointer pUser
 		return;
 	}
 
-	LONG nDroppedCardType = DropAndGetNewCardByHero(pTargetPlayer);
+	LONG nDroppedCardType = DropAndGetNewCardByHero(pTargetPlayer);	
 	BOOL bKill = FALSE;
 	if (nDroppedCardType == LOVELETTER_PRINCESS) {
 		Dead(pTargetPlayer);
 		bKill = TRUE;
 	}
 
+	LONG nNewCard = 0;
+	if (!bKill) {
+		nNewCard = status.nCurTurnGetCardIndex;
+	}
+
 	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
-	OutPacket oPacket(GCP_GameLoveLetter);
-	oPacket.Encode2(GCP_LL_ActionRet);
-	oPacket.Encode4(LOVELETTER_HERO);
-	oPacket.Encode4(pTurnPlayer->m_nIndex);
-	oPacket.Encode4(pTargetPlayer->m_nIndex);	
-	oPacket.Encode4(bKill);					// Princess Drop Kill
-	pRoom->BroadcastPacket(oPacket);
+	LONG nSize = m_vPlayers.size();
+	for (int i = 0; i < nSize; ++i) {
+		OutPacket oPacket(GCP_GameLoveLetter);
+		oPacket.Encode2(GCP_LL_ActionRet);
+		oPacket.Encode4(LOVELETTER_HERO);
+		oPacket.Encode4(pTurnPlayer->m_nIndex);
+		oPacket.Encode4(pTargetPlayer->m_nIndex);
+		oPacket.Encode4(nDroppedCardType);
+		BOOL bTargetPlayer = FALSE;
+		if (m_vPlayers[i] == pTargetPlayer) {
+			bTargetPlayer = TRUE;			
+		}
+		oPacket.Encode4(bTargetPlayer);
+		if (bTargetPlayer) {
+			oPacket.Encode4(nNewCard);
+		}
+
+		CUser::pointer pUser = pRoom->GetUser(m_vPlayers[i]->nUserSN);
+		pUser->SendPacket(oPacket);
+	}
 
 	Next();
 	Process();
@@ -407,6 +425,13 @@ void CGameDealerLoveLetter::OnLadyAction(InPacket& iPacket, CUser::pointer pUser
 		//	¿À·ù
 		return;
 	}
+
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+	OutPacket oPacket(GCP_GameLoveLetter);
+	oPacket.Encode2(GCP_LL_ActionRet);
+	oPacket.Encode4(LOVELETTER_LADY);
+	oPacket.Encode4(status.nCurTurnIndex);
+	pRoom->BroadcastPacket(oPacket);
 
 	Next();
 	Process();

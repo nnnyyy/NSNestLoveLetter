@@ -589,6 +589,7 @@ public:
 				BOOL bSucceed = iPacket.Decode4();				
 				pRoom->GetPlayer(nSrcIdx)->DropCard(1);
 				if (bSucceed) {	
+					pRoom->GetPlayer(nTargetIdx)->DropCard(nCardIdx);
 					pRoom->GetPlayer(nTargetIdx)->m_bDead = true;					
 					AddMessage("경비병 사용 성공");
 				}
@@ -659,16 +660,22 @@ public:
 			//	영웅 사용 결과
 			LONG nSrcIdx = iPacket.Decode4();
 			LONG nTargetIdx = iPacket.Decode4();
-			BOOL bKill = iPacket.Decode4();
+			LONG nDropCardIdx = iPacket.Decode4();
+			BOOL bTargetPlayer = iPacket.Decode4();
+			LONG nNewCard = bTargetPlayer ? iPacket.Decode4() : -1;
 			pRoom->GetPlayer(nSrcIdx)->DropCard(5);
 			std::string sMsg = boost::str(boost::format("[영웅] player[%d]가 player[%d]에게 사용했습니다.") % nSrcIdx % nTargetIdx);
 			AddMessage(sMsg);
-			if (bKill) {
+			if (nDropCardIdx == 8) {
 				std::string sMsg = boost::str(boost::format("[영웅] player[%d]가 공주 카드를 드롭하여 죽었습니다.") % nTargetIdx);
 				pRoom->GetPlayer(nTargetIdx)->DropCard(8);
 				pRoom->GetPlayer(nTargetIdx)->m_bDead = TRUE;
 				AddMessage(sMsg);
-			}			
+			}
+			else {
+				pRoom->GetPlayer(nTargetIdx)->DropCard(nDropCardIdx);
+				pRoom->GetPlayer(nTargetIdx)->PutCardToHand(nNewCard);
+			}
 		}
 		break;
 		case 6:

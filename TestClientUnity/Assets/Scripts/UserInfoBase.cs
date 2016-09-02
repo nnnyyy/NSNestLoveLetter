@@ -11,9 +11,12 @@ public class UserInfoBase : MonoBehaviour {
     public Text m_lbName;
     public Text m_lbReadyState;
     public Text m_lbWinLose;
+    public bool m_bLocal;
     public GameObject m_myTurn;
     public GameObject m_shield;
     public bool bShield = false;
+    public int m_nGameIndex;
+    public int m_nUserSN;
     public List<Card> liCardHand = new List<Card>();
     public List<Card> liCardGround = new List<Card>();
 
@@ -49,10 +52,24 @@ public class UserInfoBase : MonoBehaviour {
         m_lbWinLose.text = s;
     }
 
-    virtual public void Refresh(GCPLLStatus.PlayerInfo pinfo) { }
+    virtual public void Refresh(GCPLLInitStatus.PlayerInfo pinfo) {
+        SetShield(pinfo.shieldState == 1 ? true : false);
+    }
+
+    public void SetShield(bool _bShield)
+    {
+        if (bShield == _bShield) {
+            return;
+        }
+        m_shield.SetActive(_bShield);
+        bShield = _bShield;
+    }
 
     virtual public void PutHand(Card c) { }
-    virtual public void PutGround(Card c) { }
+    virtual public void DropCard(Card c) { }
+    virtual public void DropCard(int nCard) { }
+    virtual public void SendCard(UserInfoBase targetUI, int nCard) {        
+    }
 }
 
 public class GameUser
@@ -66,6 +83,6 @@ public class GameUser
 
     public int m_nUserSN;    
     public int m_nGameIndex;
-    public bool m_bLocal;
     public UserInfoBase infoUI;
+    public bool m_bLocal;
 }
