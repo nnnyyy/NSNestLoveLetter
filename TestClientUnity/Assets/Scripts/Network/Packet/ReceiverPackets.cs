@@ -226,6 +226,8 @@ namespace NSNetwork
             public int deadState;
             public int shieldState;
             public List<int> listGroundCards = new List<int>();
+            public List<int> listHandCards = new List<int>();
+            public bool bMyTurn;
         }
 
         public int currentTurnUserIndex;
@@ -236,8 +238,10 @@ namespace NSNetwork
             listPlayer.Clear();
             type = (eGCP)GetShort(data);
             eGCP_LoveLetter llType = (eGCP_LoveLetter)GetShort(data);
+            currentTurnUserIndex = GetInt(data);
             int userCount = GetInt(data);
-            
+
+            PlayerInfo local = null;
             for( int i = 0; i < userCount; ++i )
             {
                 PlayerInfo player = new PlayerInfo();
@@ -251,8 +255,24 @@ namespace NSNetwork
                 {
                     player.listGroundCards.Add(GetInt(data));
                 }
-                listPlayer.Add(player);
+                listPlayer.Add(player);              
+                
+                if(GlobalData.Instance.userSN == player.userSN)
+                {
+                    local = player;
+                }  
             }
+
+            local.bMyTurn = GetInt(data) == 0 ? false : true;
+            local.listHandCards.Add(GetInt(data));
+            if (local.bMyTurn)
+            {
+                local.listHandCards.Add(GetInt(data));
+
+
+
+                 
+            }          
         }
     }
 

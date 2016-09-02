@@ -32,6 +32,7 @@ public class Game : MonoBehaviour {
     bool isGameRunning = false;
     public List<GameUser> m_aUser;
     public Dictionary<int, GameUser> m_mUser;   //  gameIndex to User
+    public Dictionary<int, int> dSN_to_GameIdx;
 
     public Text lbTitle;
     public Button btnReadyOrStart;
@@ -181,6 +182,8 @@ public class Game : MonoBehaviour {
     void ResetUIForGame(GCPGameStartRet startRet)
     {
         int nLocalIdx = startRet.dSN_to_GameIdx[GlobalData.Instance.userSN];
+        dSN_to_GameIdx = startRet.dSN_to_GameIdx;
+
         List<int> liGameIndex = new List<int>();
         int nLocalNext = (nLocalIdx + 1) % 4;
         for(int i = nLocalNext; i < 4; ++i)
@@ -247,11 +250,27 @@ public class Game : MonoBehaviour {
         }        
     }
 
+    void OnLLStatus(GCPLLStatus status)
+    {
+        Debug.Log("현재 턴 : " + status.currentTurnUserIndex);
+
+        foreach(GCPLLStatus.PlayerInfo pinfo in status.listPlayer)
+        {
+            int gidx = dSN_to_GameIdx[pinfo.userSN];
+            GameUser guser = m_mUser[gidx];
+            Debug.Log(guser.m_nGameIndex);
+            guser.infoUI.Refresh(pinfo);
+        }
+        
+
+    }
+
     void SetCallback()
     {        
         Receiver.OnRoomStateCallback += OnRoomState;
         Receiver.OnLeaveRoomRetCallback += OnLeaveRoomRet;
         Receiver.OnGameStartRetCallback += OnGameStartRet;
+        Receiver.OnLLStatusCallback += OnLLStatus;
         TouchMan.Instance.ResetEvent();
         TouchMan.Instance.begin0 += OnTouch;
         TouchMan.Instance.move0 += OnTouch;
@@ -266,6 +285,7 @@ public class Game : MonoBehaviour {
         Receiver.OnRoomStateCallback -= OnRoomState;
         Receiver.OnLeaveRoomRetCallback -= OnLeaveRoomRet;
         Receiver.OnGameStartRetCallback -= OnGameStartRet;
+        Receiver.OnLLStatusCallback -= OnLLStatus;
         TouchMan.Instance.ResetEvent();
         TouchMan.Instance.begin0 -= OnTouch;
         TouchMan.Instance.move0 -= OnTouch;
@@ -277,6 +297,6 @@ public class Game : MonoBehaviour {
 
     void GameStart()
     {
-
+        btnReadyOrStart.gameObject.SetActive(false);
     }
 }

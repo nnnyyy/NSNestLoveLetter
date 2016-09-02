@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using NSNetwork;
+using System.Collections.Generic;
 
 public class UserInfoBase : MonoBehaviour {
 
@@ -9,6 +11,11 @@ public class UserInfoBase : MonoBehaviour {
     public Text m_lbName;
     public Text m_lbReadyState;
     public Text m_lbWinLose;
+    public GameObject m_myTurn;
+    public GameObject m_shield;
+    public bool bShield = false;
+    public List<Card> liCardHand = new List<Card>();
+    public List<Card> liCardGround = new List<Card>();
 
     // Use this for initialization
     void Start () {
@@ -42,7 +49,10 @@ public class UserInfoBase : MonoBehaviour {
         m_lbWinLose.text = s;
     }
 
+    virtual public void Refresh(GCPLLStatus.PlayerInfo pinfo) { }
+
     virtual public void PutHand(Card c) { }
+    virtual public void PutGround(Card c) { }
 }
 
 public class GameUser

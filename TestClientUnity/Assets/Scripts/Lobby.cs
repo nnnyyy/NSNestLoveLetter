@@ -55,7 +55,7 @@ public class Lobby : MonoBehaviour {
 
     public void OnBtnBackToLobby()
     {
-        msgBox.Show("로비로 돌아가시겠습니까?");
+        
     }
 
     public void OnBtnRefresh()

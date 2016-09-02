@@ -2,11 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using NSNetwork;
 
-public class UserLocalInfo : UserInfoBase {
-
-    private List<Card> liCardHand = new List<Card>();
-    private List<Card> liCardGround = new List<Card>();
+public class UserLocalInfo : UserInfoBase {    
 
     // Use this for initialization
     void Start () {
@@ -17,6 +15,55 @@ public class UserLocalInfo : UserInfoBase {
 	void Update () {
 	
 	}
+
+    public override void Refresh(GCPLLStatus.PlayerInfo pinfo)
+    {
+        base.Refresh(pinfo);
+
+        if (pinfo.bMyTurn)
+        {
+            m_myTurn.SetActive(true);
+        }
+        else
+        {
+            m_myTurn.SetActive(false);
+        }
+
+        if (pinfo.shieldState == 1)
+        {
+            bShield = true;
+            m_shield.SetActive(true);
+        }
+        else
+        {
+            bShield = false;
+            m_shield.SetActive(false);
+        }
+
+        int diff = pinfo.listGroundCards.Count - liCardGround.Count;
+        if (diff > 0)
+        {
+            while (diff > 0)
+            {
+                int cardNum = pinfo.listGroundCards[pinfo.listGroundCards.Count - diff];
+                Card c = CardManager.CreateCard(Card.SizeType.REMOTE, cardNum);
+                PutGround(c);
+                --diff;
+            }
+        }
+
+        diff = pinfo.listHandCards.Count - liCardHand.Count;
+        if (diff > 0)
+        {
+            while (diff > 0)
+            {
+                int cardNum = pinfo.listHandCards[pinfo.listHandCards.Count - diff];
+                Card c = CardManager.CreateCard(Card.SizeType.REMOTE, cardNum);
+                PutHand(c);
+                --diff;
+            }
+        }
+    }
 
     public override void PutHand(Card c)
     {
