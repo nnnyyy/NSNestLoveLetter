@@ -13,7 +13,7 @@
 #include "Packet.h"
 #include "../GameLoveLetter/PacketProtocol.h"
 
-//#define LOCAL_CONNECT
+#define LOCAL_CONNECT
 
 #define _BUFF_SIZE 128 
 #define _MY_IP "127.0.0.1" 
@@ -62,6 +62,34 @@ public:
 		std::vector<LONG> m_vHandCardType;
 		std::vector<LONG> m_vGroundCardType;
 		typedef boost::shared_ptr<Player> pointer;
+	public:
+		void DropCard(LONG nCardIdx) {
+			std::vector<LONG>::iterator iter = m_vHandCardType.begin();
+			for (; iter != m_vHandCardType.end(); ++iter) {
+				if (*iter == nCardIdx) {
+					m_vHandCardType.erase(iter);
+					break;
+				}
+			}
+
+			m_vGroundCardType.push_back(nCardIdx);
+		}
+
+		void PutCardToHand(LONG nCardIdx) {
+			m_vHandCardType.push_back(nCardIdx);
+		}
+
+		void SendCard(Player::pointer pTargetPlayer, LONG nCardIdx) {
+			std::vector<LONG>::iterator iter = m_vHandCardType.begin();			
+			for (; iter != m_vHandCardType.end(); ++iter) {
+				if (*iter == nCardIdx) {
+					m_vHandCardType.erase(iter);
+					break;
+				}
+			}
+
+			pTargetPlayer->PutCardToHand(nCardIdx);
+		}
 	};
 
 	struct RoomInfo {
@@ -75,6 +103,11 @@ public:
 		std::map<LONG, LONG> mSNToIndex;	//	UserSN to Idx
 		std::map<LONG, LONG> mIndexToSN;	//	Idx to UserSN  
 		BOOL m_bGameStart;
+
+		Player::pointer GetPlayer(LONG nUserIdx) {
+			LONG sn = mIndexToSN[nUserIdx];
+			return mPlayers[sn];
+		}
 
 		BOOL IsMyTurn() {
 			if (!pLocalPlayer) return FALSE;
@@ -535,8 +568,12 @@ public:
 	}
 
 	void OnLLStatus(InPacket& iPacket) {
+		boost::shared_ptr<CContext::RoomInfo> pRoom = CContext::get_mutable_instance().m_pRoom;
 		LONG nCurTurnIndex = iPacket.Decode4();
-		LONG nCurTurnGetCard = iPacket.Decode4();
+		LONG nCurTurnGetCard = iPacket.Decode4();		
+		pRoom->nCurTurnIndex = nCurTurnIndex;
+		pRoom->GetPlayer(nCurTurnIndex)->m_bGuard = FALSE;
+		pRoom->GetPlayer(nCurTurnIndex)->PutCardToHand(nCurTurnGetCard);
 	}
 
 	void OnActionRet(InPacket& iPacket) {
@@ -546,16 +583,17 @@ public:
 		case 1:
 			{
 				//	경비병 사용 결과
-				BOOL bSucceed = iPacket.Decode4();
-				if (bSucceed) {
-					LONG nIdxDead = iPacket.Decode4();
-					LONG nUserSNDead = pRoom->mIndexToSN[nIdxDead];
+				LONG nSrcIdx = iPacket.Decode4();
+				LONG nTargetIdx = iPacket.Decode4();
+				LONG nCardIdx = iPacket.Decode4();
+				BOOL bSucceed = iPacket.Decode4();				
+				pRoom->GetPlayer(nSrcIdx)->DropCard(1);
+				if (bSucceed) {	
+					pRoom->GetPlayer(nTargetIdx)->m_bDead = true;					
 					AddMessage("경비병 사용 성공");
 				}
-				else {
-					LONG nIdxAlive = iPacket.Decode4();
-					LONG nFailCardType = iPacket.Decode4();
-					std::string sMsg = boost::str(boost::format("[경비병] %d플레이어가 %d 가 아닙니다.") % nIdxAlive % nFailCardType);
+				else {					
+					std::string sMsg = boost::str(boost::format("[경비병] %d플레이어가 %d 가 아닙니다.") % nTargetIdx % nCardIdx);
 					AddMessage(sMsg);					
 				}
 			}
@@ -563,26 +601,45 @@ public:
 		case 2:
 			{
 				//	신하 사용 결과
-				BOOL bSucceed = iPacket.Decode4();
-				if (bSucceed) {
-					LONG nCardType = iPacket.Decode4();	
+				LONG nSrcIdx = iPacket.Decode4();
+				LONG nTargetIdx = iPacket.Decode4();
+				BOOL bMyTurn = iPacket.Decode4();
+				pRoom->GetPlayer(nSrcIdx)->DropCard(2);
+				if (bMyTurn) {
+					LONG nCardType = iPacket.Decode4();
 					std::string sMsg = boost::str(boost::format("[신하] 상대방은 %d 카드 입니다.") % nCardType);
 					AddMessage(sMsg);
+				}
+				else {
+					//	나머지 사람들은 아무 행동하지 않는다.
 				}
 			}
 			break;
 		case 3:
 		{
 			//	험담가 사용 결과
-			BOOL bSucceed = iPacket.Decode4();
-			LONG nAliveIndex = iPacket.Decode4();
-			if (bSucceed) {
-				LONG nDeadIndex = iPacket.Decode4();				
-				std::string sMsg = boost::str(boost::format("[험담가] player[%d] 가 player[%d] 를 이겼습니다.") % nAliveIndex % nDeadIndex);
+			LONG nSrcIdx = iPacket.Decode4();
+			LONG nTargetIdx = iPacket.Decode4();
+			LONG nRet = iPacket.Decode4();
+			LONG nDeadCard = -1;
+			pRoom->GetPlayer(nSrcIdx)->DropCard(3);
+			if (nRet != 0) {
+				nDeadCard = iPacket.Decode4();
+			}
+			if (nRet == 1) {	//	Src 의 승리				
+				pRoom->GetPlayer(nTargetIdx)->DropCard(nDeadCard);
+				pRoom->GetPlayer(nTargetIdx)->m_bDead = TRUE;
+				std::string sMsg = boost::str(boost::format("[험담가] player[%d] 가 player[%d] 를 이겼습니다.") % nSrcIdx % nTargetIdx);
+				AddMessage(sMsg);				
+			}
+			else if (nRet == -1) {	//	Target 의 승리
+				pRoom->GetPlayer(nSrcIdx)->DropCard(nDeadCard);
+				pRoom->GetPlayer(nSrcIdx)->m_bDead = TRUE;
+				std::string sMsg = boost::str(boost::format("[험담가] player[%d] 가 player[%d] 를 이겼습니다.") % nTargetIdx % nSrcIdx);
 				AddMessage(sMsg);
 			}
 			else {
-				std::string sMsg = boost::str(boost::format("[험담가] player[%d] 와 아무 일도 없었습니다.") % nAliveIndex );
+				std::string sMsg = boost::str(boost::format("[험담가] player[%d] 와 player[%d]는 아무 일도 없었습니다.") % nSrcIdx % nTargetIdx);
 				AddMessage(sMsg);
 			}
 		}
@@ -590,23 +647,55 @@ public:
 		case 4:
 		{
 			//	컴페니언 사용 결과
-			LONG nUserIndex = iPacket.Decode4();
-			std::string sMsg = boost::str(boost::format("%d 가 한 턴 동안 보호를 걸었습니다.") % nUserIndex);
+			LONG nSrcIdx = iPacket.Decode4();
+			pRoom->GetPlayer(nSrcIdx)->DropCard(4);
+			pRoom->GetPlayer(nSrcIdx)->m_bGuard = TRUE;
+			std::string sMsg = boost::str(boost::format("[컴페니언] player[%d] 가 한 턴 동안 보호를 걸었습니다.") % nSrcIdx);
 			AddMessage(sMsg);
 		}
 		break;
 		case 5:
 		{
 			//	영웅 사용 결과
-			LONG nFromUserIdx = iPacket.Decode4();
-			LONG nToUserIdx = iPacket.Decode4();
+			LONG nSrcIdx = iPacket.Decode4();
+			LONG nTargetIdx = iPacket.Decode4();
 			BOOL bKill = iPacket.Decode4();
-			std::string sMsg = boost::str(boost::format("[영웅] player[%d]가 player[%d]에게 사용했습니다.") % nFromUserIdx % nToUserIdx );
+			pRoom->GetPlayer(nSrcIdx)->DropCard(5);
+			std::string sMsg = boost::str(boost::format("[영웅] player[%d]가 player[%d]에게 사용했습니다.") % nSrcIdx % nTargetIdx);
 			AddMessage(sMsg);
 			if (bKill) {
-				std::string sMsg = boost::str(boost::format("[영웅] player[%d]가 공주 카드를 드롭하여 죽었습니다.") % nToUserIdx);
+				std::string sMsg = boost::str(boost::format("[영웅] player[%d]가 공주 카드를 드롭하여 죽었습니다.") % nTargetIdx);
+				pRoom->GetPlayer(nTargetIdx)->DropCard(8);
+				pRoom->GetPlayer(nTargetIdx)->m_bDead = TRUE;
 				AddMessage(sMsg);
 			}			
+		}
+		break;
+		case 6:
+		{			
+			LONG nSrcIdx = iPacket.Decode4();
+			LONG nTargetIdx = iPacket.Decode4();
+			BOOL bSrcOrTarget = iPacket.Decode4();
+			pRoom->GetPlayer(nSrcIdx)->DropCard(6);
+			std::string sMsg = boost::str(boost::format("[위자드] player[%d]가 player[%d]에게 사용했습니다.") % nSrcIdx % nTargetIdx);
+			AddMessage(sMsg);
+			if (bSrcOrTarget) {
+				LONG nSrcToTargetCardIdx = iPacket.Decode4();
+				LONG nTargetToSrcCardIdx = iPacket.Decode4();
+				pRoom->GetPlayer(nSrcIdx)->SendCard(pRoom->GetPlayer(nTargetIdx), nSrcToTargetCardIdx);
+				pRoom->GetPlayer(nTargetIdx)->SendCard(pRoom->GetPlayer(nSrcIdx), nTargetToSrcCardIdx);				
+			}
+			else {
+			}
+		}
+		break;
+
+		case 7:
+		{
+			LONG nSrcIdx = iPacket.Decode4();
+			pRoom->GetPlayer(nSrcIdx)->DropCard(7);
+			std::string sMsg = boost::str(boost::format("[왕비] player[%d]가 왕비를 냈습니다.") % nSrcIdx);
+			AddMessage(sMsg);
 		}
 		break;
 		}

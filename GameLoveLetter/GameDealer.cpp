@@ -122,28 +122,24 @@ void CGameDealerLoveLetter::OnGuardAction(InPacket& iPacket, CUser::pointer pUse
 	pTargetPlayer->m_pUser->gamedata.m_nAttackedByGuard++;
 	pTurnPlayer->m_pUser->gamedata.m_nUseGuard++;
 
+	BOOL bSucceed = FALSE;
 	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
 	if (m_vPlayers[nTargetIdx]->m_vHandCards[0]->m_nType == nCardTypeGuess) {
 		pTurnPlayer->m_pUser->gamedata.m_nSuccessUseGuard++;
 		Dead(m_vPlayers[nTargetIdx]);
-		//	잡았다.		
-		OutPacket oPacket(GCP_GameLoveLetter);
-		oPacket.Encode2(GCP_LL_ActionRet);
-		oPacket.Encode4(LOVELETTER_GAURD);		
-		oPacket.Encode4(TRUE);
-		oPacket.Encode4(nTargetIdx);
-		pRoom->BroadcastPacket(oPacket);
-	}
-	else {
-		//	아무일도 일어나지 않는다.
-		OutPacket oPacket(GCP_GameLoveLetter);
-		oPacket.Encode2(GCP_LL_ActionRet);
-		oPacket.Encode4(LOVELETTER_GAURD);
-		oPacket.Encode4(FALSE);		
-		oPacket.Encode4(nTargetIdx);
-		oPacket.Encode4(nCardTypeGuess);
-		pRoom->BroadcastPacket(oPacket);
-	}
+		//	잡았다.
+		bSucceed = TRUE;
+		
+	}	
+
+	OutPacket oPacket(GCP_GameLoveLetter);
+	oPacket.Encode2(GCP_LL_ActionRet);
+	oPacket.Encode4(LOVELETTER_GAURD);
+	oPacket.Encode4(pTurnPlayer->m_nIndex);
+	oPacket.Encode4(pTargetPlayer->m_nIndex);
+	oPacket.Encode4(nCardTypeGuess);
+	oPacket.Encode4(bSucceed);
+	pRoom->BroadcastPacket(oPacket);
 
 	Next();
 	Process();
@@ -187,6 +183,8 @@ void CGameDealerLoveLetter::OnRoyalSubjectAction(InPacket& iPacket, CUser::point
 		OutPacket oPacket(GCP_GameLoveLetter);
 		oPacket.Encode2(GCP_LL_ActionRet);
 		oPacket.Encode4(LOVELETTER_ROYAL);
+		oPacket.Encode4(pTurnPlayer->m_nIndex);
+		oPacket.Encode4(pTargetPlayer->m_nIndex);
 		BOOL bMyTurn = IsMyTurn(m_vPlayers[i]);
 		oPacket.Encode4(bMyTurn);
 		if (bMyTurn) {
@@ -234,22 +232,22 @@ void CGameDealerLoveLetter::OnGossipAction(InPacket& iPacket, CUser::pointer pUs
 	Card::pointer pTargetHandCard = pTargetPlayer->m_vHandCards[0];
 	Card::pointer pMyHandCard = pTurnPlayer->m_vHandCards[0];
 
-	BOOL bRet = FALSE;
-	LONG nDeadIndex = -1;
+	LONG nRet = 0;	//	0 무승부 -1 Target Win 1 Turn Win
+	LONG nDeadCard = -1;
 	LONG nAliveIndex = -1;
 	if (pTargetHandCard->m_nType > pMyHandCard->m_nType) {
 		//	내가 죽음
 		Dead(pTurnPlayer);
-		bRet = TRUE;
-		nDeadIndex = status.nCurTurnIndex;
+		nRet = -1;
+		nDeadCard = pMyHandCard->m_nType;
 		nAliveIndex = nWho;
 	}
 	else if (pTargetHandCard->m_nType < pMyHandCard->m_nType) {
 		//	상대방이 죽음
 		pTurnPlayer->m_pUser->gamedata.m_nSuccessUseGossip++;
 		Dead(pTargetPlayer);
-		bRet = TRUE;
-		nDeadIndex = nWho;
+		nRet = 1;
+		nDeadCard = pTargetHandCard->m_nType;
 		nAliveIndex = status.nCurTurnIndex;
 	}
 	else {
@@ -261,10 +259,11 @@ void CGameDealerLoveLetter::OnGossipAction(InPacket& iPacket, CUser::pointer pUs
 	OutPacket oPacket(GCP_GameLoveLetter);
 	oPacket.Encode2(GCP_LL_ActionRet);
 	oPacket.Encode4(LOVELETTER_GOSSIP);
-	oPacket.Encode4(bRet);
-	oPacket.Encode4(nAliveIndex);
-	if (bRet) {
-		oPacket.Encode4(nDeadIndex);		
+	oPacket.Encode4(pTurnPlayer->m_nIndex);
+	oPacket.Encode4(pTargetPlayer->m_nIndex);
+	oPacket.Encode4(nRet);
+	if (nRet != 0) {
+		oPacket.Encode4(nDeadCard);
 	}	
 	pRoom->BroadcastPacket(oPacket);
 
@@ -331,8 +330,8 @@ void CGameDealerLoveLetter::OnHeroAction(InPacket& iPacket, CUser::pointer pUser
 	OutPacket oPacket(GCP_GameLoveLetter);
 	oPacket.Encode2(GCP_LL_ActionRet);
 	oPacket.Encode4(LOVELETTER_HERO);
-	oPacket.Encode4(status.nCurTurnIndex);	// From
-	oPacket.Encode4(nWho);					// To
+	oPacket.Encode4(pTurnPlayer->m_nIndex);
+	oPacket.Encode4(pTargetPlayer->m_nIndex);	
 	oPacket.Encode4(bKill);					// Princess Drop Kill
 	pRoom->BroadcastPacket(oPacket);
 
@@ -368,6 +367,29 @@ void CGameDealerLoveLetter::OnWizardAction(InPacket& iPacket, CUser::pointer pUs
 
 	// 교환 처리
 	ExchangeCard(pTurnPlayer, pTargetPlayer);
+
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+
+	LONG nSize = m_vPlayers.size();
+	for (int i = 0; i < nSize; ++i) {
+		OutPacket oPacket(GCP_GameLoveLetter);
+		oPacket.Encode2(GCP_LL_ActionRet);
+		oPacket.Encode4(LOVELETTER_WIZARD);
+		oPacket.Encode4(pTurnPlayer->m_nIndex);
+		oPacket.Encode4(pTargetPlayer->m_nIndex);
+		BOOL bSrcOrTarget = FALSE;
+		if (pTurnPlayer == m_vPlayers[i] || pTargetPlayer == m_vPlayers[i]) {
+			bSrcOrTarget = TRUE;
+		}
+		oPacket.Encode4(bSrcOrTarget);
+		if (bSrcOrTarget) {
+			oPacket.Encode4(pTargetPlayer->m_vHandCards[0]->m_nType);
+			oPacket.Encode4(pTurnPlayer->m_vHandCards[0]->m_nType);
+		}
+
+		CUser::pointer pUser = pRoom->GetUser(m_vPlayers[i]->nUserSN);
+		pUser->SendPacket(oPacket);
+	}
 
 	Next();
 	Process();
@@ -500,6 +522,7 @@ void CGameDealerLoveLetter::Update() {
 		}
 		else {
 			InitGame();
+			SendGameInitInfo();
 			Process();
 		}		
 		return;
@@ -732,6 +755,7 @@ void CGameDealerLoveLetter::EncodePlayerIndexList(OutPacket& oPacket) {
 }
 
 BOOL CGameDealerLoveLetter::GetCardFromDeck(Player::pointer pPlayer) {
+	status.nCurTurnGetCardIndex = m_vDeck.back()->m_nType;
 	pPlayer->m_vHandCards.push_back(m_vDeck.back());
 	BOOST_ASSERT(pPlayer->m_vHandCards.size() == 2 || pPlayer->m_vHandCards.size() == 1);
 	m_vDeck.pop_back();	
