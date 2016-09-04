@@ -147,8 +147,7 @@ namespace NSNetwork
             public char readyState = (char)0;
         }
 
-        public int flag;
-        public eFlagType flagType;
+        public int flag;        
         public int masterSN;
         public List<UserInfo> listUsers = new List<UserInfo>();
 
@@ -158,15 +157,12 @@ namespace NSNetwork
             flag = GetInt(data);            
 
             if ( (flag & FLAG_ROOM_MASTER) != 0 )
-            {
-                flagType = eFlagType.RoomMaster;
+            {                
                 masterSN = GetInt(data);
             }
 
             if( (flag & FLAG_WITHOUT_ROOM_MASTER) != 0 )
             {
-                flagType = eFlagType.UserInfos;
-
                 int userCount = (int)GetChar(data);
                 for (int i = 0; i < userCount; ++i)
                 {
@@ -177,9 +173,6 @@ namespace NSNetwork
                     listUsers.Add(user);
                 }
             }
-
-            if ((flag & FLAG_ALL) != 0)
-                flagType = eFlagType.All;
         }
     }
 

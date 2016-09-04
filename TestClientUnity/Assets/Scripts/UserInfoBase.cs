@@ -17,6 +17,7 @@ public class UserInfoBase : MonoBehaviour {
     public bool bShield = false;
     public int m_nGameIndex;
     public int m_nUserSN;
+    public bool bDead = false;
     public List<Card> liCardHand = new List<Card>();
     public List<Card> liCardGround = new List<Card>();
 

@@ -169,15 +169,10 @@ namespace NSNetwork
         static void OnRoomState(GCPRoomState packet)
         {
             Debug.Log("### OnRoomState ###");
-            if (packet.flagType == GCPRoomState.eFlagType.UserInfos)
+            if ((packet.flag & (int)GCPRoomState.FLAG_WITHOUT_ROOM_MASTER) != 0)
                 GlobalData.Instance.roomUsers = packet.listUsers;
-            else if (packet.flagType == GCPRoomState.eFlagType.RoomMaster)
-                GlobalData.Instance.roomMasterSN = packet.masterSN;
-            else if (packet.flagType == GCPRoomState.eFlagType.All)
-            {
-                GlobalData.Instance.roomUsers = packet.listUsers;
-                GlobalData.Instance.roomMasterSN = packet.masterSN;
-            }            
+            if ((packet.flag & (int)GCPRoomState.FLAG_ROOM_MASTER) != 0)
+                GlobalData.Instance.roomMasterSN = packet.masterSN;            
 
             if (m_onRoomStateCallback != null)
                 m_onRoomStateCallback(packet);

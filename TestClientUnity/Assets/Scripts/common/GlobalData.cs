@@ -17,7 +17,7 @@ public class GlobalData : Singleton<GlobalData>
 
 
     public bool IsInRoom() { return (roomSN > 0); }
-    public bool IsRoomMaster() { return (roomMasterSN == userSN); }
+    public bool IsRoomMaster(int _SN) { return (roomMasterSN == _SN); }
 
     public void ClearData()
     {
