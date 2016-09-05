@@ -18,7 +18,8 @@ public class Intro : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
         msgBox.gameObject.SetActive(false);
-        NetworkUnityEvent.Instance.Connect(NSNest.Common.Const.SERVER_IP, NSNest.Common.Const.SERVER_PORT);        
+        NetworkUnityEvent.Instance.Connect(NSNest.Common.Const.SERVER_IP, NSNest.Common.Const.SERVER_PORT);
+        SoundManager.instance.PlayLoop(0);
     }
 	
 	// Update is called once per frame
@@ -40,6 +41,7 @@ public class Intro : MonoBehaviour {
 
         Receiver.OnLoginRetCallback += OnLoginRet;
         Sender.Login(m_lbID.text, m_lbPw.text);
+        SoundManager.instance.PlaySingle(1);
     }
 
     public void OnBtnRegister(){

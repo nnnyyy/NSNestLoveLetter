@@ -23,6 +23,11 @@ namespace NSNetwork
             NetworkUnityEvent.Instance.Send(registerUser);
         }
 
+        public static void AliveAck() {
+            CGPAliveAck aliveAck = new CGPAliveAck();
+            NetworkUnityEvent.Instance.Send(aliveAck);
+        }
+
         /// <summary>
         /// 현재 개설된 방 정보를 요청
         /// </summary>
@@ -144,6 +149,12 @@ namespace NSNetwork
         {
             CGPLLLady llLady = new CGPLLLady();
             NetworkUnityEvent.Instance.Send(llLady);
+        }
+
+        public static void LLEmotionLaugh(int gameIdx)
+        {
+            CGPLLEmotionLaugh llEmotion = new CGPLLEmotionLaugh(gameIdx);
+            NetworkUnityEvent.Instance.Send(llEmotion);
         }
     }
 }

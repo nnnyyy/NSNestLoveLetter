@@ -148,7 +148,9 @@ LONG CRoom::GetUserCount() {
 
 void CRoom::RemoveUser(CUser::pointer pUser) {
 	if (!pUser) return;
-	m_mUsers.erase(pUser->m_nUserSN);
+	m_mUsers.erase(pUser->m_nUserSN);	
+
+	
 
 	BOOL bFind = FALSE;
 	for (std::vector<CUser::pointer>::iterator iter = m_vUsers.begin(); iter != m_vUsers.end(); ++iter) {
@@ -159,6 +161,19 @@ void CRoom::RemoveUser(CUser::pointer pUser) {
 			break;
 		}
 	}	
+
+	if (IsGameRunning()) {
+		for each (CUser::pointer p in m_vUsers)
+		{
+			if (m_pMaster == p) {
+				p->m_bReady = TRUE;
+			}
+			else {
+				p->m_bReady = FALSE;
+			}			
+		}
+		m_pDealer->StopGame();
+	}
 
 	if (bFind && m_vUsers.size() > 0 && m_pMaster == pUser) {
 		m_pMaster = m_vUsers[0];
@@ -207,6 +222,7 @@ void CRoomManager::Update() {
 	for (std::vector<CRoom::pointer>::iterator iter = m_vRooms.begin(); iter != m_vRooms.end(); ) {
 		if ((*iter)->GetUserCount() <= 0 ) {
 			(*iter)->Destroy();
+			LogAdd(boost::str(boost::format("[RoomManager] Destroy Room : %d") % (*iter)->GetSN()));
 			m_LockMutex.lock();
 			m_mRooms.erase((*iter)->GetSN());			
 			iter = m_vRooms.erase(iter);

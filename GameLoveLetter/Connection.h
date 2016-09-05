@@ -13,7 +13,7 @@ private:
 	std::string m_sMsg;	
 	InPacket packetBuf;
 
-	CConnection(boost::asio::io_service& io) : m_Socket(io), m_uSocketSN(-1){
+	CConnection(boost::asio::io_service& io) : m_Socket(io), m_uSocketSN(-1), bAlive(TRUE), bDisconnecting(FALSE){
 	}
 
 	void handle_Accept(const boost::system::error_code& err, size_t byte_transferred);
@@ -48,4 +48,13 @@ private:
 
 	void OnLogin(InPacket &iPacket);
 	void OnRegister(InPacket &iPacket);
+	void OnAliveAck(InPacket &iPacket);
+
+public:
+	void Update();
+private:
+	boost::chrono::system_clock::time_point tAliveCheckTime;	//	얼라이브 체크 타임	
+	BOOL bAlive;
+
+	BOOL bDisconnecting;
 };

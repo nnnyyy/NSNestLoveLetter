@@ -86,6 +86,7 @@ public:
 				void OnWizardAction(InPacket& iPacket, CUser::pointer pUser);
 				void OnLadyAction(InPacket& iPacket, CUser::pointer pUser);
 				void OnPrincessAction(InPacket& iPacket, CUser::pointer pUser);
+				void OnEmotion(InPacket& iPacket, CUser::pointer pUser);
 	virtual void Update();	
 
 	void InitGame();
@@ -112,6 +113,7 @@ public:
 	void SendGameInitInfo();
 
 	BOOL IsGameRunning();
+	void StopGame();
 
 public:
 	typedef boost::shared_ptr<CGameDealerLoveLetter> pointer;

@@ -362,12 +362,14 @@ namespace NSNetwork
 
     public class GCPLLRoundResult : ReceivePacket
     {
+        public int nReason;
         public int winUserIndex;
 
         public GCPLLRoundResult(byte[] data)
         {
             type = (eGCP)GetShort(data);
             eGCP_LoveLetter llType = (eGCP_LoveLetter)GetShort(data);
+            nReason = GetInt(data);
             winUserIndex = GetInt(data);
         }
     }
@@ -383,4 +385,24 @@ namespace NSNetwork
         }
     }
 
+    public class GCPLLAborted : ReceivePacket
+    {
+        public int winUserIndex;
+        public GCPLLAborted(byte[] data)
+        {
+            type = (eGCP)GetShort(data);
+            eGCP_LoveLetter lltype = (eGCP_LoveLetter)GetShort(data);            
+        }
+    }
+
+    public class GCPLLEmotion : ReceivePacket
+    {
+        public int gameIdx;
+        public GCPLLEmotion(byte[] data)
+        {
+            type = (eGCP)GetShort(data);
+            eGCP_LoveLetter lltype = (eGCP_LoveLetter)GetShort(data);
+            gameIdx = GetInt(data);
+        }
+    }
 }

@@ -75,6 +75,7 @@ void CGameDealerLoveLetter::OnPacket(InPacket& iPacket, CUser::pointer pUser) {
 	case CGP_LL_Wizard: OnWizardAction(iPacket, pUser); break;
 	case CGP_LL_Lady: OnLadyAction(iPacket, pUser); break;
 	case CGP_LL_Princess: OnPrincessAction(iPacket, pUser); break;
+	case CGP_LL_Emotion: OnEmotion(iPacket, pUser); break;
 	}
 }
 
@@ -313,6 +314,10 @@ void CGameDealerLoveLetter::OnHeroAction(InPacket& iPacket, CUser::pointer pUser
 		return;
 	}
 
+	if (pTargetPlayer->m_bGuard) {
+		return;
+	}
+
 	BOOL bDrop = DropCard(pTurnPlayer, LOVELETTER_HERO);
 	if (!bDrop) {
 		//	오류
@@ -371,6 +376,10 @@ void CGameDealerLoveLetter::OnWizardAction(InPacket& iPacket, CUser::pointer pUs
 		//	죽은 자도 타게팅 할 수 없다.
 		return;
 	}	
+
+	if (pTargetPlayer->m_bGuard) {
+		return;
+	}
 
 	if (FindTarget(pTurnPlayer) && nWho == status.nCurTurnIndex) {
 		//	타겟이 남아있는데 나에게 쓰는건 안됨
@@ -457,6 +466,14 @@ void CGameDealerLoveLetter::OnPrincessAction(InPacket& iPacket, CUser::pointer p
 	Process();
 }
 
+void CGameDealerLoveLetter::OnEmotion(InPacket& iPacket, CUser::pointer pUser) {
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+	OutPacket oPacket(GCP_GameLoveLetter);
+	oPacket.Encode2(GCP_LL_Emotion);
+	oPacket.Encode4(iPacket.Decode4());
+	pRoom->BroadcastPacket(oPacket);
+}
+
 LONG CGameDealerLoveLetter::DropAndGetNewCardByHero(Player::pointer pTargetPlayer) {
 	//	항상 1장이 있어야 한다.
 	BOOST_ASSERT(pTargetPlayer->m_vHandCards.size() == 1);
@@ -464,7 +481,8 @@ LONG CGameDealerLoveLetter::DropAndGetNewCardByHero(Player::pointer pTargetPlaye
 	pTargetPlayer->m_vHandCards.clear();
 	pTargetPlayer->m_vGroundCards.push_back(pCardDropped);
 	if (pCardDropped->m_nType != LOVELETTER_PRINCESS) {
-		GetCardFromDeck(pTargetPlayer);
+		BOOL bRet = GetCardFromDeck(pTargetPlayer);
+		if (!bRet) return -1;
 	}	
 	return pCardDropped->m_nType;
 }
@@ -703,6 +721,7 @@ void CGameDealerLoveLetter::GameOver(LONG nReason) {
 			CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
 			OutPacket oPacket(GCP_GameLoveLetter);
 			oPacket.Encode2(GCP_LL_RoundResult);
+			oPacket.Encode4(nReason);
 			oPacket.Encode4(pWinner->m_nIndex);
 			pRoom->BroadcastPacket(oPacket);
 		}		
@@ -780,6 +799,9 @@ void CGameDealerLoveLetter::EncodePlayerIndexList(OutPacket& oPacket) {
 }
 
 BOOL CGameDealerLoveLetter::GetCardFromDeck(Player::pointer pPlayer) {
+	if (m_vDeck.size() <= 0) {
+		return FALSE;
+	}
 	status.nCurTurnGetCardIndex = m_vDeck.back()->m_nType;
 	pPlayer->m_vHandCards.push_back(m_vDeck.back());
 	BOOST_ASSERT(pPlayer->m_vHandCards.size() == 2 || pPlayer->m_vHandCards.size() == 1);
@@ -845,4 +867,11 @@ BOOL CGameDealerLoveLetter::IsGameRunning() {
 	if (!pRoom) return FALSE;
 	
 	return pRoom->IsGameRunning();
+}
+
+void CGameDealerLoveLetter::StopGame() {
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+	OutPacket oPacket(GCP_GameLoveLetter);
+	oPacket.Encode2(GCP_LL_Aborted);
+	pRoom->BroadcastPacket(oPacket);
 }

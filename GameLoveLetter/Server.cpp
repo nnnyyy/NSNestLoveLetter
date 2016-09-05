@@ -13,6 +13,8 @@ Server::Server(boost::asio::io_service& io) : m_Acceptor(io, tcp::endpoint(tcp::
 	WaitAccept();
 }
 
+void Server_Wrapper::Update() { m_pServer->Update(); }
+
 void Server::WaitAccept() {
 	CConnection::pointer newConn = CConnection::create(m_Acceptor.get_io_service());	
 
@@ -23,10 +25,11 @@ void Server::WaitAccept() {
 
 void Server::handle_Accept(CConnection::pointer newConn, const boost::system::error_code& err) {
 	if (!err) {
-
+		m_LockMutex.lock();
 		newConn->m_uSocketSN = m_dwSocketSNCounter;
 		m_dwSocketSNCounter++;
 		m_mSockets.insert(std::pair<ULONG, CConnection::pointer>(newConn->m_uSocketSN, newConn ));		
+		m_LockMutex.unlock();
 		//m_lSockets.push_back(newConn);
 
 		newConn->start();
@@ -35,5 +38,16 @@ void Server::handle_Accept(CConnection::pointer newConn, const boost::system::er
 }
 
 void Server::RemoveSocket(CConnection::pointer pSocket) {
+	boost::lock_guard<boost::mutex> lock(m_LockMutex);
 	m_mSockets.erase(pSocket->m_uSocketSN);
+}
+
+void Server::Update() {	
+	std::map<ULONG, CConnection::pointer>::iterator it = m_mSockets.begin();
+	for (; it != m_mSockets.end(); ++it) {
+		CConnection::pointer pConn = it->second;
+		m_LockMutex.lock();
+		pConn->Update();
+		m_LockMutex.unlock();
+	}
 }

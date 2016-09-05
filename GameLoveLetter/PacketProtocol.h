@@ -39,6 +39,7 @@ enum {
 	CGP_LL_Wizard,			//	마법사 액션
 	CGP_LL_Lady,			//	귀부인 액션
 	CGP_LL_Princess,		//	공주 액션
+	CGP_LL_Emotion,		//	이모션
 	CGP_LL_Action,		//	선택하기 전의 엑션	
 };
 
@@ -50,4 +51,6 @@ enum {
 	GCP_LL_ActionRet,	//	카드 사용 결과
 	GCP_LL_RoundResult,	//	한 라운드 결과
 	GCP_LL_FinalResult,	//	최종 결과
+	GCP_LL_Aborted,	//	게임 중간 종료
+	GCP_LL_Emotion, //  이모션 결과
 };

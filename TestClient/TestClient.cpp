@@ -13,7 +13,7 @@
 #include "Packet.h"
 #include "../GameLoveLetter/PacketProtocol.h"
 
-#define LOCAL_CONNECT
+//#define LOCAL_CONNECT
 
 #define _BUFF_SIZE 128 
 #define _MY_IP "127.0.0.1" 
@@ -337,6 +337,14 @@ public:
 			OnLoginRet(iPacket);
 			break;
 
+		case GCP_AliveAck:
+		{
+			OutPacket oPacket(CGP_AliveAck);
+			SendPacket(oPacket);
+			return;
+		}			
+			break;
+
 		case GCP_RoomListRet:
 			OnRoomListRet(iPacket);
 			break;
@@ -523,6 +531,9 @@ public:
 		case GCP_LL_FinalResult:
 			OnFinalRoundRet(iPacket);
 			break;
+
+		case GCP_LL_Aborted:
+			OnGameAborted(iPacket);
 		}
 	}
 
@@ -709,6 +720,7 @@ public:
 	}	
 
 	void OnRoundRet(InPacket& iPacket) {
+		LONG nReason = iPacket.Decode4();
 		LONG nWinnerIdx = iPacket.Decode4();
 		//	좋겠다 이겨서
 		system("cls");
@@ -727,6 +739,10 @@ public:
 		std::cout << sMsg << std::endl;
 		Sleep(3000);
 		PrintMenu();
+	}
+
+	void OnGameAborted(InPacket& iPacket) {
+		CContext::get_mutable_instance().m_pRoom->m_bGameStart = FALSE;
 	}
 
 	void PrintRoomList() {

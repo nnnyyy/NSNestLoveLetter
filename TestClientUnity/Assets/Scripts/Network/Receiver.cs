@@ -16,6 +16,7 @@ namespace NSNetwork
             switch (type)
             {
                 case eGCP.GCP_LoginRet:         Receiver.OnLogin(new GCPLoginRet(data));                    break;
+                case eGCP.GCP_AliveAck:         Receiver.OnAliveAck(); break;
                 case eGCP.GCP_RegisterUserRet:  Receiver.OnRegisterUserRet(new GCPRegisterUserRet(data));  break;
                 case eGCP.GCP_RoomListRet:      Receiver.OnRoomListRet(new GCPRoomListRet(data));           break;
                 case eGCP.GCP_CreateRoomRet:    Receiver.OnCreateRoomRet(new GCPCreateRoomRet(data));       break;
@@ -43,6 +44,8 @@ namespace NSNetwork
                 case eGCP_LoveLetter.GCP_LL_ActionRet:      Receiver.OnLLActionRet(new GCPLLActionRet(data));       break;
                 case eGCP_LoveLetter.GCP_LL_RoundResult:    Receiver.OnLLRoundResult(new GCPLLRoundResult(data));   break;
                 case eGCP_LoveLetter.GCP_LL_FinalResult:    Receiver.OnLLFinalResult(new GCPLLFinalResult(data));   break;
+                case eGCP_LoveLetter.GCP_LL_Aborted:        Receiver.OnLLAborted(new GCPLLAborted(data)); break;
+                case eGCP_LoveLetter.GCP_LL_Emotion:        Receiver.OnLLEmotion(new GCPLLEmotion(data)); break;
             }
         }
 
@@ -82,6 +85,11 @@ namespace NSNetwork
 
             if (m_onRegisterUserRetCallback != null)
                 m_onRegisterUserRetCallback(packet);
+        }
+
+        static void OnAliveAck()
+        {
+            Sender.AliveAck();
         }
 
         public delegate void RoomListRetDelegate(GCPRoomListRet roomListRet);
@@ -268,6 +276,40 @@ namespace NSNetwork
             Debug.Log("### OnLLFinalResult ###");
             if (m_onLLFinalResultCallback != null)
                 m_onLLFinalResultCallback(packet);
+        }
+
+        public delegate void LLAbortedDelagate(GCPLLAborted llFinalResult);
+        static LLAbortedDelagate m_onLLAbortedCallback;
+        public static event LLAbortedDelagate OnLLAbortedCallback
+        {
+            add { m_onLLAbortedCallback += value; }
+            remove { m_onLLAbortedCallback -= value; }
+        }
+
+        static void OnLLAborted(GCPLLAborted packet)
+        {
+            Debug.Log("### OnLLAborted ###");
+            if (m_onLLAbortedCallback != null)
+                m_onLLAbortedCallback(packet);
+        }
+
+        public delegate void LLEmotionDelagate(GCPLLEmotion packet);
+        static LLEmotionDelagate m_onLLEmotionCallback;
+        public static event LLEmotionDelagate OnLLEmotionCallback
+        {
+            add { m_onLLEmotionCallback += value; }
+            remove { m_onLLEmotionCallback -= value; }
+        }
+        static void OnLLEmotion(GCPLLEmotion packet)
+        {
+            Debug.Log("### OnLLEmotion ###");
+            if (m_onLLEmotionCallback != null)
+                m_onLLEmotionCallback(packet);
+        }
+
+        static public void ClearEmotionEvent()
+        {
+            m_onLLEmotionCallback = null;
         }
     }
 }

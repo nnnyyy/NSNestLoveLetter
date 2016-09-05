@@ -18,13 +18,14 @@ public class UserInfoBase : MonoBehaviour {
     public int m_nGameIndex;
     public int m_nUserSN;
     public bool bDead = false;
+    public GameObject m_dead;
     public List<Card> liCardHand = new List<Card>();
     public List<Card> liCardGround = new List<Card>();
+    public EmotionMan emotion;
 
     // Use this for initialization
-    void Start () {
-	
-	}
+    void Start () {        
+    }
 	
 	// Update is called once per frame
 	void Update () {
@@ -36,6 +37,11 @@ public class UserInfoBase : MonoBehaviour {
         m_lbName.text = "";
         m_lbReadyState.text = "";
         m_lbWinLose.text = "";
+        m_nUserSN = 0;
+        m_nGameIndex = -1;
+        SetShield(false);
+        SetDead(false);
+        bDead = false;        
     }
 
     public void SetNickName(string s)
@@ -54,6 +60,8 @@ public class UserInfoBase : MonoBehaviour {
     }
 
     virtual public void Refresh(GCPLLInitStatus.PlayerInfo pinfo) {
+        ClearHandAndGround();
+        SetDead(false);
         SetShield(pinfo.shieldState == 1 ? true : false);
     }
 
@@ -66,10 +74,43 @@ public class UserInfoBase : MonoBehaviour {
         bShield = _bShield;
     }
 
-    virtual public void PutHand(Card c) { }
-    virtual public void DropCard(Card c) { }
-    virtual public void DropCard(int nCard) { }
+    public void SetDead(bool _bDead)
+    {
+        m_dead.SetActive(_bDead);
+        bDead = _bDead;
+    }
+
+    public void SetMyTurn(bool _bMyTurn)
+    {
+        m_myTurn.SetActive(_bMyTurn);
+    }
+
+    virtual public void PutHand(Card c) {
+        SoundManager.Instance.PlaySingle(5);
+    }
+    virtual public void DropCard(Card c) {
+        SoundManager.Instance.PlaySingle(5);
+    }
+    virtual public void DropCard(int nCard) {
+        SoundManager.Instance.PlaySingle(5);
+    }
     virtual public void SendCard(UserInfoBase targetUI, int nCard) {        
+    }
+
+    protected void ClearHandAndGround() {
+        liCardHand.Clear();
+        liCardGround.Clear();
+        List<Transform> liDelete = new List<Transform>();
+        foreach (Transform child in m_panelHands.transform) { liDelete.Add(child); }
+        foreach (Transform t in liDelete) { DestroyObject(t.gameObject); }
+        liDelete = new List<Transform>();
+        foreach (Transform child in m_panelGround.transform) { liDelete.Add(child); }
+        foreach (Transform t in liDelete) { DestroyObject(t.gameObject); }
+    }
+
+    public void Dead() {
+        bDead = true;
+        m_dead.SetActive(true);
     }
 }
 
@@ -86,4 +127,9 @@ public class GameUser
     public int m_nGameIndex;
     public UserInfoBase infoUI;
     public bool m_bLocal;
+
+    public string GetNickName()
+    {
+        return infoUI.m_lbName.text;
+    }
 }

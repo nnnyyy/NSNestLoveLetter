@@ -12,6 +12,7 @@ public class Lobby : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+        SoundManager.Instance.PlayLoop(0);
         Receiver.OnRoomListRetCallback += OnRoomListRet;
         Receiver.OnEnterRoomRetCallback += OnEnterRoomRet;
         Receiver.OnCreateRoomRetCallback += OnCreateRoomRet;
@@ -21,8 +22,15 @@ public class Lobby : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	
-	}
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            msgBox.ShowYesNo("게임을 종료하시겠습니까?", () =>
+            {
+                Application.Quit();
+                return;
+            });
+        }
+    }
 
     void InitRoomList()
     {
@@ -49,7 +57,8 @@ public class Lobby : MonoBehaviour {
     }
 
     public void OnBtnCreateRoom()
-    {        
+    {
+        SoundManager.instance.PlaySingle(1);
         Sender.CreateRoom();
     }
 
@@ -60,6 +69,7 @@ public class Lobby : MonoBehaviour {
 
     public void OnBtnRefresh()
     {
+        SoundManager.instance.PlaySingle(1);
         Sender.RoomListRequest();
     }
 
@@ -84,7 +94,7 @@ public class Lobby : MonoBehaviour {
     }
 
     public void OnRoomState(GCPRoomState roomState)
-    {
+    {        
         Receiver.OnRoomListRetCallback -= OnRoomListRet;
         Receiver.OnEnterRoomRetCallback -= OnEnterRoomRet;
         Receiver.OnCreateRoomRetCallback -= OnCreateRoomRet;

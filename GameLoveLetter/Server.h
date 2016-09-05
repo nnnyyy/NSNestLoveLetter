@@ -13,6 +13,8 @@ public:
 	boost::shared_ptr<Server> m_pServer;
 
 	static std::map<ULONG, boost::shared_ptr<CUser> > m_mUsers;
+
+	void Update();
 };
 
 class Server {	
@@ -34,4 +36,6 @@ private:
 public:
 
 	void RemoveSocket( CConnection::pointer pSocket );
+	void Update();
+	boost::mutex m_LockMutex;
 };

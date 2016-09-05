@@ -15,6 +15,7 @@
 #include "LogMan.h"
 
 using boost::asio::ip::tcp;	
+using namespace boost::chrono;
 
 void CConnection::handle_Accept(const boost::system::error_code& err, size_t byte_transferred) {	
 	m_Socket.async_read_some(
@@ -46,6 +47,7 @@ void CConnection::handle_Read(const boost::system::error_code& err, size_t byte_
 		LogAdd(boost::str(boost::format("[Disconnected] SocketSN : %d, pUser : %d") % m_uSocketSN % m_pUser));
 		Server_Wrapper::get_mutable_instance().m_pServer->RemoveSocket(shared_from_this());		
 		if (m_pUser) {
+			LogAdd(boost::str(boost::format("[Disconnected] UserSN : %d, UserName : %s") % m_pUser->m_nUserSN % m_pUser->m_sNick));
 			Server_Wrapper::m_mUsers.erase(m_pUser->m_nUserSN);
 			CMysqlManager::get_mutable_instance().SetGameDataToDB(m_pUser->m_nUserSN, m_pUser->gamedata);
 			CMysqlManager::get_mutable_instance().Logout(m_pUser->m_nUserSN);
@@ -61,6 +63,7 @@ void CConnection::handle_Write(const boost::system::error_code& err, size_t byte
 
 
 void CConnection::start() {	
+	tAliveCheckTime = system_clock::now();
 	time_t now = time(0);	
 	LogAdd(boost::str(boost::format("Scoket Connected : %s") 
 		% m_Socket.remote_endpoint().address().to_string()));
@@ -81,6 +84,7 @@ void CConnection::ProcessPacket(InPacket &iPacket) {
 	switch (nType) {
 	case CGP_Login: OnLogin(iPacket); break;
 	case CGP_RegisterUser: OnRegister(iPacket); break;
+	case CGP_AliveAck: OnAliveAck(iPacket); break;
 	default:
 		return;
 	}
@@ -178,4 +182,25 @@ void CConnection::OnRegister(InPacket &iPacket) {
 	OutPacket oPacket(GCP_RegisterUserRet);
 	oPacket.Encode2(nRet);
 	SendPacket(oPacket);
+}
+
+void CConnection::OnAliveAck(InPacket &iPacket) {
+	bAlive = TRUE;
+}
+
+void CConnection::Update(){
+	if (duration_cast<milliseconds>(system_clock::now() - tAliveCheckTime).count() >= 5000) {
+		if (!bAlive && !bDisconnecting) {
+			m_Socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+			m_Socket.close();
+			bDisconnecting = TRUE;
+			return;
+		}
+		//	5초에 한번 얼라이브 체크
+		OutPacket oPacket(GCP_AliveAck);		
+		SendPacket(oPacket);
+
+		tAliveCheckTime = system_clock::now();
+		bAlive = FALSE;
+	}
 }

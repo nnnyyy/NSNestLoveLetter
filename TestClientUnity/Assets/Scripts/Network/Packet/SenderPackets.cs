@@ -26,6 +26,14 @@ namespace NSNetwork
         }
     }
 
+    public class CGPAliveAck : SendPacket
+    {
+        public CGPAliveAck()
+        {
+            AddShort((short)eCGP.CGP_AliveAck);
+            CreateData();
+        }
+    }
     public class CGPRoomListRequest : SendPacket
     {
         public CGPRoomListRequest()
@@ -153,6 +161,17 @@ namespace NSNetwork
         {
             AddShort((short)eCGP.CGP_GameLoveLetter);
             AddShort((short)eCGP_LoveLetter.CGP_LL_Lady);
+            CreateData();
+        }
+    }
+
+    public class CGPLLEmotionLaugh : SendPacket
+    {
+        public CGPLLEmotionLaugh(int _gameIdx)
+        {
+            AddShort((short)eCGP.CGP_GameLoveLetter);
+            AddShort((short)eCGP_LoveLetter.CGP_LL_Emotion);
+            AddInt(_gameIdx);
             CreateData();
         }
     }

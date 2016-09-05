@@ -26,8 +26,7 @@ public class Game : MonoBehaviour {
     public UserLocalInfo m_LocalUser;
     public UserRemoteInfo[] m_aRemoteUsers;
     public Transform tfTestBase;
-    public Transform tfBase;
-    public Transform tfGrave;
+    public Transform tfBase;    
 
     //  게임 관련
     public Text lbTitle;
@@ -35,7 +34,9 @@ public class Game : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
+        SoundManager.Instance.PlayLoop(3);
         gameMan = GetComponent<GameLoveLetterMan>();
+        gameMan.msgBox = msgBox;
         SetCallback();        
         s_tfBaseForConv = tfTestBase;
         s_tfRoot = tfBase;
@@ -46,20 +47,21 @@ public class Game : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
-            	
-	}
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            msgBox.ShowYesNo("나가시겠습니까? 게임 중에는 패널티가 주어집니다.", () =>
+            {
+                OnBtnLeave();
+            });            
+        }            
+    }
 
     public void OnTouch(int nType, int nID, float x, float y, float dx, float dy)
     {
-        if (!gameMan.bInteractable)
+        if (!gameMan.bInteractable || gameMan.isTouchProcessing)
         {            
             return;
-        }   
-        
-        if(gameMan.isTouchProcessing)
-        {
-            return;
-        }
+        }        
                    
         Collider2D coll;
         Vector3 ray = Camera.main.ScreenToWorldPoint(new Vector3(x, y, 1));
@@ -102,9 +104,14 @@ public class Game : MonoBehaviour {
     }
 
     public void OnLeaveRoomRet(GCPLeaveRoomRet leaveRoomRet)
-    {
-        RemoveCallback();
-        SceneManager.LoadScene("Lobby");
+    {        
+        if (GlobalData.Instance.userSN == leaveRoomRet.sn)
+        {
+            RemoveCallback();
+            SceneManager.LoadScene("Lobby");
+        }
+        else {
+        }
     }
 
     void Refresh()
@@ -168,7 +175,8 @@ public class Game : MonoBehaviour {
         }
     }
     public void OnRoomState(GCPRoomState roomState)
-    {        
+    {
+        SoundManager.Instance.PlaySingle(4);
         Refresh();
     }
 
@@ -191,6 +199,9 @@ public class Game : MonoBehaviour {
         Receiver.OnLLInitStatusCallback += OnLLInitStatus;
         Receiver.OnLLActionRetCallback += OnLLActionRet;
         Receiver.OnLLStatusCallback += OnLLStatus;
+        Receiver.OnLLRoundResultCallback += OnRoundResult;
+        Receiver.OnLLFinalResultCallback += OnFinalRoundResult;
+        Receiver.OnLLAbortedCallback += OnAborted;
         TouchMan.Instance.ResetEvent();
         TouchMan.Instance.begin0 += OnTouch;
         TouchMan.Instance.move0 += OnTouch;
@@ -203,6 +214,15 @@ public class Game : MonoBehaviour {
     void OnLLInitStatus(GCPLLInitStatus status) {        gameMan.OnLLInitStatus(status);    }
     void OnLLActionRet(GCPLLActionRet action) { gameMan.OnLLActionRet(action); }
     void OnLLStatus(GCPLLStatus status) { gameMan.OnLLStatus(status); }
+    void OnRoundResult(GCPLLRoundResult ret) { gameMan.OnRoundResult(ret); }
+    void OnFinalRoundResult(GCPLLFinalResult ret) {
+        btnReadyOrStart.gameObject.SetActive(true);
+        gameMan.OnFinalRoundResult(ret);
+    }
+    void OnAborted(GCPLLAborted ret) {
+        btnReadyOrStart.gameObject.SetActive(true);
+        gameMan.OnAborted(ret);
+    }
 
 
     void RemoveCallback()
@@ -213,6 +233,9 @@ public class Game : MonoBehaviour {
         Receiver.OnLLInitStatusCallback -= OnLLInitStatus;
         Receiver.OnLLActionRetCallback -= OnLLActionRet;
         Receiver.OnLLStatusCallback -= OnLLStatus;
+        Receiver.OnLLRoundResultCallback -= OnRoundResult;
+        Receiver.OnLLFinalResultCallback -= OnFinalRoundResult;
+        Receiver.OnLLAbortedCallback -= OnAborted;
         TouchMan.Instance.ResetEvent();
         TouchMan.Instance.begin0 -= OnTouch;
         TouchMan.Instance.move0 -= OnTouch;

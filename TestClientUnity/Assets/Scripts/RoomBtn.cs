@@ -25,11 +25,12 @@ public class RoomBtn : MonoBehaviour {
     {
         m_nRoomIndex = _roomIdx;
         m_nUserCnt = _userCnt;
-        m_lbRoomInfo.text = "Room Index : " + m_nRoomIndex + ", UserCnt : " + m_nUserCnt;
+        m_lbRoomInfo.text = "Room <color=yellow>" + m_nRoomIndex + "</color> | User Count <color=yellow>" + m_nUserCnt + "</color>";
     }
 
     public void OnBtnEnterRoom()
     {
+        SoundManager.instance.PlaySingle(1);
         Debug.Log("OnBtnEnterRoom - " + m_nRoomIndex);
         Sender.EnterRoom(m_nRoomIndex);               
     }

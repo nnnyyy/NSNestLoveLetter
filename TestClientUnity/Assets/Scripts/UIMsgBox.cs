@@ -28,16 +28,17 @@ public class UIMsgBox : MonoBehaviour {
 
     public void Show(string sMsg, string sOkMsg = DEFAULT_OK_MSG, Action callback = null)
     {
+        SoundManager.instance.PlaySingle(2);
         btnOK.gameObject.SetActive(true);
         btnYes.gameObject.SetActive(false);
         btnNo.gameObject.SetActive(false);
         m_lbMsg.text = sMsg;
-        m_goWithoutPanel.transform.DOScale(0, 0);
+        m_goWithoutPanel.transform.DOScale(0.7f, 0);
         this.gameObject.SetActive(true);
 
         m_lbOKMsg.text = sOkMsg;
         okCallback = callback;        
-        m_goWithoutPanel.transform.DOScale(1, 0.3f);
+        m_goWithoutPanel.transform.DOScale(1, 0.2f);
     }
 
     public void ShowYesNo(string sMsg, Action _okCallback = null)
@@ -46,11 +47,11 @@ public class UIMsgBox : MonoBehaviour {
         btnYes.gameObject.SetActive(true);
         btnNo.gameObject.SetActive(true);
         m_lbMsg.text = sMsg;
-        m_goWithoutPanel.transform.DOScale(0, 0);
+        m_goWithoutPanel.transform.DOScale(0.7f, 0);
         this.gameObject.SetActive(true);
         
         okCallback = _okCallback;
-        m_goWithoutPanel.transform.DOScale(1, 0.3f);
+        m_goWithoutPanel.transform.DOScale(1, 0.2f);
     }
 
     public void Hide()

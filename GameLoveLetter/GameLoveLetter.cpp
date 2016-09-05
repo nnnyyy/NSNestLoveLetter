@@ -23,7 +23,8 @@ class CThreadManager {
 public:
 	void handle_timer() {
 		while (true) {
-			CRoomManager::get_mutable_instance().Update();
+			Server_Wrapper::get_mutable_instance().Update();
+			CRoomManager::get_mutable_instance().Update();			
 			Sleep(10);
 		}		
 	}

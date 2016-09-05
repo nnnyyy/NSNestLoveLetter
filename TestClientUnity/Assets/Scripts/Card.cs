@@ -34,6 +34,23 @@ public class Card : MonoBehaviour {
         imgBase.sprite = sprites[nIndex];
     }
 
+    static public string GetName(int _cardIdx)
+    {
+        switch (_cardIdx)
+        {
+            case 1: return "경비병";
+            case 2: return "신하";
+            case 3: return "험담가";
+            case 4: return "동료";
+            case 5: return "영웅";
+            case 6: return "마법사";
+            case 7: return "왕비";
+            case 8: return "공주";
+        }
+
+        return "---";
+    }
+
     void Selected()
     {
 
