@@ -534,6 +534,11 @@ public:
 
 		case GCP_LL_Aborted:
 			OnGameAborted(iPacket);
+			break;
+
+		case GCP_LL_Emotion:
+			std::cout << "\a" << std::endl;
+			break;
 		}
 	}
 
@@ -769,7 +774,7 @@ private:
 };
 
 int main()
-{
+{	
 	try {
 		boost::asio::io_service io;
 		boost::asio::io_service::work work(io);
@@ -862,7 +867,16 @@ void ProcGameMenu(CProtocol& client, LONG n) {
 			int n2 = atoi(line);
 			ProcCardCommand(client, n2);			
 		}
-				break;		
+				break;	
+
+		case 1: {
+			// ÃÄ¿ôÀ½
+			OutPacket oPacket(CGP_GameLoveLetter);
+			oPacket.Encode2(CGP_LL_Emotion);
+			oPacket.Encode4(CContext::get_mutable_instance().m_pRoom->pLocalPlayer->m_nIndex);
+			client.SendPacket(oPacket);			
+		}
+				break;
 	}
 }
 

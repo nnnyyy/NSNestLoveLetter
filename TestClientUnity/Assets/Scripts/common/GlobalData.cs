@@ -27,7 +27,10 @@ public class GlobalData : Singleton<GlobalData>
         cntLose = 0;
         roomSN = 0;
         roomMasterSN = 0;
-
-        roomUsers = null;
+        if (roomUsers != null) {
+            roomUsers.Clear();
+            roomUsers = null;
+        }
+        
     }    
 }

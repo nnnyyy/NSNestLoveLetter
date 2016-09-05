@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 namespace NSNetwork
 {
@@ -51,7 +52,11 @@ namespace NSNetwork
                 return;
 
             if (network.IsConnected() == false)
+            {                
+                GlobalData.Instance.ClearData();
+                //NetworkUnityEvent.Instance.Connect(NSNest.Common.Const.SERVER_IP, NSNest.Common.Const.SERVER_PORT);
                 return;
+            }                
 
             if( network.HasRecvPacket() )
             {

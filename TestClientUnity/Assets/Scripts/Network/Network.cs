@@ -71,7 +71,10 @@ namespace NSNetwork
         public Network()
         {
             if (socket == null)
-                socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
+            {
+                socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);                
+            }
+                
 
             listPacket.Clear();
         }
@@ -89,7 +92,7 @@ namespace NSNetwork
             if (this.socket == null)
                 return;
 
-            bool isConnected = socket.Connected;
+            bool isConnected = socket.Connected;            
             this.ip = ip;
             this.port = port;
 
@@ -101,12 +104,12 @@ namespace NSNetwork
                     isConnected = true;
                     Debug.Log("### Connect Success!! ###");
                 }
-                catch
+                catch(SocketException e)
                 {
+                    Debug.Log("Connect Error : " + e.ErrorCode);
                     isConnected = false;
                     if (onErrorCallback != null)
-                        onErrorCallback(eErrorType.ConnectFail);
-                    Debug.Log("### Connect Fail!! ###");
+                        onErrorCallback(eErrorType.ConnectFail);                    
                 }
             }
 
@@ -175,7 +178,7 @@ namespace NSNetwork
             }
             catch (Exception ex)
             {
-                Debug.Log("EndReceive Exception >> " + ex);
+                Debug.Log("EndReceive Exception >> " + ex);                
                 if (onErrorCallback != null)
                     onErrorCallback(eErrorType.EndReceiveFail);
                 return;
