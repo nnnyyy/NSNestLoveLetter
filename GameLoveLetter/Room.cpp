@@ -26,8 +26,11 @@ CRoom::~CRoom() {
 }
 
 void CRoom::Enter(CUser::pointer pUser) {
-	if (m_vUsers.size() >= USER_MAX) {
-		//	Log(ERROR, "What!?");
+	if (m_vUsers.size() >= USER_MAX) {		
+		return;
+	}
+
+	if (IsGameRunning()) {		
 		return;
 	}
 
@@ -108,7 +111,7 @@ void CRoom::Start(CUser::pointer pUser) {
 		return;
 	}
 
-	if (m_vUsers.size() < USER_MAX) {
+	if (m_vUsers.size() < USER_MIN) {
 		//	유저가 부족하다.
 		OutPacket oPacket(GCP_GameStartRet);
 		oPacket.Encode4(-1);	//	유저 부족 오류
@@ -172,6 +175,7 @@ void CRoom::RemoveUser(CUser::pointer pUser) {
 				p->m_bReady = FALSE;
 			}			
 		}
+		m_bGameStart = FALSE;
 		m_pDealer->StopGame();
 	}
 
@@ -239,6 +243,9 @@ void CRoomManager::MakeRoomListPacket(OutPacket& oPacket) {
 	oPacket.Encode4(m_vRooms.size());
 	for (std::vector<CRoom::pointer>::iterator iter = m_vRooms.begin(); iter != m_vRooms.end(); ++iter) {
 		CRoom::pointer pRoom = *iter;
+		if (pRoom->IsGameRunning()) {
+			continue;
+		}
 		oPacket.Encode4(pRoom->GetSN());
 		oPacket.Encode1(pRoom->GetUserCount());
 	}

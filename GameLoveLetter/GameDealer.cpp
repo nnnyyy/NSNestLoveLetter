@@ -583,6 +583,7 @@ void CGameDealerLoveLetter::InitGame() {
 	}
 	else {
 		status.nCurTurnIndex = 0;
+		status.nRoundOverCnt = m_vPlayers.size() == 4 ? 4 : 5;
 	}
 	
 
@@ -703,7 +704,7 @@ void CGameDealerLoveLetter::GameOver(LONG nReason) {
 		status.tRoundOverStart = system_clock::now();
 		status.nPrevRoundWinIndex = pWinner->m_nIndex;
 
-		if (pWinner->m_nRoundWin >= 3 /* 4명이면 보석 3개 모으기 */) {
+		if (pWinner->m_nRoundWin >= status.nRoundOverCnt) {
 			status.bFinalOver = TRUE;			
 			for each (Player::pointer p in m_vPlayers)
 			{				

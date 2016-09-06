@@ -80,7 +80,7 @@ public class Game : MonoBehaviour {
         Debug.Log("OnBtnReadyOrStart");
         if( GlobalData.Instance.IsRoomMaster(GlobalData.Instance.userSN) )
         {
-            if (GlobalData.Instance.roomUsers.Count < 4) return;
+            if (GlobalData.Instance.roomUsers.Count < 3) return;
             foreach (GCPRoomState.UserInfo u in GlobalData.Instance.roomUsers)
             {
                 if(u.readyState == 0)
@@ -154,7 +154,7 @@ public class Game : MonoBehaviour {
         if(GlobalData.Instance.IsRoomMaster(GlobalData.Instance.userSN))
         {
             btnReadyOrStart.GetComponentInChildren<Text>().text = "Start!";            
-            btnReadyOrStart.interactable = readyCnt == 4 ? true : false;
+            btnReadyOrStart.interactable = (readyCnt == GlobalData.Instance.roomUsers.Count) ? true : false;
         }
         else
         {

@@ -62,6 +62,7 @@ public:
 		LONG nCurTurnIndex;			//	현재 턴 플레이어
 		LONG nCurTurnGetCardIndex;	//	현재 턴 플레이어가 뽑은 카드 종류
 		BOOL bRoundOver;			//	현재 라운드가 종료 되었는지
+		LONG nRoundOverCnt;			//	라운드 모두 종료되기 위한 카운트. 4인 4개 3인 5개
 		BOOL bFinalOver;
 		boost::chrono::system_clock::time_point tRoundOverStart;		//	다음 라운드까지 중간에 티타임을 가지기 위함.
 		enum { WAIT_NEXT_ROUND_TIME = 5 * 1000, };

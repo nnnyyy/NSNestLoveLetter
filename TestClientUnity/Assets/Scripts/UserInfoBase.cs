@@ -18,10 +18,12 @@ public class UserInfoBase : MonoBehaviour {
     public int m_nGameIndex;
     public int m_nUserSN;
     public bool bDead = false;
+    public int m_nTokken;
     public GameObject m_dead;
     public List<Card> liCardHand = new List<Card>();
     public List<Card> liCardGround = new List<Card>();
     public EmotionMan emotion;
+    public Image[] jewelries;
 
     // Use this for initialization
     void Start () {        
@@ -34,14 +36,16 @@ public class UserInfoBase : MonoBehaviour {
 
     public void ClearInfo()
     {
-        m_lbName.text = "";
-        m_lbReadyState.text = "";
-        m_lbWinLose.text = "";
+        m_lbName.text = "-NoName-";
+        m_lbReadyState.text = "------";
+        m_lbWinLose.text = "------";
         m_nUserSN = 0;
         m_nGameIndex = -1;
         SetShield(false);
         SetDead(false);
-        bDead = false;        
+        bDead = false;
+        m_nTokken = 0;
+        ResetTokenImg();
     }
 
     public void SetNickName(string s)
@@ -111,6 +115,24 @@ public class UserInfoBase : MonoBehaviour {
     public void Dead() {
         bDead = true;
         m_dead.SetActive(true);
+    }
+
+    public void AddTokken()
+    {
+        m_nTokken++;
+        ResetTokenImg();
+    }
+
+    void ResetTokenImg()
+    {
+        foreach(Image img in jewelries)
+        {
+            img.gameObject.SetActive(false);
+        }
+        for(int i = 0; i < m_nTokken;++i)
+        {
+            jewelries[i].gameObject.SetActive(true);
+        }            
     }
 }
 

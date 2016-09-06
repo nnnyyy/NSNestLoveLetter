@@ -17,6 +17,8 @@
 using boost::asio::ip::tcp;	
 using namespace boost::chrono;
 
+const LONG ALIVE_CHECK_TIME_MILLI = 5000;
+
 void CConnection::handle_Accept(const boost::system::error_code& err, size_t byte_transferred) {	
 	m_Socket.async_read_some(
 		boost::asio::buffer(m_RecvBuf),
@@ -189,7 +191,7 @@ void CConnection::OnAliveAck(InPacket &iPacket) {
 }
 
 void CConnection::Update(){
-	if (duration_cast<milliseconds>(system_clock::now() - tAliveCheckTime).count() >= 5000) {
+	if (duration_cast<milliseconds>(system_clock::now() - tAliveCheckTime).count() >= ALIVE_CHECK_TIME_MILLI) {
 		if (!bAlive && !bDisconnecting) {
 			m_Socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
 			m_Socket.close();

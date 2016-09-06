@@ -168,9 +168,11 @@ public class GameLoveLetterMan : MonoBehaviour {
         int nLocalIdx = startRet.dSN_to_GameIdx[GlobalData.Instance.userSN];
         dSN_to_GameIdx = startRet.dSN_to_GameIdx;
 
+        int nUserCnt = startRet.dSN_to_GameIdx.Count;
+
         List<int> liGameIndex = new List<int>();
-        int nLocalNext = (nLocalIdx + 1) % 4;
-        for (int i = nLocalNext; i < 4; ++i)
+        int nLocalNext = (nLocalIdx + 1) % nUserCnt;
+        for (int i = nLocalNext; i < nUserCnt; ++i)
         {
             liGameIndex.Add(i);
         }
@@ -211,7 +213,7 @@ public class GameLoveLetterMan : MonoBehaviour {
         m_mUser.Add(gameIndex, newLocalUser);
         m_aUser.Add(newLocalUser);
 
-        for (int i = 0; i < 3; ++i)
+        for (int i = 0; i < (nUserCnt - 1); ++i)
         {
             GameUser newUser = new GameUser();
             newUser.m_bLocal = false;
@@ -423,7 +425,9 @@ public class GameLoveLetterMan : MonoBehaviour {
     public void OnFinalRoundResult(GCPLLFinalResult ret)
     {
         gameLog.Reset();
-        string sWinner = m_mUser[ret.winUserIndex].GetNickName();
+        GameUser winner = m_mUser[ret.winUserIndex];
+        string sWinner = winner.GetNickName();
+        winner.infoUI.AddTokken();
         gameLog.AddLog(sWinner + "이(가) 최종 승리했습니다!!!!! 레알 축하합니다!");
         btnEmotion.gameObject.SetActive(false);
     }

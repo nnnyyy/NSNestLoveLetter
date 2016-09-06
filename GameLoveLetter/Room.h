@@ -2,7 +2,7 @@
 
 class CRoom : public Object {
 public:
-	enum { USER_MIN = 2, USER_MAX = 4 };
+	enum { USER_MIN = 3, USER_MAX = 4 };
 	static LONG s_nSN;
 
 	CRoom();
