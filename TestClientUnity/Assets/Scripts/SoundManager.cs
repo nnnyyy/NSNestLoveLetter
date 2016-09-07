@@ -1,68 +1,94 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
-public class SoundManager : Singleton<SoundManager> {
-
-    public AudioClip[] clips;
-
-    public AudioSource efxSource;                   //Drag a reference to the audio source which will play the sound effects.
-    public AudioSource musicSource;                 //Drag a reference to the audio source which will play the music.
-    public static SoundManager instance = null;     //Allows other scripts to call functions from SoundManager.             
+public class SoundManager : Singleton<SoundManager> {        
     public float lowPitchRange = .95f;              //The lowest a sound effect will be randomly pitched.
     public float highPitchRange = 1.05f;            //The highest a sound effect will be randomly pitched.
+    public readonly int MAX_SOURCE_CNT = 10;
+    List<AudioSource> liSourcesSfx;
+    AudioSource sourceBGM;
+    List<AudioClip> clips;
+    Dictionary<string, AudioClip> mClips;
 
-
-    void Awake()
+    public void Awake()
     {
-        //Check if there is already an instance of SoundManager
-        if (instance == null)
-            //if not, set it to this.
-            instance = this;
-        //If instance already exists:
-        else if (instance != this)
-            //Destroy this, this enforces our singleton pattern so there can only be one instance of SoundManager.
-            Destroy(gameObject);
+        liSourcesSfx = new List<AudioSource>();
+        for(int i = 0; i < MAX_SOURCE_CNT; ++i)
+        {
+            liSourcesSfx.Add(gameObject.AddComponent<AudioSource>());
+        }
 
-        //Set SoundManager to DontDestroyOnLoad so that it won't be destroyed when reloading our scene.
-        DontDestroyOnLoad(gameObject);
+        foreach(AudioSource asource in liSourcesSfx)
+        {
+            asource.playOnAwake = false;
+            asource.loop = false;
+        }
+
+        sourceBGM = gameObject.AddComponent<AudioSource>();
+        sourceBGM.loop = true;
+        sourceBGM.playOnAwake = false;
+        LoadClipsFromResources();
     }
 
+    void LoadClipsFromResources() {
+        clips = new List<AudioClip>();
+        mClips = new Dictionary<string, AudioClip>();
+        AudioClip[] acs = Resources.LoadAll< AudioClip>("sounds");
+        foreach(AudioClip ac in acs)
+        {
+            clips.Add(ac);
+            mClips.Add(ac.name, ac);
+            Debug.Log(ac.name);
+        }
+    }
 
     //Used to play single sound clips.
-    public void PlaySingle(int _num)
+    public void PlaySfx(int _num)
     {
-        if (clips == null || clips.Length <= 0) return;
-        //Set the clip of our efxSource audio source to the clip passed in as a parameter.
-        efxSource.clip = clips[_num];
-
-        //Play the clip.
-        efxSource.Play();
+        if (clips == null || clips.Count <= 0) return;
+        
+        foreach(AudioSource audiosource in liSourcesSfx)
+        {
+            if (audiosource.isPlaying) continue;
+            audiosource.clip = clips[_num];
+            audiosource.Play();
+        }
     }
 
-    public void PlayLoop(int _num)
+    public void PlaySfx(string sName)
     {
-        if (clips == null || clips.Length <= 0) return;
-        musicSource.clip = clips[_num];
-        musicSource.Play();
+        if (mClips == null || mClips.Count <= 0) return;
+        AudioClip ac = null;
+        if(!mClips.TryGetValue(sName, out ac))
+        {
+            return;
+        }
+
+        foreach (AudioSource audiosource in liSourcesSfx)
+        {
+            if (audiosource.isPlaying) continue;
+            audiosource.clip = ac;
+            audiosource.Play();
+        }
     }
 
-
-    //RandomizeSfx chooses randomly between various audio clips and slightly changes their pitch.
-    public void RandomizeSfx(params AudioClip[] clips)
+    public void PlayBGM(int _num)
     {
-        //Generate a random number between 0 and the length of our array of clips passed in.
-        int randomIndex = Random.Range(0, clips.Length);
+        if (clips == null || clips.Count <= 0) return;
+        sourceBGM.clip = clips[_num];
+        sourceBGM.Play();
+    }
 
-        //Choose a random pitch to play back our clip at between our high and low pitch ranges.
-        float randomPitch = Random.Range(lowPitchRange, highPitchRange);
-
-        //Set the pitch of the audio source to the randomly chosen pitch.
-        efxSource.pitch = randomPitch;
-
-        //Set the clip to the clip at our randomly chosen index.
-        efxSource.clip = clips[randomIndex];
-
-        //Play the clip.
-        efxSource.Play();
+    public void PlayBGM(string sName)
+    {        
+        if (mClips == null || mClips.Count <= 0) return;
+        AudioClip ac = null;
+        if (!mClips.TryGetValue(sName, out ac))
+        {
+            return;
+        }
+        sourceBGM.clip = ac;
+        sourceBGM.Play();
     }
 }

@@ -36,7 +36,7 @@ public class EmotionMan : MonoBehaviour {
         }
         nCurLaugh = UnityEngine.Random.Range(0, laugh.Length);
         laugh[nCurLaugh].gameObject.SetActive(true);
-        SoundManager.instance.PlaySingle(6);
+        SoundManager.Instance.PlaySfx("laugh");
         bShow = true;
         tStart = Environment.TickCount;
     }

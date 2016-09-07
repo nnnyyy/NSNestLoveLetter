@@ -11,6 +11,8 @@ namespace NSNetwork
         public string ip = "52.79.205.198";
         public int port = 7770;
         private Network network = null;
+        public bool isConnecting = false;
+        public UIMsgBox curMsgBox = null;
 
         private LinkedList<SendPacket> listSend = new LinkedList<SendPacket>();
 
@@ -49,14 +51,7 @@ namespace NSNetwork
         void Update()
         {
             if (network == null)
-                return;
-
-            if (network.IsConnected() == false)
-            {                
-                GlobalData.Instance.ClearData();
-                //NetworkUnityEvent.Instance.Connect(NSNest.Common.Const.SERVER_IP, NSNest.Common.Const.SERVER_PORT);
-                return;
-            }                
+                return;     
 
             if( network.HasRecvPacket() )
             {
@@ -84,6 +79,37 @@ namespace NSNetwork
         public bool IsConnected()
         {
             return network.IsConnected();
+        }
+
+        void OnApplicationFocus(bool focusStatus)
+        {
+            if (focusStatus)
+            {
+                if (network.IsConnected() == false && isConnecting == false)
+                {
+                    isConnecting = true;
+                    GlobalData.Instance.ClearData();
+                    if (curMsgBox != null)
+                    {
+                        curMsgBox.Show("네트워크 연결이 끊겼습니다.", "확인", () =>
+                        {
+                            Connect(NSNest.Common.Const.SERVER_IP, NSNest.Common.Const.SERVER_PORT);
+                            SceneManager.LoadScene("MainMenu");
+                        });
+                    }
+                    else
+                    {
+                        Connect(NSNest.Common.Const.SERVER_IP, NSNest.Common.Const.SERVER_PORT);
+                        SceneManager.LoadScene("MainMenu");
+                    }
+                    return;
+                }
+            }
+        }
+
+        void OnApplicationPause(bool pauseStatus)
+        {   
+                     
         }
 
         void OnApplicationQuit()

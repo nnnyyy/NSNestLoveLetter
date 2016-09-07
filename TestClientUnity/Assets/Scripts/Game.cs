@@ -34,7 +34,8 @@ public class Game : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        SoundManager.Instance.PlayLoop(3);
+        NetworkUnityEvent.Instance.curMsgBox = msgBox;
+        SoundManager.Instance.PlayBGM("bgm2");
         gameMan = GetComponent<GameLoveLetterMan>();
         gameMan.msgBox = msgBox;
         SetCallback();        
@@ -154,7 +155,7 @@ public class Game : MonoBehaviour {
         if(GlobalData.Instance.IsRoomMaster(GlobalData.Instance.userSN))
         {
             btnReadyOrStart.GetComponentInChildren<Text>().text = "Start!";            
-            btnReadyOrStart.interactable = (readyCnt == GlobalData.Instance.roomUsers.Count) ? true : false;
+            btnReadyOrStart.interactable = (readyCnt > 1 && readyCnt == GlobalData.Instance.roomUsers.Count) ? true : false;
         }
         else
         {
@@ -176,7 +177,7 @@ public class Game : MonoBehaviour {
     }
     public void OnRoomState(GCPRoomState roomState)
     {
-        SoundManager.Instance.PlaySingle(4);
+        SoundManager.Instance.PlaySfx("enterroom");
         Refresh();
     }
 

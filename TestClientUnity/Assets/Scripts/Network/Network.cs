@@ -70,12 +70,6 @@ namespace NSNetwork
 
         public Network()
         {
-            if (socket == null)
-            {
-                socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);                
-            }
-                
-
             listPacket.Clear();
         }
 
@@ -84,13 +78,18 @@ namespace NSNetwork
             if (socket == null)
                 return false;
 
-            return socket.Connected;
+            return !(socket.Poll(1, SelectMode.SelectRead) && socket.Available == 0);
         }
 
         public void Connect(string ip, int port)
         {
-            if (this.socket == null)
-                return;
+            if (this.socket != null)
+            {
+                this.socket.Close();
+                this.socket = null;
+            }
+
+            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
 
             bool isConnected = socket.Connected;            
             this.ip = ip;
@@ -102,10 +101,12 @@ namespace NSNetwork
                 {
                     socket.Connect(this.ip, this.port);
                     isConnected = true;
+                    NetworkUnityEvent.Instance.isConnecting = false;
                     Debug.Log("### Connect Success!! ###");
                 }
                 catch(SocketException e)
                 {
+                    NetworkUnityEvent.Instance.isConnecting = false;
                     Debug.Log("Connect Error : " + e.ErrorCode);
                     isConnected = false;
                     if (onErrorCallback != null)

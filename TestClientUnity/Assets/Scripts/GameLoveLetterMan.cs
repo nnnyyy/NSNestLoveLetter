@@ -417,8 +417,10 @@ public class GameLoveLetterMan : MonoBehaviour {
         if(ret.nReason == 0)
         {
             tfGrave.gameObject.SetActive(false);
-        }        
-        string sWinner = m_mUser[ret.winUserIndex].GetNickName();
+        }
+        GameUser winner = m_mUser[ret.winUserIndex];
+        string sWinner = winner.GetNickName();
+        winner.infoUI.AddTokken();
         gameLog.AddLog(sWinner + "이(가) 승리했습니다! 축하합니다!");
     }
 

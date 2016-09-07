@@ -45,7 +45,7 @@ public class UserInfoBase : MonoBehaviour {
         SetDead(false);
         bDead = false;
         m_nTokken = 0;
-        ResetTokenImg();
+        ResetTokenImg();        
     }
 
     public void SetNickName(string s)
@@ -90,13 +90,13 @@ public class UserInfoBase : MonoBehaviour {
     }
 
     virtual public void PutHand(Card c) {
-        SoundManager.Instance.PlaySingle(5);
+        SoundManager.Instance.PlaySfx("card_move");
     }
     virtual public void DropCard(Card c) {
-        SoundManager.Instance.PlaySingle(5);
+        SoundManager.Instance.PlaySfx("card_move");
     }
     virtual public void DropCard(int nCard) {
-        SoundManager.Instance.PlaySingle(5);
+        SoundManager.Instance.PlaySfx("card_move");
     }
     virtual public void SendCard(UserInfoBase targetUI, int nCard) {        
     }

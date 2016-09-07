@@ -30,7 +30,7 @@ public class RoomBtn : MonoBehaviour {
 
     public void OnBtnEnterRoom()
     {
-        SoundManager.instance.PlaySingle(1);
+        SoundManager.Instance.PlaySfx("btnNormal");
         Debug.Log("OnBtnEnterRoom - " + m_nRoomIndex);
         Sender.EnterRoom(m_nRoomIndex);               
     }

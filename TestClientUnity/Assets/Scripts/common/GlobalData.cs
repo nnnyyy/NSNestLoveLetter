@@ -21,7 +21,7 @@ public class GlobalData : Singleton<GlobalData>
 
     public void ClearData()
     {
-        userSN = 0;
+        userSN = -1;
         userNickname = "";
         cntWin = 0;
         cntLose = 0;

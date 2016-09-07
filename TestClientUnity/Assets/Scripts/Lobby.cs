@@ -12,7 +12,8 @@ public class Lobby : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        SoundManager.Instance.PlayLoop(0);
+        NetworkUnityEvent.Instance.curMsgBox = msgBox;
+        SoundManager.Instance.PlayBGM("bgm1");
         Receiver.OnRoomListRetCallback += OnRoomListRet;
         Receiver.OnEnterRoomRetCallback += OnEnterRoomRet;
         Receiver.OnCreateRoomRetCallback += OnCreateRoomRet;
@@ -58,7 +59,7 @@ public class Lobby : MonoBehaviour {
 
     public void OnBtnCreateRoom()
     {
-        SoundManager.instance.PlaySingle(1);
+        SoundManager.Instance.PlaySfx("btnNormal");
         Sender.CreateRoom();
     }
 
@@ -69,7 +70,7 @@ public class Lobby : MonoBehaviour {
 
     public void OnBtnRefresh()
     {
-        SoundManager.instance.PlaySingle(1);
+        SoundManager.Instance.PlaySfx("btnNormal");
         Sender.RoomListRequest();
     }
 

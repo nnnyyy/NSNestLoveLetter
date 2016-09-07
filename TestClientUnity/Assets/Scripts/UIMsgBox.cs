@@ -28,7 +28,7 @@ public class UIMsgBox : MonoBehaviour {
 
     public void Show(string sMsg, string sOkMsg = DEFAULT_OK_MSG, Action callback = null)
     {
-        SoundManager.instance.PlaySingle(2);
+        SoundManager.Instance.PlaySfx("btnDoong");
         btnOK.gameObject.SetActive(true);
         btnYes.gameObject.SetActive(false);
         btnNo.gameObject.SetActive(false);
