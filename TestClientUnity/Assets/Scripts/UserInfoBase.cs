@@ -119,6 +119,7 @@ public class UserInfoBase : MonoBehaviour {
     public void Dead() {
         bDead = true;
         m_dead.SetActive(true);
+        SoundManager.Instance.PlaySfx("scream");
     }
 
     public void AddTokken()

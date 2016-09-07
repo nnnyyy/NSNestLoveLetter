@@ -14,7 +14,7 @@ public class Lobby : MonoBehaviour {
 	void Start () {
         SoundManager.Instance.PlayBGM("bgm1");
         Receiver.ClearLobbyEvent();
-        ScreenFade.Fade(1, 0, 1.0f, 0, true, () =>
+        ScreenFade.Fade(1, 0, 0.5f, 0, true, () =>
         {
             NetworkUnityEvent.Instance.curMsgBox = msgBox;            
             Receiver.OnRoomListRetCallback += OnRoomListRet;
@@ -69,7 +69,13 @@ public class Lobby : MonoBehaviour {
 
     public void OnBtnBackToLobby()
     {
-        
+        msgBox.ShowYesNo("로그아웃 하시겠습니까?", () =>
+        {
+            NetworkUnityEvent.Instance.Disconnect();
+            GlobalData.Instance.ClearData();
+            Receiver.ClearLobbyEvent();
+            SceneManager.LoadScene("MainMenu");
+        });        
     }
 
     public void OnBtnRefresh()
@@ -101,7 +107,7 @@ public class Lobby : MonoBehaviour {
 
     public void OnRoomState(GCPRoomState roomState)
     {
-        ScreenFade.Fade(0, 1, 1.0f, 0, true, () =>
+        ScreenFade.Fade(0, 1, 0.5f, 0, true, () =>
         {
             Receiver.ClearLobbyEvent();
             SceneManager.LoadScene("Game");

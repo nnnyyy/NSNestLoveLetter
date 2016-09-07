@@ -34,7 +34,8 @@ public class Game : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        ScreenFade.Fade(1, 0, 1.0f, 0, true, () =>
+        Application.targetFrameRate = 60;
+        ScreenFade.Fade(1, 0, 0.5f, 0, true, () =>
         {
         });
         s_tfBaseForConv = tfTestBase;
@@ -62,13 +63,14 @@ public class Game : MonoBehaviour {
 
     public void OnTouch(int nType, int nID, float x, float y, float dx, float dy)
     {
+        Collider2D coll;
+        Vector3 ray = Camera.main.ScreenToWorldPoint(new Vector3(x, y, 1));        
         if (!gameMan.bInteractable || gameMan.isTouchProcessing)
         {            
             return;
         }        
                    
-        Collider2D coll;
-        Vector3 ray = Camera.main.ScreenToWorldPoint(new Vector3(x, y, 1));
+        
         if (coll = Physics2D.OverlapPoint(new Vector2(ray.x, ray.y), 0x300))
         {
             if(coll.gameObject.CompareTag("Card"))
@@ -82,6 +84,7 @@ public class Game : MonoBehaviour {
     public void OnBtnReadyOrStart()
     {
         Debug.Log("OnBtnReadyOrStart");
+        if (GlobalData.Instance.roomUsers == null) return;
         if( GlobalData.Instance.IsRoomMaster(GlobalData.Instance.userSN) )
         {
             if (GlobalData.Instance.roomUsers.Count < 3) return;
@@ -111,7 +114,7 @@ public class Game : MonoBehaviour {
     {        
         if (GlobalData.Instance.userSN == leaveRoomRet.sn)
         {
-            ScreenFade.Fade(0, 1, 1.0f, 0, true, () =>
+            ScreenFade.Fade(0, 1, 0.5f, 0, true, () =>
             {
                 RemoveCallback();
                 SceneManager.LoadScene("Lobby");
