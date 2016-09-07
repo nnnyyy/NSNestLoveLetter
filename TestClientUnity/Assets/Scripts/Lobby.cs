@@ -9,6 +9,8 @@ public class Lobby : MonoBehaviour {
     public GameObject ContentRoot;
     public Object PrefebRoomObject;
     public UIMsgBox msgBox;
+    [SerializeField]
+    private GameObject lbMsgNoRoom;
 
 	// Use this for initialization
 	void Start () {
@@ -117,6 +119,11 @@ public class Lobby : MonoBehaviour {
     public void OnRoomListRet(GCPRoomListRet roomListRet)
     {
         InitRoomList();
+        if (roomListRet.listRooms == null || roomListRet.listRooms.Count == 0) {
+            lbMsgNoRoom.SetActive(true);
+            return;
+        }
+
         foreach(GCPRoomListRet.RoomInfo info in roomListRet.listRooms)
         {
             AddRoom(info.sn, info.userCount);
