@@ -311,5 +311,13 @@ namespace NSNetwork
         {
             m_onLLEmotionCallback = null;
         }
+
+        static public void ClearLobbyEvent()
+        {
+            m_onRoomListRetCallback = null;
+            m_onEnterRoomRetCallback = null;
+            m_onCreateRoomRetCallback = null;
+            m_onRoomStateCallback = null;            
+        }
     }
 }

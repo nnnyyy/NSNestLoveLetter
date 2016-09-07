@@ -88,6 +88,7 @@ public class SoundManager : Singleton<SoundManager> {
         {
             return;
         }
+        if (sourceBGM.clip && sourceBGM.clip.name == sName) return;
         sourceBGM.clip = ac;
         sourceBGM.Play();
     }

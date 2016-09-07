@@ -12,13 +12,17 @@ public class Lobby : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        NetworkUnityEvent.Instance.curMsgBox = msgBox;
         SoundManager.Instance.PlayBGM("bgm1");
-        Receiver.OnRoomListRetCallback += OnRoomListRet;
-        Receiver.OnEnterRoomRetCallback += OnEnterRoomRet;
-        Receiver.OnCreateRoomRetCallback += OnCreateRoomRet;
-        Receiver.OnRoomStateCallback += OnRoomState;        
-        Sender.RoomListRequest();
+        Receiver.ClearLobbyEvent();
+        ScreenFade.Fade(1, 0, 1.0f, 0, true, () =>
+        {
+            NetworkUnityEvent.Instance.curMsgBox = msgBox;            
+            Receiver.OnRoomListRetCallback += OnRoomListRet;
+            Receiver.OnEnterRoomRetCallback += OnEnterRoomRet;
+            Receiver.OnCreateRoomRetCallback += OnCreateRoomRet;
+            Receiver.OnRoomStateCallback += OnRoomState;
+            Sender.RoomListRequest();
+        });        
     }
 	
 	// Update is called once per frame
@@ -39,7 +43,7 @@ public class Lobby : MonoBehaviour {
         List<Transform> liDelete = new List<Transform>();
         foreach (Transform child in ContentRoot.transform) {
             Debug.Log("InitRoomList1 - " + child);
-            liDelete.Add(child);            
+            liDelete.Add(child);
         }
         Debug.Log("InitRoomList2");
         foreach (Transform t in liDelete)
@@ -91,16 +95,17 @@ public class Lobby : MonoBehaviour {
         if( enterRoomRet.result == GCPEnterRoomRet.eResult.Fail)
         {
             msgBox.Show("방 입장에 실패 했습니다.");
+            Sender.RoomListRequest();
         }
     }
 
     public void OnRoomState(GCPRoomState roomState)
-    {        
-        Receiver.OnRoomListRetCallback -= OnRoomListRet;
-        Receiver.OnEnterRoomRetCallback -= OnEnterRoomRet;
-        Receiver.OnCreateRoomRetCallback -= OnCreateRoomRet;
-        Receiver.OnRoomStateCallback -= OnRoomState;
-        SceneManager.LoadScene("Game");
+    {
+        ScreenFade.Fade(0, 1, 1.0f, 0, true, () =>
+        {
+            Receiver.ClearLobbyEvent();
+            SceneManager.LoadScene("Game");
+        });        
     }
 
     public void OnRoomListRet(GCPRoomListRet roomListRet)

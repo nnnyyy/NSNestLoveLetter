@@ -407,7 +407,7 @@ public:
 		LONG nRoomCnt = iPacket.Decode4();
 		for (int i = 0; i < nRoomCnt; ++i) {
 			LONG nRoomSN = iPacket.Decode4();
-			LONG nUserCnt = iPacket.Decode4();
+			LONG nUserCnt = iPacket.Decode1();
 			std::cout << "[방번호 : " << nRoomSN << "] - 인원 : " << nUserCnt << std::endl;
 			m_vRoomInfo.clear();
 			RoomInfo info;

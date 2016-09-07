@@ -92,14 +92,12 @@ namespace NSNetwork
                     if (curMsgBox != null)
                     {
                         curMsgBox.Show("네트워크 연결이 끊겼습니다.", "확인", () =>
-                        {
-                            Connect(NSNest.Common.Const.SERVER_IP, NSNest.Common.Const.SERVER_PORT);
+                        {                            
                             SceneManager.LoadScene("MainMenu");
                         });
                     }
                     else
-                    {
-                        Connect(NSNest.Common.Const.SERVER_IP, NSNest.Common.Const.SERVER_PORT);
+                    {                        
                         SceneManager.LoadScene("MainMenu");
                     }
                     return;

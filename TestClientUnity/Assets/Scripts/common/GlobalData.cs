@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using NSNetwork;
 
 public class GlobalData : Singleton<GlobalData>
-{    
+{
+    public readonly string P_ID = "UserID";
+    public readonly string P_PW = "UserPW";
 
     public int userSN = 0;
     public string userNickname = "";

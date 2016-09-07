@@ -86,7 +86,7 @@ public class UserRemoteInfo : UserInfoBase {
 
     void Sort()
     {
-        int gap = 15;
+        int gap = 30;
         if (liCardHand.Count == 1)
         {
             liCardHand[0].transform.DOMove(m_panelHands.transform.position, 0.2f);

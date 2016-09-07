@@ -34,16 +34,19 @@ public class Game : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
+        ScreenFade.Fade(1, 0, 1.0f, 0, true, () =>
+        {
+        });
+        s_tfBaseForConv = tfTestBase;
+        s_tfRoot = tfBase;
         NetworkUnityEvent.Instance.curMsgBox = msgBox;
         SoundManager.Instance.PlayBGM("bgm2");
         gameMan = GetComponent<GameLoveLetterMan>();
         gameMan.msgBox = msgBox;
-        SetCallback();        
-        s_tfBaseForConv = tfTestBase;
-        s_tfRoot = tfBase;
-        CardManager.Init();        
+        SetCallback();
+        CardManager.Init();
         lbTitle.text = "Room : " + GlobalData.Instance.roomSN;
-        Refresh();        
+        Refresh();         
     }
 
     // Update is called once per frame
@@ -108,8 +111,11 @@ public class Game : MonoBehaviour {
     {        
         if (GlobalData.Instance.userSN == leaveRoomRet.sn)
         {
-            RemoveCallback();
-            SceneManager.LoadScene("Lobby");
+            ScreenFade.Fade(0, 1, 1.0f, 0, true, () =>
+            {
+                RemoveCallback();
+                SceneManager.LoadScene("Lobby");
+            });            
         }
         else {
         }
@@ -141,7 +147,7 @@ public class Game : MonoBehaviour {
                 idx++;
             }
             
-            uib.m_lbName.text = u.nickName;
+            uib.SetNickName(u.nickName);
             if(GlobalData.Instance.IsRoomMaster(u.sn))
             {
                 uib.m_lbReadyState.text = "Master";

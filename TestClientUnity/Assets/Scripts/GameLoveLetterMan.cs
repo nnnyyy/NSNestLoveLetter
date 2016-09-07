@@ -245,6 +245,7 @@ public class GameLoveLetterMan : MonoBehaviour {
 
     public void OnLLInitStatus(GCPLLInitStatus status)
     {
+        gameLog.Reset();
         gameLog.AddLog("새로운 라운드가 시작 되었습니다");
 
         foreach (GCPLLInitStatus.PlayerInfo pinfo in status.listPlayer)
@@ -257,7 +258,7 @@ public class GameLoveLetterMan : MonoBehaviour {
     }
 
     public void OnLLStatus(GCPLLStatus status)
-    {
+    {        
         GameUser turnUser = m_mUser[status.currentTurnUserIndex];
         if (turnUser.m_bLocal)
         {
@@ -412,8 +413,7 @@ public class GameLoveLetterMan : MonoBehaviour {
     }
 
     public void OnRoundResult(GCPLLRoundResult ret)
-    {
-        gameLog.Reset();
+    {        
         if(ret.nReason == 0)
         {
             tfGrave.gameObject.SetActive(false);
@@ -421,7 +421,7 @@ public class GameLoveLetterMan : MonoBehaviour {
         GameUser winner = m_mUser[ret.winUserIndex];
         string sWinner = winner.GetNickName();
         winner.infoUI.AddTokken();
-        gameLog.AddLog(sWinner + "이(가) 승리했습니다! 축하합니다!");
+        gameLog.AddLog(sWinner + "이(가) 라운드를 승리했습니다! 축하합니다!");
     }
 
     public void OnFinalRoundResult(GCPLLFinalResult ret)

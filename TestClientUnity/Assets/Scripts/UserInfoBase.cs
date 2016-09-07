@@ -8,6 +8,7 @@ public class UserInfoBase : MonoBehaviour {
 
     public GameObject m_panelHands;
     public GameObject m_panelGround;
+    public GameObject panelWait;
     public Text m_lbName;
     public Text m_lbReadyState;
     public Text m_lbWinLose;
@@ -36,11 +37,12 @@ public class UserInfoBase : MonoBehaviour {
 
     public void ClearInfo()
     {
-        m_lbName.text = "-NoName-";
-        m_lbReadyState.text = "------";
-        m_lbWinLose.text = "------";
+        m_lbName.text = "";
+        m_lbReadyState.text = "";
+        m_lbWinLose.text = "";
         m_nUserSN = 0;
         m_nGameIndex = -1;
+        if(panelWait) panelWait.SetActive(true);
         SetShield(false);
         SetDead(false);
         bDead = false;
@@ -51,6 +53,8 @@ public class UserInfoBase : MonoBehaviour {
     public void SetNickName(string s)
     {
         m_lbName.text = s;
+        if(s != "" && panelWait)
+            panelWait.SetActive(false);
     }
 
     public void SetReadyStateMsg(string s)
