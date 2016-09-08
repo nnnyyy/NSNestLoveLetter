@@ -42,6 +42,7 @@ public class UserInfoBase : MonoBehaviour {
         m_lbWinLose.text = "";
         m_nUserSN = 0;
         m_nGameIndex = -1;
+        SetMyTurn(false);
         if(panelWait) panelWait.SetActive(true);
         SetShield(false);
         SetDead(false);

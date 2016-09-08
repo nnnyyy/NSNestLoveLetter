@@ -19,6 +19,7 @@ public class Intro : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+        Application.targetFrameRate = 60;
         SceneManager.UnloadScene("Lobby");
         SceneManager.UnloadScene("Game");
         NetworkUnityEvent.Instance.curMsgBox = msgBox;

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using NSNetwork;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System;
 
 public class Game : MonoBehaviour {
     public UIMsgBox msgBox;    
@@ -25,7 +26,7 @@ public class Game : MonoBehaviour {
     private Vector3 vCurrentProcessingCardPos;
 
     // Use this for initialization
-    void Start () {
+    void Start () {        
         ScreenFade.Fade(1, 0, 1.0f, 0, true, () =>
         {
         });        
@@ -50,6 +51,18 @@ public class Game : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
+
+        long dt = (long)(new TimeSpan(DateTime.Now.Ticks - tCurrentProcessingCard)).TotalMilliseconds;
+        if (currentProcessingCard && (dt > 700))
+        {
+            //  카드 설명                        
+            if (!uiCardInfo.gameObject.activeInHierarchy)
+            {
+                uiCardInfo.gameObject.SetActive(true);
+                uiCardInfo.Show(currentProcessingCard.m_nNum);
+            }            
+        }
+
         if (Input.GetKeyDown(KeyCode.Escape))
         {   
             OnBtnLeave();
@@ -76,27 +89,14 @@ public class Game : MonoBehaviour {
                         Card c = coll.GetComponent<Card>();
                         if (!c.bActive) return;
                         currentProcessingCard = c;
-                        tCurrentProcessingCard = System.DateTime.Now.Ticks;
+                        tCurrentProcessingCard = DateTime.Now.Ticks;
                         vCurrentProcessingCardPos = currentProcessingCard.transform.position;
                     }                    
                 }
                 break;
 
             case 1:/*Move*/
-                {
-                    if(currentProcessingCard && (System.DateTime.Now.Ticks - tCurrentProcessingCard > 1000))
-                    {
-                        //  카드 설명                        
-                        if (!uiCardInfo.gameObject.activeInHierarchy)
-                        {
-                            uiCardInfo.gameObject.SetActive(true);
-                            uiCardInfo.Show(currentProcessingCard.m_nNum);
-                        }     
-                        else
-                        {
-                            currentProcessingCard.transform.position = new Vector3(ray.x, ray.y, 1);
-                        }                   
-                    }
+                {                    
                 }
                 break;
 
