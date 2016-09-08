@@ -12,9 +12,7 @@ public class Game : MonoBehaviour {
     private GameLoveLetterMan gameMan;
 
     public UserLocalInfo m_LocalUser;
-    public UserRemoteInfo[] m_aRemoteUsers;
-    public Transform tfTestBase;
-    public Transform tfBase;    
+    public UserRemoteInfo[] m_aRemoteUsers;    
 
     //  게임 관련
     public Text lbTitle;
@@ -27,7 +25,7 @@ public class Game : MonoBehaviour {
 
     // Use this for initialization
     void Start () {        
-        ScreenFade.Fade(1, 0, 1.0f, 0, true, () =>
+        ScreenFade.Fade(1, 0, 0.5f, 0, true, () =>
         {
         });        
         NetworkUnityEvent.Instance.curMsgBox = msgBox;
@@ -201,7 +199,7 @@ public class Game : MonoBehaviour {
         if(GlobalData.Instance.IsRoomMaster(GlobalData.Instance.userSN))
         {
             btnReadyOrStart.GetComponentInChildren<Text>().text = "Start!";            
-            btnReadyOrStart.interactable = (readyCnt > 1 && readyCnt == GlobalData.Instance.roomUsers.Count) ? true : false;
+            btnReadyOrStart.interactable = (readyCnt > 2 && readyCnt == GlobalData.Instance.roomUsers.Count) ? true : false;
         }
         else
         {

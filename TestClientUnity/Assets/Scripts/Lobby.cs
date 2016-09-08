@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using NSNetwork;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class Lobby : MonoBehaviour {
 
@@ -11,19 +12,22 @@ public class Lobby : MonoBehaviour {
     public UIMsgBox msgBox;
     [SerializeField]
     private GameObject lbMsgNoRoom;
+    [SerializeField]
+    private Button btnCreateRoom;
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start () {
+        NetworkUnityEvent.Instance.curMsgBox = msgBox;
         SoundManager.Instance.PlayBGM("bgm1");
         Receiver.ClearLobbyEvent();
+        Receiver.OnRoomListRetCallback += OnRoomListRet;
+        Receiver.OnEnterRoomRetCallback += OnEnterRoomRet;
+        Receiver.OnCreateRoomRetCallback += OnCreateRoomRet;
+        Receiver.OnRoomStateCallback += OnRoomState;
+        Sender.RoomListRequest();
         ScreenFade.Fade(1, 0, 0.5f, 0, true, () =>
-        {
-            NetworkUnityEvent.Instance.curMsgBox = msgBox;            
-            Receiver.OnRoomListRetCallback += OnRoomListRet;
-            Receiver.OnEnterRoomRetCallback += OnEnterRoomRet;
-            Receiver.OnCreateRoomRetCallback += OnCreateRoomRet;
-            Receiver.OnRoomStateCallback += OnRoomState;
-            Sender.RoomListRequest();
+        {           
+            
         });        
     }
 	
@@ -65,6 +69,7 @@ public class Lobby : MonoBehaviour {
 
     public void OnBtnCreateRoom()
     {
+        btnCreateRoom.interactable = false;
         SoundManager.Instance.PlaySfx("btnNormal");
         Sender.CreateRoom();
     }
@@ -95,6 +100,7 @@ public class Lobby : MonoBehaviour {
         else
         {
             msgBox.Show("방 생성에 실패 했습니다.");
+            btnCreateRoom.interactable = true;
         }
     }
 
@@ -124,7 +130,8 @@ public class Lobby : MonoBehaviour {
             return;
         }
 
-        foreach(GCPRoomListRet.RoomInfo info in roomListRet.listRooms)
+        lbMsgNoRoom.SetActive(false);
+        foreach (GCPRoomListRet.RoomInfo info in roomListRet.listRooms)
         {
             AddRoom(info.sn, info.userCount);
         }        
