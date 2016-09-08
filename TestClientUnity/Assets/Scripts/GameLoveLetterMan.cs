@@ -60,6 +60,7 @@ public class GameLoveLetterMan : MonoBehaviour {
 
     public void ProcessCard(int _cardNum)
     {
+        if (_cardNum == 0) return;
         if (isTouchProcessing) return;
 
         nCurProcessCardNum = _cardNum;
@@ -76,6 +77,12 @@ public class GameLoveLetterMan : MonoBehaviour {
                 me = u;
                 break;
             }
+        }
+
+        if(_cardNum == 8)
+        {
+            msgBox.Show("게임의 룰을 모르시나요? 이 카드는 내면 죽습니다");
+            return;
         }
 
         if(_cardNum == 5 || _cardNum == 6)
@@ -293,6 +300,7 @@ public class GameLoveLetterMan : MonoBehaviour {
         switch (action.nCardType)
         {
             case 1:
+                EffectManager.GetInstance().ShowEffect(0, m_mUser[action.nTargetIdx].infoUI.m_panelHands.transform.position);
                 sSrcNick = str_green(m_mUser[action.nSrcIdx].GetNickName());
                 sTargetNick = str_green(m_mUser[action.nTargetIdx].GetNickName());
                 string sCardName = "<color=yellow>" + Card.GetName(action.nCardIdx) + "</color>";
@@ -307,11 +315,13 @@ public class GameLoveLetterMan : MonoBehaviour {
                 }
                 else {
                     gameLog.AddLog("[" + sUsedCardName + "] 아무 일도 일어나지 않았습니다");
+                    SoundManager.Instance.PlaySfx("ohno");
                 }              
 
                 break;
 
             case 2:
+                EffectManager.GetInstance().ShowEffect(0, m_mUser[action.nTargetIdx].infoUI.m_panelHands.transform.position);
                 sSrcNick = str_green(m_mUser[action.nSrcIdx].GetNickName());
                 sTargetNick = str_green(m_mUser[action.nTargetIdx].GetNickName());
                 m_mUser[action.nSrcIdx].infoUI.DropCard(action.nCardType);
@@ -324,6 +334,7 @@ public class GameLoveLetterMan : MonoBehaviour {
                 break;
 
             case 3:
+                EffectManager.GetInstance().ShowEffect(0, m_mUser[action.nTargetIdx].infoUI.m_panelHands.transform.position);
                 sSrcNick = str_green(m_mUser[action.nSrcIdx].GetNickName());
                 sTargetNick = str_green(m_mUser[action.nTargetIdx].GetNickName());
                 m_mUser[action.nSrcIdx].infoUI.DropCard(action.nCardType);
@@ -343,6 +354,7 @@ public class GameLoveLetterMan : MonoBehaviour {
                 else
                 {
                     gameLog.AddLog("[" + sUsedCardName + "] 아무 일도 없었습니다.");
+                    SoundManager.Instance.PlaySfx("ohno");
                 }
                 break;
 
@@ -354,6 +366,7 @@ public class GameLoveLetterMan : MonoBehaviour {
                 break;
 
             case 5:
+                EffectManager.GetInstance().ShowEffect(0, m_mUser[action.nTargetIdx].infoUI.m_panelHands.transform.position);
                 sSrcNick = str_green(m_mUser[action.nSrcIdx].GetNickName());
                 sTargetNick = str_green(m_mUser[action.nTargetIdx].GetNickName());
                 gameLog.AddLog("[" + sUsedCardName + "] " + sSrcNick + "이(가) " + sTargetNick + "에게 사용합니다.");
@@ -385,6 +398,7 @@ public class GameLoveLetterMan : MonoBehaviour {
                 break;
 
             case 6:
+                EffectManager.GetInstance().ShowEffect(0, m_mUser[action.nTargetIdx].infoUI.m_panelHands.transform.position);
                 sSrcNick = str_green(m_mUser[action.nSrcIdx].GetNickName());
                 sTargetNick = str_green(m_mUser[action.nTargetIdx].GetNickName());
                 gameLog.AddLog("[" + sUsedCardName + "] " + sSrcNick + "이 " + sTargetNick + "와 교환합니다.");
@@ -399,7 +413,7 @@ public class GameLoveLetterMan : MonoBehaviour {
                     UserInfoBase srcUI = m_mUser[action.nSrcIdx].infoUI;
                     UserInfoBase targetUI = m_mUser[action.nTargetIdx].infoUI;
                     srcUI.SendCard(targetUI, action.nSrcToTargetCardIdx);
-                    targetUI.SendCard(srcUI, action.nSrcToTargetCardIdx);
+                    targetUI.SendCard(srcUI, action.nTargetToSrcCardIdx);
                 }
                 break;
 

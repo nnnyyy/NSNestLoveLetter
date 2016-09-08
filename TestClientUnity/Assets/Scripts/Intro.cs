@@ -75,7 +75,7 @@ public class Intro : MonoBehaviour {
         {
             PlayerPrefs.SetString(GlobalData.Instance.P_ID, m_lbID.text);
             PlayerPrefs.SetString(GlobalData.Instance.P_PW, m_lbPw.text);                        
-            ScreenFade.Fade(0, 1, 1.0f, 0, true, () =>
+            ScreenFade.Fade(0, 1, 0.5f, 0, true, () =>
             {
                 SceneManager.LoadScene("Lobby");
             });

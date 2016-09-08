@@ -53,6 +53,7 @@ public class SoundManager : Singleton<SoundManager> {
             if (audiosource.isPlaying) continue;
             audiosource.clip = clips[_num];
             audiosource.Play();
+            break;
         }
     }
 
@@ -70,6 +71,7 @@ public class SoundManager : Singleton<SoundManager> {
             if (audiosource.isPlaying) continue;
             audiosource.clip = ac;
             audiosource.Play();
+            break;
         }
     }
 
