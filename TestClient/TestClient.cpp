@@ -496,6 +496,8 @@ public:
 			boost::shared_ptr<CContext::RoomInfo> pRoom = CContext::get_mutable_instance().m_pRoom;			
 			
 			pRoom->m_bGameStart = TRUE;
+			pRoom->mSNToIndex.clear();
+			pRoom->mIndexToSN.clear();
 			LONG nSize = iPacket.Decode4();
 			for (int i = 0; i < nSize; ++i) {
 				LONG nUserSN = iPacket.Decode4();

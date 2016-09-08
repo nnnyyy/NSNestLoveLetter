@@ -7,6 +7,7 @@ public class GlobalData : Singleton<GlobalData>
 {
     public readonly string P_ID = "UserID";
     public readonly string P_PW = "UserPW";
+    public readonly string P_TUTORIAL1 = "Tuto1";
 
     public int userSN = 0;
     public string userNickname = "";

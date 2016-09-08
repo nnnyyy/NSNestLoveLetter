@@ -22,7 +22,10 @@ CUser::~CUser() {
 }
 
 void CUser::SendPacket(OutPacket& oPacket) {		
-	CConnection::pointer pConn = Server_Wrapper::get_mutable_instance().m_pServer->m_mSockets.at(m_uSocketSN);
+	CConnection::pointer pConn = Server_Wrapper::get_mutable_instance().m_pServer->GetSocket(m_uSocketSN);
+	if (!pConn) {		
+		return;
+	}
 	pConn->SendPacket(oPacket);
 
 }

@@ -51,9 +51,9 @@ namespace NSNetwork
         void Update()
         {
             if (network == null)
-                return;     
+                return;
 
-            if( network.HasRecvPacket() )
+            if ( network.HasRecvPacket() )
             {
                 OnReceive(network.GetPacket());
             }

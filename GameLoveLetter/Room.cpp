@@ -165,7 +165,7 @@ void CRoom::RemoveUser(CUser::pointer pUser) {
 		}
 	}	
 
-	if (IsGameRunning()) {
+	if (IsGameRunning()) {		
 		for each (CUser::pointer p in m_vUsers)
 		{
 			if (m_pMaster == p) {

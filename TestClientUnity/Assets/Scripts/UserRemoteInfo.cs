@@ -32,6 +32,7 @@ public class UserRemoteInfo : UserInfoBase {
     {
         base.PutHand(c);
         c.Set(0); //  항상 뒷면
+        c.bActive = false;
         liCardHand.Add(c);        
         c.transform.parent = m_panelHands.transform;
         c.transform.localScale = new Vector3(0.8f, 0.8f, 1);
@@ -59,11 +60,12 @@ public class UserRemoteInfo : UserInfoBase {
 
         liCardGround.Add(cDrop);
         cDrop.Set(nCard);
+        cDrop.bActive = false;
         Vector3 localScaleBackup = cDrop.transform.localScale;
         cDrop.transform.parent = m_panelGround.transform;
         cDrop.transform.localScale = localScaleBackup;
         cDrop.transform.DOMove(m_panelGround.transform.position, 0.3f);
-        cDrop.transform.DOScale(new Vector3(0.3f, 0.3f, 1), 0.3f).OnComplete(() =>
+        cDrop.transform.DOScale(new Vector3(0.4f, 0.4f, 1), 0.4f).OnComplete(() =>
         {
             Sort();
         });
@@ -86,7 +88,8 @@ public class UserRemoteInfo : UserInfoBase {
 
     void Sort()
     {
-        int gap = 30;
+        int gap = 15;
+        int ground_gap = 35;
         if (liCardHand.Count == 1)
         {
             liCardHand[0].transform.DOMove(m_panelHands.transform.position, 0.2f);
@@ -105,7 +108,7 @@ public class UserRemoteInfo : UserInfoBase {
         int nStart = 0 - ((int)m_panelHands.gameObject.GetComponent<RectTransform>().rect.width / 2);
         foreach (Card c in liCardGround)
         {
-            c.transform.DOLocalMove(new Vector3(nStart + idx * gap, 0, 1), 0.5f);
+            c.transform.DOLocalMove(new Vector3(nStart + idx * ground_gap, 0, 1), 0.5f);
             idx++;
         }
     }

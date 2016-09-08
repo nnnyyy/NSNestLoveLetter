@@ -3,12 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using NSNetwork;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class Lobby : MonoBehaviour {
 
     public GameObject ContentRoot;
     public Object PrefebRoomObject;
     public UIMsgBox msgBox;
+    [SerializeField]
+    private Button btnCreateRoom;
 
 	// Use this for initialization
 	void Start () {
@@ -63,6 +66,7 @@ public class Lobby : MonoBehaviour {
 
     public void OnBtnCreateRoom()
     {
+        btnCreateRoom.interactable = false;
         SoundManager.Instance.PlaySfx("btnNormal");
         Sender.CreateRoom();
     }
@@ -87,6 +91,7 @@ public class Lobby : MonoBehaviour {
         else
         {
             msgBox.Show("방 생성에 실패 했습니다.");
+            btnCreateRoom.interactable = true;
         }
     }
 

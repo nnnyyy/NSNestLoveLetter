@@ -871,6 +871,7 @@ BOOL CGameDealerLoveLetter::IsGameRunning() {
 }
 
 void CGameDealerLoveLetter::StopGame() {
+	AllReset();
 	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
 	OutPacket oPacket(GCP_GameLoveLetter);
 	oPacket.Encode2(GCP_LL_Aborted);

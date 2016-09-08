@@ -42,6 +42,14 @@ void Server::RemoveSocket(CConnection::pointer pSocket) {
 	m_mSockets.erase(pSocket->m_uSocketSN);
 }
 
+CConnection::pointer Server::GetSocket(ULONG _uSocketSN) {
+	boost::lock_guard<boost::mutex> lock(m_LockMutex);
+	if (m_mSockets.end() != m_mSockets.find(_uSocketSN)) {
+		return m_mSockets.at(_uSocketSN);
+	}
+	return NULL;
+}
+
 void Server::Update() {	
 	boost::lock_guard<boost::mutex> lock(m_LockMutex);
 	std::map<ULONG, CConnection::pointer>::iterator it = m_mSockets.begin();

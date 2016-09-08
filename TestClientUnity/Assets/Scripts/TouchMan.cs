@@ -16,39 +16,70 @@ public class TouchMan : Singleton<TouchMan> {
 	
 	// Update is called once per frame
 	void Update () {
-        //  Define 걸어서 나누자        
-        bool bMouseClicked = Input.GetMouseButtonDown(0);
-        if (bMouseClicked)
+        if(Application.platform == RuntimePlatform.IPhonePlayer || Application.platform == RuntimePlatform.Android)
         {
-            Vector2 pos = Input.mousePosition;
-            if (begin0 != null) begin0(0, 0, pos.x, pos.y, 0, 0);
-        }
-
-        int cnt = Input.touchCount;
-        for (int i = 0; i < cnt; ++i)
-        {
-            Touch touch = Input.GetTouch(i);
-            int id = touch.fingerId;
-            Vector2 pos = touch.position;
-            if (touch.phase == TouchPhase.Began) touchDelta[id] = touch.position;
-
-            float x, y, dx = 0, dy = 0;
-            x = pos.x;
-            y = pos.y;
-            if (touch.phase != TouchPhase.Began)
+            int cnt = Input.touchCount;
+            for (int i = 0; i < cnt; ++i)
             {
-                dx = x - touchDelta[id].x;
-                dy = y - touchDelta[id].y;
+                Touch touch = Input.GetTouch(i);
+                int id = touch.fingerId;
+                Vector2 pos = touch.position;
+                if (touch.phase == TouchPhase.Began) touchDelta[id] = touch.position;
+
+                float x, y, dx = 0, dy = 0;
+                x = pos.x;
+                y = pos.y;
+                if (touch.phase != TouchPhase.Began)
+                {
+                    dx = x - touchDelta[id].x;
+                    dy = y - touchDelta[id].y;
+                }
+
+                if (touch.phase == TouchPhase.Began)
+                {
+                    switch (id)
+                    {
+                        case 0:
+                            if (begin0 != null) begin0(0, id, x, y, dx, dy);
+                            break;
+                    }
+                }
+
+                if (touch.phase == TouchPhase.Moved)
+                {
+                    switch (id)
+                    {
+                        case 0:
+                            if (move0 != null) move0(1, id, x, y, dx, dy);
+                            break;
+                    }
+                }
+
+                if (touch.phase == TouchPhase.Ended)
+                {
+                    switch (id)
+                    {
+                        case 0:
+                            if (end0 != null) end0(2, id, x, y, dx, dy);
+                            break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            bool bMouseDown = Input.GetMouseButtonDown(0);
+            bool bMouseUp = Input.GetMouseButtonUp(0);
+            if (bMouseDown)
+            {
+                Vector2 pos = Input.mousePosition;
+                if (begin0 != null) begin0(0, 0, pos.x, pos.y, 0, 0);
             }
 
-            if (touch.phase == TouchPhase.Began)
+            if (bMouseUp)
             {
-                switch (id)
-                {
-                    case 0:
-                        if (begin0 != null) begin0(0, id, x, y, dx, dy);
-                        break;
-                }
+                Vector2 pos = Input.mousePosition;
+                if (end0 != null) end0(2, 0, pos.x, pos.y, 0, 0);
             }
         }
     }

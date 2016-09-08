@@ -9,6 +9,7 @@ public class Card : MonoBehaviour {
     Image imgBase;    
     public Sprite[] sprites;
     public int m_nNum;
+    public bool bActive { get; set; }
 
     public enum SizeType
     {
@@ -38,14 +39,14 @@ public class Card : MonoBehaviour {
     {
         switch (_cardIdx)
         {
-            case 1: return "경비병";
-            case 2: return "신하";
-            case 3: return "험담가";
-            case 4: return "동료";
-            case 5: return "영웅";
-            case 6: return "마법사";
-            case 7: return "왕비";
-            case 8: return "공주";
+            case 1: return "경비병(1)";
+            case 2: return "신하(2)";
+            case 3: return "험담가(3)";
+            case 4: return "동료(4)";
+            case 5: return "영웅(5)";
+            case 6: return "마법사(6)";
+            case 7: return "왕비(7)";
+            case 8: return "공주(8)";
         }
 
         return "---";

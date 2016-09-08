@@ -31,6 +31,7 @@ public class UserLocalInfo : UserInfoBase {
     {
         base.PutHand(c);
         liCardHand.Add(c);
+        c.bActive = true;
         c.transform.parent = m_panelHands.transform;
         c.transform.localScale = new Vector3(0.8f, 0.8f, 1);
         c.transform.DOMove(m_panelHands.transform.position, 0.3f);
@@ -61,6 +62,7 @@ public class UserLocalInfo : UserInfoBase {
 
         liCardGround.Add(cDrop);
         Vector3 localScaleBackup = cDrop.transform.localScale;
+        cDrop.bActive = false;
         cDrop.transform.parent = m_panelGround.transform;
         cDrop.transform.localScale = localScaleBackup;
         cDrop.transform.DOMove(m_panelGround.transform.position, 0.3f);

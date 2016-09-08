@@ -188,6 +188,7 @@ void CConnection::OnRegister(InPacket &iPacket) {
 
 void CConnection::OnAliveAck(InPacket &iPacket) {	
 	bAlive = TRUE;
+	tAliveCheckTime = system_clock::now();
 }
 
 void CConnection::Update(){

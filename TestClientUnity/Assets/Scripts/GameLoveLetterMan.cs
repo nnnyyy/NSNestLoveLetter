@@ -259,7 +259,7 @@ public class GameLoveLetterMan : MonoBehaviour {
 
     public void OnLLStatus(GCPLLStatus status)
     {        
-        GameUser turnUser = m_mUser[status.currentTurnUserIndex];
+        GameUser turnUser = m_mUser[status.currentTurnUserIndex];x
         if (turnUser.m_bLocal)
         {
             bInteractable = true;

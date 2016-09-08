@@ -7,21 +7,8 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class Game : MonoBehaviour {
-    public UIMsgBox msgBox;
-    static public Transform s_tfBaseForConv;
-    static public Transform s_tfRoot;
+    public UIMsgBox msgBox;    
     private GameLoveLetterMan gameMan;
-    static public Vector3 ConvPosToRootLocal(Vector3 vSrcPos)
-    {
-        s_tfBaseForConv.position = vSrcPos;
-        return s_tfBaseForConv.localPosition;
-    }
-
-    static public Vector3 ConvPosToRootGlobal(Vector3 vSrcPos)
-    {
-        s_tfBaseForConv.position = vSrcPos;
-        return s_tfBaseForConv.position;
-    }
 
     public UserLocalInfo m_LocalUser;
     public UserRemoteInfo[] m_aRemoteUsers;
@@ -31,51 +18,104 @@ public class Game : MonoBehaviour {
     //  게임 관련
     public Text lbTitle;
     public Button btnReadyOrStart;
+    [SerializeField]
+    private UICardInfo uiCardInfo; 
+    private Card currentProcessingCard = null;
+    private long tCurrentProcessingCard;
+    private Vector3 vCurrentProcessingCardPos;
 
     // Use this for initialization
     void Start () {
         ScreenFade.Fade(1, 0, 1.0f, 0, true, () =>
         {
-        });
-        s_tfBaseForConv = tfTestBase;
-        s_tfRoot = tfBase;
+        });        
         NetworkUnityEvent.Instance.curMsgBox = msgBox;
         SoundManager.Instance.PlayBGM("bgm2");
         gameMan = GetComponent<GameLoveLetterMan>();
         gameMan.msgBox = msgBox;
+        RemoveCallback();
         SetCallback();
         CardManager.Init();
+        uiCardInfo.gameObject.SetActive(false);
         lbTitle.text = "Room : " + GlobalData.Instance.roomSN;
-        Refresh();         
+        Refresh();
+        int nTutoRet = PlayerPrefs.GetInt(GlobalData.Instance.P_TUTORIAL1, -1);
+        if(nTutoRet == -1)
+        {
+            msgBox.Show("자신의 턴일 때, 카드를 길게 누르면 상세 설명이 나옵니다.", "확인", ()=> {
+                PlayerPrefs.SetInt(GlobalData.Instance.P_TUTORIAL1, 1);
+            });
+        }        
     }
 
     // Update is called once per frame
     void Update () {
         if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            msgBox.ShowYesNo("나가시겠습니까? 게임 중에는 패널티가 주어집니다.", () =>
-            {
-                OnBtnLeave();
-            });            
+        {   
+            OnBtnLeave();
         }            
     }
 
     public void OnTouch(int nType, int nID, float x, float y, float dx, float dy)
     {
+        Collider2D coll;
+        Vector3 ray = Camera.main.ScreenToWorldPoint(new Vector3(x, y, 1));
+        coll = Physics2D.OverlapPoint(new Vector2(ray.x, ray.y), 0x300);
+
         if (!gameMan.bInteractable || gameMan.isTouchProcessing)
         {            
             return;
-        }        
-                   
-        Collider2D coll;
-        Vector3 ray = Camera.main.ScreenToWorldPoint(new Vector3(x, y, 1));
-        if (coll = Physics2D.OverlapPoint(new Vector2(ray.x, ray.y), 0x300))
+        }
+
+        switch (nType)
         {
-            if(coll.gameObject.CompareTag("Card"))
-            {
-                gameMan.ProcessCard(coll.GetComponent<Card>().m_nNum);
-            }
-            coll.transform.SendMessage("Selected");
+            case 0:/*Begin*/
+                {                    
+                    if (coll != null && coll.gameObject.CompareTag("Card"))
+                    {
+                        Card c = coll.GetComponent<Card>();
+                        if (!c.bActive) return;
+                        currentProcessingCard = c;
+                        tCurrentProcessingCard = System.DateTime.Now.Ticks;
+                        vCurrentProcessingCardPos = currentProcessingCard.transform.position;
+                    }                    
+                }
+                break;
+
+            case 1:/*Move*/
+                {
+                    if(currentProcessingCard && (System.DateTime.Now.Ticks - tCurrentProcessingCard > 1000))
+                    {
+                        //  카드 설명                        
+                        if (!uiCardInfo.gameObject.activeInHierarchy)
+                        {
+                            uiCardInfo.gameObject.SetActive(true);
+                            uiCardInfo.Show(currentProcessingCard.m_nNum);
+                        }     
+                        else
+                        {
+                            currentProcessingCard.transform.position = new Vector3(ray.x, ray.y, 1);
+                        }                   
+                    }
+                }
+                break;
+
+            case 2:/*End*/
+                {
+                    if(coll != null && currentProcessingCard != null && coll.GetComponent<Card>() == currentProcessingCard)
+                    {
+                        if (!uiCardInfo.gameObject.activeInHierarchy)
+                        {
+                            gameMan.ProcessCard(currentProcessingCard.m_nNum);
+                        }
+                        currentProcessingCard.transform.position = vCurrentProcessingCardPos;
+                        currentProcessingCard = null;                        
+                    }
+
+                    uiCardInfo.gameObject.SetActive(false);
+                    uiCardInfo.Hide();
+                }
+                break;
         }
     }
 

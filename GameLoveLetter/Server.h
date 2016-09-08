@@ -36,6 +36,7 @@ private:
 public:
 
 	void RemoveSocket( CConnection::pointer pSocket );
+	CConnection::pointer GetSocket(ULONG _uSocketSN);
 	void Update();
 	boost::mutex m_LockMutex;
 };
