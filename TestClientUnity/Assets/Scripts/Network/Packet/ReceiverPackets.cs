@@ -364,6 +364,7 @@ namespace NSNetwork
     {
         public int nReason;
         public int winUserIndex;
+        public Dictionary<int, int> mIdxToCardLeft;
 
         public GCPLLRoundResult(byte[] data)
         {
@@ -371,6 +372,17 @@ namespace NSNetwork
             eGCP_LoveLetter llType = (eGCP_LoveLetter)GetShort(data);
             nReason = GetInt(data);
             winUserIndex = GetInt(data);
+            if(nReason == 0)
+            {
+                mIdxToCardLeft = new Dictionary<int, int>();
+                int nSize = GetInt(data);
+                for(int i = 0; i < nSize; ++i)
+                {
+                    int nIdx = GetInt(data);
+                    int nCard = GetInt(data);
+                    mIdxToCardLeft.Add(nIdx, nCard);
+                }                                
+            }
         }
     }
 

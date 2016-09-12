@@ -65,7 +65,7 @@ public:
 		LONG nRoundOverCnt;			//	라운드 모두 종료되기 위한 카운트. 4인 4개 3인 5개
 		BOOL bFinalOver;
 		boost::chrono::system_clock::time_point tRoundOverStart;		//	다음 라운드까지 중간에 티타임을 가지기 위함.
-		enum { WAIT_NEXT_ROUND_TIME = 5 * 1000, };
+		enum { WAIT_NEXT_ROUND_TIME = 10 * 1000, };
 
 		void EncodeStatus(OutPacket& oPacket);
 		void Reset() {

@@ -140,6 +140,11 @@ public class UserInfoBase : MonoBehaviour {
             jewelries[i].gameObject.SetActive(true);
         }            
     }
+
+    public void ChangeHandCard(int _num)
+    {
+        liCardHand[0].Set(_num);
+    }
 }
 
 public class GameUser

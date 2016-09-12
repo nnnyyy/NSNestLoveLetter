@@ -435,6 +435,14 @@ public class GameLoveLetterMan : MonoBehaviour {
         GameUser winner = m_mUser[ret.winUserIndex];
         string sWinner = winner.GetNickName();
         winner.infoUI.AddTokken();
+        if(ret.nReason == 0)
+        {
+            foreach(KeyValuePair<int,int> pair in ret.mIdxToCardLeft)
+            {
+                if (m_mUser[pair.Key].m_bLocal) continue;
+                m_mUser[pair.Key].infoUI.ChangeHandCard(pair.Value);
+            }
+        }
         gameLog.AddLog(sWinner + "이(가) 라운드를 승리했습니다! 축하합니다!");
     }
 

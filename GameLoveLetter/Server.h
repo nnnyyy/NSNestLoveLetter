@@ -13,8 +13,10 @@ public:
 	boost::shared_ptr<Server> m_pServer;
 
 	static std::map<ULONG, boost::shared_ptr<CUser> > m_mUsers;
+	static std::map<ULONG, boost::shared_ptr<CUser> > m_mUsersDisConnReserv;
 
 	void Update();
+	boost::mutex m_LockMutex;
 };
 
 class Server {	

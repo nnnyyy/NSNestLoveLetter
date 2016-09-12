@@ -608,9 +608,7 @@ void CGameDealerLoveLetter::InitGame() {
 			p->Init();
 		}
 	}
-	
 
-	//ShuffleCard();
 	m_vDeck.clear();
 	m_pSecretCard = NULL;
 	m_vDeck.resize(m_vCards.size());
@@ -718,12 +716,26 @@ void CGameDealerLoveLetter::GameOver(LONG nReason) {
 			SendFinalRoundOver(pWinner);
 			return;
 		}
-		else {			
+		else {	
+			std::map<LONG, LONG> mLastCard;
+			for each (Player::pointer p in m_vPlayers) {
+				if (p->m_bDead) continue;
+				mLastCard[p->m_nIndex] = p->m_vHandCards[0]->m_nType;
+			}
+
 			CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
 			OutPacket oPacket(GCP_GameLoveLetter);
 			oPacket.Encode2(GCP_LL_RoundResult);
 			oPacket.Encode4(nReason);
 			oPacket.Encode4(pWinner->m_nIndex);
+			if (nReason == GAMEOVER_DECK_IS_EMPTY) {
+				oPacket.Encode4(mLastCard.size());
+				std::map<LONG, LONG>::iterator iter = mLastCard.begin();
+				for (; iter != mLastCard.end(); ++iter) {
+					oPacket.Encode4(iter->first);
+					oPacket.Encode4(iter->second);
+				}
+			}
 			pRoom->BroadcastPacket(oPacket);
 		}		
 	}

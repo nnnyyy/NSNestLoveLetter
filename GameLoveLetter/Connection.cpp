@@ -200,12 +200,11 @@ void CConnection::Update(){
 			m_Socket.close();
 			bDisconnecting = TRUE;
 			return;
-		}
-		//	5초에 한번 얼라이브 체크
-		OutPacket oPacket(GCP_AliveAck);		
-		SendPacket(oPacket);
+		}		
 
 		tAliveCheckTime = system_clock::now();
 		bAlive = FALSE;
+		OutPacket oPacket(GCP_AliveAck);
+		SendPacket(oPacket);		
 	}
 }
