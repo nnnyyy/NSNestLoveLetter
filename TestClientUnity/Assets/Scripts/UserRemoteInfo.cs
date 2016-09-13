@@ -34,7 +34,7 @@ public class UserRemoteInfo : UserInfoBase {
         c.Set(0); //  항상 뒷면
         c.bActive = false;
         liCardHand.Add(c);        
-        c.transform.parent = m_panelHands.transform;
+        c.transform.SetParent(m_panelHands.transform);
         c.transform.localScale = new Vector3(0.8f, 0.8f, 1);
         c.transform.DOMove(m_panelHands.transform.position, 0.3f);
         c.transform.DOScale(new Vector3(0.4f, 0.4f, 1), 0.3f).OnComplete(() =>
@@ -62,7 +62,7 @@ public class UserRemoteInfo : UserInfoBase {
         cDrop.Set(nCard);
         cDrop.bActive = false;
         Vector3 localScaleBackup = cDrop.transform.localScale;
-        cDrop.transform.parent = m_panelGround.transform;
+        cDrop.transform.SetParent(m_panelGround.transform);        
         cDrop.transform.localScale = localScaleBackup;
         cDrop.transform.DOMove(m_panelGround.transform.position, 0.3f);
         cDrop.transform.DOScale(new Vector3(0.4f, 0.4f, 1), 0.4f).OnComplete(() =>

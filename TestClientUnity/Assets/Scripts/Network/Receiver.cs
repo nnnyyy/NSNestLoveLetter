@@ -319,5 +319,18 @@ namespace NSNetwork
             m_onCreateRoomRetCallback = null;
             m_onRoomStateCallback = null;            
         }
+
+        static public void ClearGameEvent()
+        {
+            m_onRoomStateCallback = null;
+            m_onLeaveRoomRetCallback = null;
+            m_onGameStartRetCallback = null;
+            m_onLLInitStatusCallback = null;
+            m_onLLActionRetCallback = null;
+            m_onLLStatusCallback = null;
+            m_onLLRoundResultCallback = null;
+            m_onLLFinalResultCallback = null;
+            m_onLLAbortedCallback = null;           
+        }
     }
 }

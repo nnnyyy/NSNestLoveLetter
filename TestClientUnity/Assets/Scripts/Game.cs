@@ -280,23 +280,9 @@ public class Game : MonoBehaviour {
 
 
     void RemoveCallback()
-    {
-        Receiver.OnRoomStateCallback -= OnRoomState;
-        Receiver.OnLeaveRoomRetCallback -= OnLeaveRoomRet;
-        Receiver.OnGameStartRetCallback -= OnGameStartRet;
-        Receiver.OnLLInitStatusCallback -= OnLLInitStatus;
-        Receiver.OnLLActionRetCallback -= OnLLActionRet;
-        Receiver.OnLLStatusCallback -= OnLLStatus;
-        Receiver.OnLLRoundResultCallback -= OnRoundResult;
-        Receiver.OnLLFinalResultCallback -= OnFinalRoundResult;
-        Receiver.OnLLAbortedCallback -= OnAborted;
+    {        
+        Receiver.ClearGameEvent();
         TouchMan.Instance.ResetEvent();
-        TouchMan.Instance.begin0 -= OnTouch;
-        TouchMan.Instance.move0 -= OnTouch;
-        TouchMan.Instance.end0 -= OnTouch;
-        /*begin0 -= OnTouch;
-        move0 -= OnTouch;
-        end0 -= OnTouch;*/
     }
 
     void GameStart()

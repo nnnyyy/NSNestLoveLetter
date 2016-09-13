@@ -130,6 +130,7 @@ void CGameDealerLoveLetter::GuardAction(_GameArgument _arg, CUser::pointer pUser
 	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
 	if (!pTurnPlayer->m_bCPU && pTurnPlayer->nUserSN != pUser->m_nUserSN) {
 		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
+		LogAdd(boost::str(boost::format("GuardAction - 1 : %d , %d") % pTurnPlayer->m_nIndex % pTurnPlayer->m_bCPU));
 		return;
 	}
 
@@ -139,25 +140,30 @@ void CGameDealerLoveLetter::GuardAction(_GameArgument _arg, CUser::pointer pUser
 
 	Player::pointer pTargetPlayer = m_vPlayers[nTargetIdx];
 	if (!pTargetPlayer) {
+		LogAdd(boost::str(boost::format("GuardAction - 2 : %d , %d") % pTurnPlayer->m_nIndex % pTurnPlayer->m_bCPU));
 		return;
 	}
 
 	if (nCardTypeGuess == LOVELETTER_GAURD) {
 		//	경비병을 직접 지목할 수 없다.
+		LogAdd(boost::str(boost::format("GuardAction - 3 : %d , %d") % pTurnPlayer->m_nIndex % pTurnPlayer->m_bCPU));
 		return;
 	}
 
 	if (FindTarget(pTurnPlayer) && nTargetIdx == status.nCurTurnIndex) {
 		//	내 자신을 지목할 수 없다.
+		LogAdd(boost::str(boost::format("GuardAction - 4 : %d , %d") % pTurnPlayer->m_nIndex % pTurnPlayer->m_bCPU));
 		return;
 	}
 
 	if (pTargetPlayer->m_bDead) {
 		//	죽은 사람도 지목하지 말자.
+		LogAdd(boost::str(boost::format("GuardAction - 5 : %d , %d") % pTurnPlayer->m_nIndex % pTurnPlayer->m_bCPU));
 		return;
 	}
 
 	if (pTargetPlayer->m_bGuard) {
+		LogAdd(boost::str(boost::format("GuardAction - 6 : %d , %d") % pTurnPlayer->m_nIndex % pTurnPlayer->m_bCPU));
 		return;
 	}
 
@@ -861,8 +867,7 @@ void CGameDealerLoveLetter::Process() {
 
 void CGameDealerLoveLetter::ProcessCPU(Player::pointer p) {
 	BOOST_ASSERT(p->m_vHandCards.size() == 2);
-	status.pCPUTurn = NULL;
-	LogAdd(boost::str(boost::format("ProcessCPU : %d") % p->m_nIndex));
+	status.pCPUTurn = NULL;	
 
 	std::vector<Card::pointer> vTemp(2);
 	std::copy(p->m_vHandCards.begin(), p->m_vHandCards.end(), vTemp.begin());
@@ -873,6 +878,8 @@ void CGameDealerLoveLetter::ProcessCPU(Player::pointer p) {
 	if (pCardUse->m_nType == LOVELETTER_PRINCESS) {
 		pCardUse = vTemp[1];
 	}
+
+	LogAdd(boost::str(boost::format("ProcessCPU : %d , %d") % p->m_nIndex % pCardUse->m_nType));
 
 	std::vector<Player::pointer> vTargets;
 	if (pCardUse->m_nType == LOVELETTER_GAURD) {		
@@ -889,7 +896,7 @@ void CGameDealerLoveLetter::ProcessCPU(Player::pointer p) {
 			pTarget = vTargets[0];
 		}
 		_GameArgument gm;						
-		std::tr1::mt19937 rng;
+		std::tr1::mt19937 rng(time(0));
 		std::tr1::uniform_int_distribution<> six(2, 8);		
 		gm.nTargetIdx = pTarget->m_nIndex;
 		gm.nTargetCard = six(rng);
