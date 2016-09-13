@@ -601,6 +601,19 @@ void CGameDealerLoveLetter::InitGame() {
 			p->m_nIndex = idx;
 			idx++;
 		}
+
+		std::vector< CRoom::CPUInfo > &vCPUs = pRoom->GetCPUs();
+		for (std::vector< CRoom::CPUInfo >::iterator iter = vCPUs.begin(); iter != vCPUs.end(); ++iter) {
+			Player::pointer p(new Player());
+			p->Init();
+			p->nUserSN = -1;
+			p->m_bDead = FALSE;
+			p->m_pUser = NULL;
+			m_vPlayers.push_back(p);
+			p->m_nIndex = idx;
+			p->m_bCPU = TRUE;
+			idx++;
+		}
 	}
 	else {
 		for each (Player::pointer p in m_vPlayers)

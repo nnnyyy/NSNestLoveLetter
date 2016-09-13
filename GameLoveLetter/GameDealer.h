@@ -40,7 +40,7 @@ public:
 
 	class Player : public boost::enable_shared_from_this<Player> {
 	public:
-		Player() : m_nRoundWin(0) {}
+		Player() : m_nRoundWin(0), m_bCPU(FALSE) {}
 		CUser::pointer m_pUser;
 		ULONG nUserSN;
 		LONG m_nIndex;
@@ -49,6 +49,7 @@ public:
 		std::vector<Card::pointer> m_vHandCards;
 		std::vector<Card::pointer> m_vGroundCards;
 		LONG m_nRoundWin;
+		BOOL m_bCPU;
 
 		void Init();
 		void Encode(OutPacket& oPacket);

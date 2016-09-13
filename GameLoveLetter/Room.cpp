@@ -26,7 +26,7 @@ CRoom::~CRoom() {
 }
 
 void CRoom::Enter(CUser::pointer pUser) {
-	if (m_vUsers.size() >= USER_MAX) {		
+	if (GetPlayerCount() >= USER_MAX) {		
 		return;
 	}
 
@@ -111,7 +111,9 @@ void CRoom::Start(CUser::pointer pUser) {
 		return;
 	}
 
-	if (m_vUsers.size() < USER_MIN) {
+	RegisterCPU();	//	CPU도 참전
+
+	if (GetPlayerCount() < USER_MIN) {
 		//	유저가 부족하다.
 		OutPacket oPacket(GCP_GameStartRet);
 		oPacket.Encode4(-1);	//	유저 부족 오류
@@ -203,6 +205,24 @@ void CRoom::ResetReady() {
 			pUser->m_bReady = FALSE;
 		}
 	}
+}
+
+void CRoom::RegisterCPU() {
+	LONG nUserCnt = m_vUsers.size();
+	LONG nCPUCnt = USER_MAX - nUserCnt;
+	m_vCPUs.clear();
+
+	for (int i = 0; i < nCPUCnt; ++i) {
+		CPUInfo info;
+		info.sName = boost::str(boost::format("CPU %d") % i);
+		m_vCPUs.push_back(info);
+	}
+}
+
+LONG CRoom::GetPlayerCount() const {
+	LONG nUserCnt = m_vUsers.size();
+	LONG nCPUCnt = m_vCPUs.size();
+	return nUserCnt + nCPUCnt;
 }
 
 CRoom::pointer CRoomManager::MakeRoom() {

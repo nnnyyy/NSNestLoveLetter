@@ -9,6 +9,9 @@ public:
 	~CRoom();
 
 public:
+	struct CPUInfo {
+		std::string sName;
+	};
 
 	enum {
 		FLAG_READY = 0x01,
@@ -32,6 +35,7 @@ public:
 	void RemoveUser(CUser::pointer pUser);	
 
 	std::vector < CUser::pointer >& GetUsers() { return m_vUsers; }
+	std::vector < CPUInfo >& GetCPUs() { return m_vCPUs; }
 	CUser::pointer GetUser(LONG nUserSN) {
 		if (m_mUsers.find(nUserSN) == m_mUsers.end()) return NULL;
 		return m_mUsers.at(nUserSN);
@@ -39,8 +43,10 @@ public:
 
 	CUser::pointer GetMaster() const { return m_pMaster; }
 
-private:
+private:	
+
 	std::vector < CUser::pointer > m_vUsers;
+	std::vector < CPUInfo > m_vCPUs;
 	std::map < ULONG, CUser::pointer > m_mUsers;
 	CUser::pointer m_pMaster;	//	πÊ¿Â
 	BOOL m_bGameStart;	
@@ -53,6 +59,9 @@ public:
 	LONG GetSN() const { return m_nSN; }
 	void ResetReady();
 	BOOL IsGameRunning() const { return m_bGameStart; }
+protected:
+	void RegisterCPU();
+	LONG GetPlayerCount() const;
 };
 
 class CRoomManager : public boost::serialization::singleton<CRoomManager> {
