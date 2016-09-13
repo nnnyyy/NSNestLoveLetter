@@ -64,6 +64,28 @@ void CUser::OnEnterRoom(InPacket &iPacket) {
 	pRoom->Enter(shared_from_this());
 }
 
+void CUser::OnCPUFlag(InPacket &iPacket) {
+	if (!m_pRoom) {
+		//	이미 나갔다
+		return;
+	}
+
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+	if (pRoom->GetMaster() != shared_from_this()) {
+		//	방장이 아니면 할 수 없다.
+		return;
+	}
+
+	
+	if (pRoom->IsCPUGame()) {
+		pRoom->RemoveCPU();
+	}
+	else {
+		pRoom->RegisterCPU();
+	}	
+	pRoom->BroadcastRoomState();
+}
+
 void CUser::OnLeaveRoom(InPacket &iPacket) {
 	if (!m_pRoom) {
 		//	이미 나갔다

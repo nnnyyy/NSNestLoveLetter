@@ -8,6 +8,7 @@ enum {
 	CGP_RoomListRequest = CGP_User_Start,
 	CGP_CreateRoom,
 	CGP_EnterRoom,
+	CGP_CPUFlag,
 	CGP_LeaveRoom,
 	CGP_GameStart,
 	CGP_GameReady,

@@ -26,6 +26,7 @@ public:
 	void OnRoomListRequest(InPacket &iPacket);
 	void OnCreateRoom(InPacket &iPacket);	
 	void OnEnterRoom(InPacket &iPacket);
+	void OnCPUFlag(InPacket &iPacket);
 	void OnLeaveRoom(InPacket &iPacket);
 	void OnGameStart(InPacket &iPacket);
 	void OnGameReady(InPacket &iPacket);

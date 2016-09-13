@@ -43,7 +43,7 @@ int main()
 		boost::shared_ptr<Server> pServer = boost::shared_ptr<Server>(new Server(io));
 		Server_Wrapper::get_mutable_instance().m_pServer = pServer;
 		CThreadManager manager;
-		boost::thread thread(boost::bind(&CThreadManager::handle_timer, &manager));		
+		boost::thread thread(boost::bind(&CThreadManager::handle_timer, &manager));
 		CLogMan::get_mutable_instance().RunThread();
 		io.run();
 

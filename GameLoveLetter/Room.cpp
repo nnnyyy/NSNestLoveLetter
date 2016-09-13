@@ -63,12 +63,18 @@ void CRoom::BroadcastRoomState(DWORD dwFlag) {
 	}
 
 	if (dwFlag & FLAG_WITHOUT_ROOM_MASTER) {
-		LONG nCnt = m_vUsers.size();		
+		LONG nCnt = GetPlayerCount();
 		oPacket.Encode1(nCnt);
-		for (int i = 0; i < nCnt; ++i) {
+		for (int i = 0; i < m_vUsers.size(); ++i) {
 			oPacket.Encode4(m_vUsers[i]->m_nUserSN);
 			oPacket.EncodeStr(m_vUsers[i]->m_sNick);
 			oPacket.Encode1(m_vUsers[i]->m_bReady);
+		}
+
+		for (int i = 0; i < m_vCPUs.size(); ++i) {
+			oPacket.Encode4(-1);
+			oPacket.EncodeStr(m_vCPUs[i].sName);
+			oPacket.Encode1(TRUE);
 		}
 	}	
 	BroadcastPacket(oPacket);
@@ -110,8 +116,6 @@ void CRoom::Start(CUser::pointer pUser) {
 		BroadcastPacket(oPacket);
 		return;
 	}
-
-	RegisterCPU();	//	CPU도 참전
 
 	if (GetPlayerCount() < USER_MIN) {
 		//	유저가 부족하다.
@@ -182,6 +186,7 @@ void CRoom::RemoveUser(CUser::pointer pUser) {
 	}
 
 	if (bFind && m_vUsers.size() > 0 && m_pMaster == pUser) {
+		RemoveCPU();
 		m_pMaster = m_vUsers[0];
 		m_pMaster->m_bReady = TRUE;
 		//	새 방장 알림 패킷
@@ -215,8 +220,17 @@ void CRoom::RegisterCPU() {
 	for (int i = 0; i < nCPUCnt; ++i) {
 		CPUInfo info;
 		info.sName = boost::str(boost::format("CPU %d") % i);
+		info.nSN = -i;
 		m_vCPUs.push_back(info);
 	}
+
+	m_bCPUGame = TRUE;
+}
+
+void CRoom::RemoveCPU() {
+	m_vCPUs.clear();
+
+	m_bCPUGame = FALSE;
 }
 
 LONG CRoom::GetPlayerCount() const {

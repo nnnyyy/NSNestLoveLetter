@@ -11,6 +11,7 @@ public:
 public:
 	struct CPUInfo {
 		std::string sName;
+		LONG nSN;
 	};
 
 	enum {
@@ -49,9 +50,9 @@ private:
 	std::vector < CPUInfo > m_vCPUs;
 	std::map < ULONG, CUser::pointer > m_mUsers;
 	CUser::pointer m_pMaster;	//	방장
-	BOOL m_bGameStart;	
+	BOOL m_bGameStart;		
 	LONG m_nSN;
-
+	BOOL m_bCPUGame;
 	CGameDealerLoveLetter::pointer m_pDealer;	//	게임 딜러
 
 public:
@@ -59,9 +60,11 @@ public:
 	LONG GetSN() const { return m_nSN; }
 	void ResetReady();
 	BOOL IsGameRunning() const { return m_bGameStart; }
-protected:
+public:
 	void RegisterCPU();
+	void RemoveCPU();
 	LONG GetPlayerCount() const;
+	BOOL IsCPUGame() const { return m_bCPUGame; }
 };
 
 class CRoomManager : public boost::serialization::singleton<CRoomManager> {
