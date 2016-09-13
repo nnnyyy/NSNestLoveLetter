@@ -89,6 +89,15 @@ namespace NSNetwork
         }
     }
 
+    public class CGPCPUFlag : SendPacket
+    {
+        public CGPCPUFlag()
+        {
+            AddShort((short)eCGP.CGP_CPUFlag);
+            CreateData();
+        }
+    }
+
     public class CGPLLGuardCheck : SendPacket
     {
         public CGPLLGuardCheck( int userIndex, int cardNumber )

@@ -3,6 +3,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
+#include <boost/tr1/random.hpp>
 #include <algorithm>
 #include <random>
 #include "GameData.h"
@@ -67,27 +68,73 @@ void CGameDealerLoveLetter::OnPacket(InPacket& iPacket, CUser::pointer pUser) {
 	}
 	 
 	switch (nSubType) {
-	case CGP_LL_GuardCheck: OnGuardAction(iPacket, pUser); break;
-	case CGP_LL_RoyalSubject: OnRoyalSubjectAction(iPacket, pUser); break;
-	case CGP_LL_Gossip: OnGossipAction(iPacket, pUser); break;
-	case CGP_LL_Companion: OnCompanionAction(iPacket, pUser); break;
-	case CGP_LL_Hero: OnHeroAction(iPacket, pUser); break;
-	case CGP_LL_Wizard: OnWizardAction(iPacket, pUser); break;
-	case CGP_LL_Lady: OnLadyAction(iPacket, pUser); break;
-	case CGP_LL_Princess: OnPrincessAction(iPacket, pUser); break;
+	case CGP_LL_GuardCheck:
+	case CGP_LL_RoyalSubject:
+	case CGP_LL_Gossip: 
+	case CGP_LL_Companion:
+	case CGP_LL_Hero: 
+	case CGP_LL_Wizard:
+	case CGP_LL_Lady: 
+	case CGP_LL_Princess: OnCardAction(nSubType, iPacket, pUser); break;
 	case CGP_LL_Emotion: OnEmotion(iPacket, pUser); break;
 	}
 }
 
-void CGameDealerLoveLetter::OnGuardAction(InPacket& iPacket, CUser::pointer pUser) {	 
+void CGameDealerLoveLetter::OnCardAction(LONG nPacketSubType, InPacket& iPacket, CUser::pointer pUser) {
+	
+	_GameArgument gm;
+	switch (nPacketSubType) {
+	case CGP_LL_GuardCheck:
+		gm.nTargetIdx = iPacket.Decode4();
+		gm.nTargetCard = iPacket.Decode4();
+		GuardAction(gm, pUser);
+		break;
+
+	case CGP_LL_RoyalSubject:
+		gm.nTargetIdx = iPacket.Decode4();
+		RoyalSubjectAction(gm, pUser);
+		break;
+
+	case CGP_LL_Gossip:
+		gm.nTargetIdx = iPacket.Decode4();
+		GossipAction(gm, pUser);
+		break;
+
+	case CGP_LL_Companion:
+		CompanionAction(gm, pUser);
+		break;
+
+	case CGP_LL_Hero:
+		gm.nTargetIdx = iPacket.Decode4();
+		HeroAction(gm, pUser);
+		break;
+
+	case CGP_LL_Wizard:
+		gm.nTargetIdx = iPacket.Decode4();
+		WizardAction(gm, pUser);
+		break;
+
+	case CGP_LL_Lady:
+		LadyAction(gm, pUser);
+		break;
+
+	case CGP_LL_Princess:
+		PrincessAction(gm, pUser);
+		break;
+	default:
+		BOOST_ASSERT(FALSE && "Error Action Type");
+	}	
+}
+
+void CGameDealerLoveLetter::GuardAction(_GameArgument _arg, CUser::pointer pUser) {
 	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
-	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
+	if (!pTurnPlayer->m_bCPU && pTurnPlayer->nUserSN != pUser->m_nUserSN) {
 		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
 		return;
 	}
 
-	LONG nTargetIdx		= iPacket.Decode4();	//	누구?
-	LONG nCardTypeGuess = iPacket.Decode4();	//	무엇?
+	LONG nTargetIdx = _arg.nTargetIdx;	//	누구?
+	LONG nCardTypeGuess = _arg.nTargetCard;	//	무엇?
 	if (m_vPlayers.size() <= nTargetIdx) return;
 
 	Player::pointer pTargetPlayer = m_vPlayers[nTargetIdx];
@@ -99,7 +146,7 @@ void CGameDealerLoveLetter::OnGuardAction(InPacket& iPacket, CUser::pointer pUse
 		//	경비병을 직접 지목할 수 없다.
 		return;
 	}
-	
+
 	if (FindTarget(pTurnPlayer) && nTargetIdx == status.nCurTurnIndex) {
 		//	내 자신을 지목할 수 없다.
 		return;
@@ -118,20 +165,24 @@ void CGameDealerLoveLetter::OnGuardAction(InPacket& iPacket, CUser::pointer pUse
 	if (!bDrop) {
 		//	오류
 		return;
+	}
+
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+	if (!pRoom->IsCPUGame()) {
+		pTargetPlayer->m_pUser->gamedata.m_nAttackedByGuard++;
+		pTurnPlayer->m_pUser->gamedata.m_nUseGuard++;
 	}	
 
-	pTargetPlayer->m_pUser->gamedata.m_nAttackedByGuard++;
-	pTurnPlayer->m_pUser->gamedata.m_nUseGuard++;
-
-	BOOL bSucceed = FALSE;
-	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+	BOOL bSucceed = FALSE;	
 	if (m_vPlayers[nTargetIdx]->m_vHandCards[0]->m_nType == nCardTypeGuess) {
-		pTurnPlayer->m_pUser->gamedata.m_nSuccessUseGuard++;
+		if (!pRoom->IsCPUGame()) {
+			pTurnPlayer->m_pUser->gamedata.m_nSuccessUseGuard++;
+		}
 		Dead(m_vPlayers[nTargetIdx]);
 		//	잡았다.
 		bSucceed = TRUE;
-		
-	}	
+
+	}
 
 	OutPacket oPacket(GCP_GameLoveLetter);
 	oPacket.Encode2(GCP_LL_ActionRet);
@@ -146,14 +197,14 @@ void CGameDealerLoveLetter::OnGuardAction(InPacket& iPacket, CUser::pointer pUse
 	Process();
 }
 
-void CGameDealerLoveLetter::OnRoyalSubjectAction(InPacket& iPacket, CUser::pointer pUser) {
+void CGameDealerLoveLetter::RoyalSubjectAction(_GameArgument _arg, CUser::pointer pUser) {
 	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
-	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
+	if (!pTurnPlayer->m_bCPU && pTurnPlayer->nUserSN != pUser->m_nUserSN) {
 		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
 		return;
 	}
 
-	LONG nTargetIdx = iPacket.Decode4();	//	누구에게 물어볼 것인가	
+	LONG nTargetIdx = _arg.nTargetIdx;	//	누구에게 물어볼 것인가	
 	if (m_vPlayers.size() <= nTargetIdx) return;
 	Player::pointer pTargetPlayer = m_vPlayers[nTargetIdx];
 
@@ -177,10 +228,10 @@ void CGameDealerLoveLetter::OnRoyalSubjectAction(InPacket& iPacket, CUser::point
 		return;
 	}
 
-	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);	
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
 
-	LONG nSize = m_vPlayers.size();	
-	for (int i = 0; i < nSize; ++i) {		
+	LONG nSize = m_vPlayers.size();
+	for (int i = 0; i < nSize; ++i) {
 		OutPacket oPacket(GCP_GameLoveLetter);
 		oPacket.Encode2(GCP_LL_ActionRet);
 		oPacket.Encode4(LOVELETTER_ROYAL);
@@ -192,23 +243,25 @@ void CGameDealerLoveLetter::OnRoyalSubjectAction(InPacket& iPacket, CUser::point
 			oPacket.Encode4(pTargetPlayer->m_vHandCards[0]->m_nType);
 		}
 
-		CUser::pointer pUser = pRoom->GetUser(m_vPlayers[i]->nUserSN);
-		pUser->SendPacket(oPacket);
+		SendPacket(m_vPlayers[i], oPacket);		
 	}
 
 	Next();
 	Process();
 }
-
-void CGameDealerLoveLetter::OnGossipAction(InPacket& iPacket, CUser::pointer pUser) {
+void CGameDealerLoveLetter::GossipAction(_GameArgument _arg, CUser::pointer pUser) {
 	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
-	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
+	if (!pTurnPlayer->m_bCPU && pTurnPlayer->nUserSN != pUser->m_nUserSN) {
 		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
+		LogAdd("GossipAction Error - 1");
 		return;
 	}
 
-	LONG nWho = iPacket.Decode4();
-	if (m_vPlayers.size() <= nWho) return;
+	LONG nWho = _arg.nTargetIdx;
+	if (m_vPlayers.size() <= nWho) {
+		LogAdd("GossipAction Error - 2");
+		return;
+	}
 	Player::pointer pTargetPlayer = m_vPlayers[nWho];
 
 	if (pTargetPlayer->m_bDead) {
@@ -225,10 +278,13 @@ void CGameDealerLoveLetter::OnGossipAction(InPacket& iPacket, CUser::pointer pUs
 	if (!bDrop) {
 		//	오류
 		return;
-	}	
+	}
 
-	pTargetPlayer->m_pUser->gamedata.m_nAttackedByGossip++;
-	pTurnPlayer->m_pUser->gamedata.m_nUseGossip++;
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+	if (!pRoom->IsCPUGame()) {
+		pTargetPlayer->m_pUser->gamedata.m_nAttackedByGossip++;
+		pTurnPlayer->m_pUser->gamedata.m_nUseGossip++;
+	}
 
 	Card::pointer pTargetHandCard = pTargetPlayer->m_vHandCards[0];
 	Card::pointer pMyHandCard = pTurnPlayer->m_vHandCards[0];
@@ -245,7 +301,9 @@ void CGameDealerLoveLetter::OnGossipAction(InPacket& iPacket, CUser::pointer pUs
 	}
 	else if (pTargetHandCard->m_nType < pMyHandCard->m_nType) {
 		//	상대방이 죽음
-		pTurnPlayer->m_pUser->gamedata.m_nSuccessUseGossip++;
+		if (!pRoom->IsCPUGame()) {
+			pTurnPlayer->m_pUser->gamedata.m_nSuccessUseGossip++;
+		}		
 		Dead(pTargetPlayer);
 		nRet = 1;
 		nDeadCard = pTargetHandCard->m_nType;
@@ -255,8 +313,7 @@ void CGameDealerLoveLetter::OnGossipAction(InPacket& iPacket, CUser::pointer pUs
 		//	비겨서 아무일도 일어나지 않음.
 		nAliveIndex = nWho;
 	}
-
-	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+	
 	OutPacket oPacket(GCP_GameLoveLetter);
 	oPacket.Encode2(GCP_LL_ActionRet);
 	oPacket.Encode4(LOVELETTER_GOSSIP);
@@ -265,16 +322,15 @@ void CGameDealerLoveLetter::OnGossipAction(InPacket& iPacket, CUser::pointer pUs
 	oPacket.Encode4(nRet);
 	if (nRet != 0) {
 		oPacket.Encode4(nDeadCard);
-	}	
+	}
 	pRoom->BroadcastPacket(oPacket);
 
 	Next();
 	Process();
 }
-
-void CGameDealerLoveLetter::OnCompanionAction(InPacket& iPacket, CUser::pointer pUser) {
+void CGameDealerLoveLetter::CompanionAction(_GameArgument _arg, CUser::pointer pUser) {
 	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
-	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
+	if (!pTurnPlayer->m_bCPU && pTurnPlayer->nUserSN != pUser->m_nUserSN) {
 		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
 		return;
 	}
@@ -299,14 +355,14 @@ void CGameDealerLoveLetter::OnCompanionAction(InPacket& iPacket, CUser::pointer 
 	Process();
 }
 
-void CGameDealerLoveLetter::OnHeroAction(InPacket& iPacket, CUser::pointer pUser) {
+void CGameDealerLoveLetter::HeroAction(_GameArgument _arg, CUser::pointer pUser) {
 	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
-	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
+	if (!pTurnPlayer->m_bCPU && pTurnPlayer->nUserSN != pUser->m_nUserSN) {
 		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
 		return;
 	}
 
-	LONG nWho = iPacket.Decode4();
+	LONG nWho = _arg.nTargetIdx;
 	if (m_vPlayers.size() <= nWho) return;
 	Player::pointer pTargetPlayer = m_vPlayers[nWho];
 	if (pTargetPlayer->m_bDead) {
@@ -324,7 +380,7 @@ void CGameDealerLoveLetter::OnHeroAction(InPacket& iPacket, CUser::pointer pUser
 		return;
 	}
 
-	LONG nDroppedCardType = DropAndGetNewCardByHero(pTargetPlayer);	
+	LONG nDroppedCardType = DropAndGetNewCardByHero(pTargetPlayer);
 	BOOL bKill = FALSE;
 	if (nDroppedCardType == LOVELETTER_PRINCESS) {
 		Dead(pTargetPlayer);
@@ -347,35 +403,34 @@ void CGameDealerLoveLetter::OnHeroAction(InPacket& iPacket, CUser::pointer pUser
 		oPacket.Encode4(nDroppedCardType);
 		BOOL bTargetPlayer = FALSE;
 		if (m_vPlayers[i] == pTargetPlayer) {
-			bTargetPlayer = TRUE;			
+			bTargetPlayer = TRUE;
 		}
 		oPacket.Encode4(bTargetPlayer);
 		if (bTargetPlayer) {
 			oPacket.Encode4(nNewCard);
 		}
 
-		CUser::pointer pUser = pRoom->GetUser(m_vPlayers[i]->nUserSN);
-		pUser->SendPacket(oPacket);
+		SendPacket(m_vPlayers[i], oPacket);		
 	}
 
 	Next();
 	Process();
 }
 
-void CGameDealerLoveLetter::OnWizardAction(InPacket& iPacket, CUser::pointer pUser) {
+void CGameDealerLoveLetter::WizardAction(_GameArgument _arg, CUser::pointer pUser) {
 	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
-	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
+	if (!pTurnPlayer->m_bCPU && pTurnPlayer->nUserSN != pUser->m_nUserSN) {
 		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
 		return;
 	}
 
-	LONG nWho = iPacket.Decode4();
+	LONG nWho = _arg.nTargetIdx;
 	if (m_vPlayers.size() <= nWho) return;
 	Player::pointer pTargetPlayer = m_vPlayers[nWho];
 	if (pTargetPlayer->m_bDead) {
 		//	죽은 자도 타게팅 할 수 없다.
 		return;
-	}	
+	}
 
 	if (pTargetPlayer->m_bGuard) {
 		return;
@@ -390,7 +445,7 @@ void CGameDealerLoveLetter::OnWizardAction(InPacket& iPacket, CUser::pointer pUs
 	if (!bDrop) {
 		//	오류
 		return;
-	}	
+	}
 
 	// 교환 처리
 	ExchangeCard(pTurnPlayer, pTargetPlayer);
@@ -414,17 +469,16 @@ void CGameDealerLoveLetter::OnWizardAction(InPacket& iPacket, CUser::pointer pUs
 			oPacket.Encode4(pTurnPlayer->m_vHandCards[0]->m_nType);
 		}
 
-		CUser::pointer pUser = pRoom->GetUser(m_vPlayers[i]->nUserSN);
-		pUser->SendPacket(oPacket);
+		SendPacket(m_vPlayers[i], oPacket);
 	}
 
 	Next();
 	Process();
 }
 
-void CGameDealerLoveLetter::OnLadyAction(InPacket& iPacket, CUser::pointer pUser) {
+void CGameDealerLoveLetter::LadyAction(_GameArgument _arg, CUser::pointer pUser) {
 	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
-	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
+	if (!pTurnPlayer->m_bCPU && pTurnPlayer->nUserSN != pUser->m_nUserSN) {
 		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
 		return;
 	}
@@ -446,9 +500,9 @@ void CGameDealerLoveLetter::OnLadyAction(InPacket& iPacket, CUser::pointer pUser
 	Process();
 }
 
-void CGameDealerLoveLetter::OnPrincessAction(InPacket& iPacket, CUser::pointer pUser) {
+void CGameDealerLoveLetter::PrincessAction(_GameArgument _arg, CUser::pointer pUser) {
 	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
-	if (pTurnPlayer->nUserSN != pUser->m_nUserSN) {
+	if (!pTurnPlayer->m_bCPU && pTurnPlayer->nUserSN != pUser->m_nUserSN) {
 		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
 		return;
 	}
@@ -570,6 +624,10 @@ void CGameDealerLoveLetter::Update() {
 		}		
 		return;
 	}
+
+	if (status.IsReservedCPUProcess() && status.IsOverCPUDelay()) {
+		ProcessCPU(status.pCPUTurn);
+	}
 }
 
 void CGameDealerLoveLetter::InitGame() {	
@@ -606,7 +664,7 @@ void CGameDealerLoveLetter::InitGame() {
 		for (std::vector< CRoom::CPUInfo >::iterator iter = vCPUs.begin(); iter != vCPUs.end(); ++iter) {
 			Player::pointer p(new Player());
 			p->Init();
-			p->nUserSN = -1;
+			p->nUserSN = (*iter).nSN;
 			p->m_bDead = FALSE;
 			p->m_pUser = NULL;
 			m_vPlayers.push_back(p);
@@ -720,10 +778,12 @@ void CGameDealerLoveLetter::GameOver(LONG nReason) {
 			for each (Player::pointer p in m_vPlayers)
 			{				
 				if (pWinner == p) {
-					pWinner->m_pUser->gamedata.m_nWin++;					
+					if(!pWinner->m_bCPU)
+						pWinner->m_pUser->gamedata.m_nWin++;					
 				}
 				else {
-					p->m_pUser->gamedata.m_nLose++;
+					if (!p->m_bCPU)
+						p->m_pUser->gamedata.m_nLose++;
 				}
 			}
 			SendFinalRoundOver(pWinner);
@@ -780,6 +840,7 @@ void CGameDealerLoveLetter::Process() {
 	player->m_bGuard = FALSE;	//	내 턴이 돌아오면 가드가 풀린다.
 	BOOL bSucceed = GetCardFromDeck(player);
 	if (!bSucceed) {
+		LogAdd(boost::str(boost::format("GetCardFromDeck Failed : %d") % player->m_nIndex));
 		return;
 	}
 
@@ -789,12 +850,144 @@ void CGameDealerLoveLetter::Process() {
 		OutPacket oPacket(GCP_GameLoveLetter);
 		oPacket.Encode2(GCP_LL_Status);
 		status.EncodeStatus(oPacket);
-		CUser::pointer pUser = pRoom->GetUser(m_vPlayers[i]->nUserSN);
-		pUser->SendPacket(oPacket);
+		SendPacket(m_vPlayers[i], oPacket);
 	}
 
-	//	현재 턴인 플레이어의 2번째 카드를 그 플레이어에게만 전송한다.
-	//	나머지 플레이어에겐 뒷면을 제공 ( 클라 액션용 )
+	//	현재 턴 플레이어가 CPU 라면 CPU 행동으로 들어간다.
+	if (player->m_bCPU) {
+		status.ReservCPUProcess(player);		
+	}
+}
+
+void CGameDealerLoveLetter::ProcessCPU(Player::pointer p) {
+	BOOST_ASSERT(p->m_vHandCards.size() == 2);
+	status.pCPUTurn = NULL;
+	LogAdd(boost::str(boost::format("ProcessCPU : %d") % p->m_nIndex));
+
+	std::vector<Card::pointer> vTemp(2);
+	std::copy(p->m_vHandCards.begin(), p->m_vHandCards.end(), vTemp.begin());
+	auto engine = std::default_random_engine(std::random_device{}());
+	std::shuffle(std::begin(vTemp), std::end(vTemp), engine);
+
+	Card::pointer pCardUse = vTemp[0];
+	if (pCardUse->m_nType == LOVELETTER_PRINCESS) {
+		pCardUse = vTemp[1];
+	}
+
+	std::vector<Player::pointer> vTargets;
+	if (pCardUse->m_nType == LOVELETTER_GAURD) {		
+		Player::pointer pTarget = NULL;
+		for (std::vector< Player::pointer >::iterator iter = m_vPlayers.begin(); iter != m_vPlayers.end(); ++iter) {
+			Player::pointer pTemp = (*iter);
+			if (pTemp == p || pTemp->m_bDead || pTemp->m_bGuard) continue;
+			vTargets.push_back(pTemp);
+		}
+
+		if (vTargets.size() == 0) pTarget = p;
+		else {
+			std::shuffle(std::begin(vTargets), std::end(vTargets), engine);
+			pTarget = vTargets[0];
+		}
+		_GameArgument gm;						
+		std::tr1::mt19937 rng;
+		std::tr1::uniform_int_distribution<> six(2, 8);		
+		gm.nTargetIdx = pTarget->m_nIndex;
+		gm.nTargetCard = six(rng);
+		GuardAction(gm, NULL);
+	}
+	else if (pCardUse->m_nType == LOVELETTER_ROYAL) {
+		Player::pointer pTarget = NULL;
+		for (std::vector< Player::pointer >::iterator iter = m_vPlayers.begin(); iter != m_vPlayers.end(); ++iter) {
+			Player::pointer pTemp = (*iter);
+			if (pTemp == p || pTemp->m_bDead || pTemp->m_bGuard) continue;
+			vTargets.push_back(pTemp);
+		}
+
+		if (vTargets.size() == 0) pTarget = p;
+		else {
+			std::shuffle(std::begin(vTargets), std::end(vTargets), engine);
+			pTarget = vTargets[0];
+		}
+		_GameArgument gm;
+		gm.nTargetIdx = pTarget->m_nIndex;
+		RoyalSubjectAction(gm, NULL);
+	}	
+	else if (pCardUse->m_nType == LOVELETTER_GOSSIP) {
+		Player::pointer pTarget = NULL;
+		for (std::vector< Player::pointer >::iterator iter = m_vPlayers.begin(); iter != m_vPlayers.end(); ++iter) {
+			Player::pointer pTemp = (*iter);
+			if (pTemp == p || pTemp->m_bDead || pTemp->m_bGuard) continue;
+			vTargets.push_back(pTemp);
+		}
+
+		if (vTargets.size() == 0) pTarget = p;
+		else {
+			std::shuffle(std::begin(vTargets), std::end(vTargets), engine);
+			pTarget = vTargets[0];
+		}
+		_GameArgument gm;
+		gm.nTargetIdx = pTarget->m_nIndex;
+		GossipAction(gm, NULL);
+	}
+	else if (pCardUse->m_nType == LOVELETTER_COMPANION) {
+		Player::pointer pTarget = p;
+		
+		_GameArgument gm;		
+		CompanionAction(gm, NULL);
+	}
+	else if (pCardUse->m_nType == LOVELETTER_HERO) {
+		Player::pointer pTarget = NULL;
+		for (std::vector< Player::pointer >::iterator iter = m_vPlayers.begin(); iter != m_vPlayers.end(); ++iter) {
+			Player::pointer pTemp = (*iter);
+			if (pTemp->m_bDead || pTemp->m_bGuard) continue;
+			vTargets.push_back(pTemp);
+		}
+
+		if (vTargets.size() == 0) pTarget = p;
+		else {
+			std::shuffle(std::begin(vTargets), std::end(vTargets), engine);
+			pTarget = vTargets[0];
+		}
+		_GameArgument gm;
+		gm.nTargetIdx = pTarget->m_nIndex;
+		HeroAction(gm, NULL);
+	}
+	else if (pCardUse->m_nType == LOVELETTER_WIZARD) {
+		Player::pointer pTarget = NULL;
+		for (std::vector< Player::pointer >::iterator iter = m_vPlayers.begin(); iter != m_vPlayers.end(); ++iter) {
+			Player::pointer pTemp = (*iter);
+			if (pTemp == p || pTemp->m_bDead || pTemp->m_bGuard) continue;
+			vTargets.push_back(pTemp);
+		}
+
+		if (vTargets.size() == 0) pTarget = p;
+		else {
+			std::shuffle(std::begin(vTargets), std::end(vTargets), engine);
+			pTarget = vTargets[0];
+		}
+		_GameArgument gm;
+		gm.nTargetIdx = pTarget->m_nIndex;
+		WizardAction(gm, NULL);
+	}
+	else if (pCardUse->m_nType == LOVELETTER_LADY) {
+		Player::pointer pTarget = p;
+
+		_GameArgument gm;
+		LadyAction(gm, NULL);
+	}
+	else if (pCardUse->m_nType == LOVELETTER_PRINCESS) {
+		Player::pointer pTarget = p;
+
+		_GameArgument gm;
+		PrincessAction(gm, NULL);
+	}
+}
+
+void CGameDealerLoveLetter::SendPacket(Player::pointer p, OutPacket& oPacket) {
+	if (p->m_bCPU) return;
+	CRoom::pointer pRoom = boost::dynamic_pointer_cast<CRoom>(m_pRoom);
+	CUser::pointer pUser = pRoom->GetUser(p->nUserSN);
+	pUser->SendPacket(oPacket);
 }
 
 void CGameDealerLoveLetter::EncodePlayerInfo(OutPacket& oPacket) {
@@ -883,8 +1076,7 @@ void CGameDealerLoveLetter::SendGameInitInfo() {
 		status.EncodeStatus(oPacket);
 		EncodePlayerInfo(oPacket);				
 		oPacket.Encode4(m_vPlayers[i]->m_vHandCards[0]->m_nType);
-		CUser::pointer pUser = pRoom->GetUser(m_vPlayers[i]->nUserSN);
-		pUser->SendPacket(oPacket);
+		SendPacket(m_vPlayers[i], oPacket);		
 	}
 }
 

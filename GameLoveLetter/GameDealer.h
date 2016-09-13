@@ -1,4 +1,6 @@
 #pragma once
+#include "LogMan.h"
+using namespace boost::chrono;
 
 class CGameDealer : public Object {
 public:
@@ -66,34 +68,63 @@ public:
 		LONG nRoundOverCnt;			//	라운드 모두 종료되기 위한 카운트. 4인 4개 3인 5개
 		BOOL bFinalOver;
 		boost::chrono::system_clock::time_point tRoundOverStart;		//	다음 라운드까지 중간에 티타임을 가지기 위함.
+		boost::chrono::system_clock::time_point tCPUStart;
 		enum { WAIT_NEXT_ROUND_TIME = 10 * 1000, };
 
 		void EncodeStatus(OutPacket& oPacket);
 		void Reset() {
 			nPrevRoundWinIndex = -1;
 			nCurTurnIndex = 0;
-			bRoundOver = FALSE;			
+			bRoundOver = FALSE;	
+			pCPUTurn = NULL;
+		}
+
+		Player::pointer pCPUTurn;
+
+		void ReservCPUProcess(Player::pointer p) { 
+			LogAdd(boost::str(boost::format("Reserv CPU Proc : %d") % p->m_nIndex));
+			pCPUTurn = p; 
+			tCPUStart = system_clock::now();
+		}
+
+		BOOL IsReservedCPUProcess() {
+			if (pCPUTurn) return TRUE;
+			return FALSE;
+		}
+
+		BOOL IsOverCPUDelay() {
+			return (duration_cast<milliseconds>(system_clock::now() - tCPUStart).count() >= 4000);
 		}
 	};
 
 	CGameDealerLoveLetter();
 	virtual ~CGameDealerLoveLetter();
 
-	virtual void OnPacket(InPacket& iPacket, CUser::pointer pUser);				
-				void OnGuardAction(InPacket& iPacket, CUser::pointer pUser);
-				void OnRoyalSubjectAction(InPacket& iPacket, CUser::pointer pUser);
-				void OnGossipAction(InPacket& iPacket, CUser::pointer pUser);
-				void OnCompanionAction(InPacket& iPacket, CUser::pointer pUser);
-				void OnHeroAction(InPacket& iPacket, CUser::pointer pUser);
-				void OnWizardAction(InPacket& iPacket, CUser::pointer pUser);
-				void OnLadyAction(InPacket& iPacket, CUser::pointer pUser);
-				void OnPrincessAction(InPacket& iPacket, CUser::pointer pUser);
+	struct _GameArgument {
+		_GameArgument() : nTargetIdx(-1), nTargetCard(-1) {}
+
+		LONG nTargetIdx;
+		LONG nTargetCard;
+	};
+
+	void GuardAction(_GameArgument _arg, CUser::pointer pUser);
+	void RoyalSubjectAction(_GameArgument _arg, CUser::pointer pUser);
+	void GossipAction(_GameArgument _arg, CUser::pointer pUser);
+	void CompanionAction(_GameArgument _arg, CUser::pointer pUser);
+	void HeroAction(_GameArgument _arg, CUser::pointer pUser);
+	void WizardAction(_GameArgument _arg, CUser::pointer pUser);
+	void LadyAction(_GameArgument _arg, CUser::pointer pUser);
+	void PrincessAction(_GameArgument _arg, CUser::pointer pUser);
+
+	virtual void OnPacket(InPacket& iPacket, CUser::pointer pUser);		
+				void OnCardAction(LONG nPacketSubType, InPacket& iPacket, CUser::pointer pUser);				
 				void OnEmotion(InPacket& iPacket, CUser::pointer pUser);
 	virtual void Update();	
 
 	void InitGame();
 	void Next();
 	void Process();
+	void ProcessCPU(Player::pointer p);
 	void GameOver(LONG nReason);
 	BOOL CheckDead();
 	BOOL CheckGameOver();
@@ -131,4 +162,8 @@ protected:
 	//	게임에 사용할 카드
 	std::vector< Card::pointer > m_vDeck;
 	Card::pointer m_pSecretCard;
+
+	void SendPacket(Player::pointer p, OutPacket& oPacket);
+
+protected:
 };

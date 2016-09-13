@@ -82,6 +82,12 @@ namespace NSNetwork
             NetworkUnityEvent.Instance.Send(gameStart);
         }
 
+        public static void CPUFlag()
+        {
+            CGPCPUFlag cpuFlag = new CGPCPUFlag();
+            NetworkUnityEvent.Instance.Send(cpuFlag);
+        }
+
         /// <summary>
         /// 가드 카드를 사용한다.
         /// </summary>

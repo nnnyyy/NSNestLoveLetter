@@ -848,11 +848,8 @@ void PrintActionLog() {
 			std::cout << s << std::endl;
 		}
 	}
-	else {
-		for (int i = 2; i >= 0; --i) {
-			
-		}
-		for (LONG i = g_vMessages.size() - 1; (LONG)(g_vMessages.size() - 3) < i; --i) {
+	else {		
+		for (int i = 0; i < g_vMessages.size(); ++i) {
 			std::cout << g_vMessages[i] << std::endl;
 		}
 	}

@@ -72,7 +72,7 @@ void CRoom::BroadcastRoomState(DWORD dwFlag) {
 		}
 
 		for (int i = 0; i < m_vCPUs.size(); ++i) {
-			oPacket.Encode4(-1);
+			oPacket.Encode4(m_vCPUs[i].nSN);
 			oPacket.EncodeStr(m_vCPUs[i].sName);
 			oPacket.Encode1(TRUE);
 		}
@@ -217,7 +217,7 @@ void CRoom::RegisterCPU() {
 	LONG nCPUCnt = USER_MAX - nUserCnt;
 	m_vCPUs.clear();
 
-	for (int i = 0; i < nCPUCnt; ++i) {
+	for (int i = 1; i <= nCPUCnt; ++i) {
 		CPUInfo info;
 		info.sName = boost::str(boost::format("CPU %d") % i);
 		info.nSN = -i;

@@ -17,6 +17,7 @@ public class Game : MonoBehaviour {
     //  게임 관련
     public Text lbTitle;
     public Button btnReadyOrStart;
+    public Button btnCPUToggle;
     [SerializeField]
     private UICardInfo uiCardInfo; 
     private Card currentProcessingCard = null;
@@ -138,6 +139,11 @@ public class Game : MonoBehaviour {
         }
     }
 
+    public void OnBtnCPU()
+    {
+        Sender.CPUFlag();
+    }
+
     public void OnBtnLeave()
     {
         msgBox.ShowYesNo("방에서 나가시겠습니까?", ()=> {
@@ -163,6 +169,7 @@ public class Game : MonoBehaviour {
     {        
         ClearUI();
         btnReadyOrStart.interactable = true;
+        btnCPUToggle.interactable = true;
 
         if (GlobalData.Instance.roomUsers == null) return;
         int idx = 0;
@@ -262,10 +269,12 @@ public class Game : MonoBehaviour {
     void OnRoundResult(GCPLLRoundResult ret) { gameMan.OnRoundResult(ret); }
     void OnFinalRoundResult(GCPLLFinalResult ret) {
         btnReadyOrStart.gameObject.SetActive(true);
+        btnCPUToggle.gameObject.SetActive(true);
         gameMan.OnFinalRoundResult(ret);
     }
     void OnAborted(GCPLLAborted ret) {
         btnReadyOrStart.gameObject.SetActive(true);
+        btnCPUToggle.gameObject.SetActive(true);
         gameMan.OnAborted(ret);
     }
 
@@ -293,5 +302,6 @@ public class Game : MonoBehaviour {
     void GameStart()
     {
         btnReadyOrStart.gameObject.SetActive(false);
+        btnCPUToggle.gameObject.SetActive(false);
     }
 }
