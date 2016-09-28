@@ -81,8 +81,7 @@ public:
 
 		Player::pointer pCPUTurn;
 
-		void ReservCPUProcess(Player::pointer p) { 
-			LogAdd(boost::str(boost::format("Reserv CPU Proc : %d") % p->m_nIndex));
+		void ReservCPUProcess(Player::pointer p) { 			
 			pCPUTurn = p; 
 			tCPUStart = system_clock::now();
 		}

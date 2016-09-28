@@ -427,6 +427,7 @@ void CGameDealerLoveLetter::WizardAction(_GameArgument _arg, CUser::pointer pUse
 	Player::pointer pTurnPlayer = m_vPlayers[status.nCurTurnIndex];
 	if (!pTurnPlayer->m_bCPU && pTurnPlayer->nUserSN != pUser->m_nUserSN) {
 		//	턴이 아닌 사람에게 액션 패킷이 오면 무효처리 
+		LogAdd(boost::str(boost::format("WizardAction - 1 : %d , %d") % pTurnPlayer->m_nIndex % pTurnPlayer->m_bCPU));
 		return;
 	}
 
@@ -435,21 +436,25 @@ void CGameDealerLoveLetter::WizardAction(_GameArgument _arg, CUser::pointer pUse
 	Player::pointer pTargetPlayer = m_vPlayers[nWho];
 	if (pTargetPlayer->m_bDead) {
 		//	죽은 자도 타게팅 할 수 없다.
+		LogAdd(boost::str(boost::format("WizardAction - 2 : %d , %d") % pTurnPlayer->m_nIndex % pTurnPlayer->m_bCPU));
 		return;
 	}
 
 	if (pTargetPlayer->m_bGuard) {
+		LogAdd(boost::str(boost::format("WizardAction - 3 : %d , %d") % pTurnPlayer->m_nIndex % pTurnPlayer->m_bCPU));
 		return;
 	}
 
 	if (FindTarget(pTurnPlayer) && nWho == status.nCurTurnIndex) {
 		//	타겟이 남아있는데 나에게 쓰는건 안됨
+		LogAdd(boost::str(boost::format("WizardAction - 4 : %d , %d") % pTurnPlayer->m_nIndex % pTurnPlayer->m_bCPU));
 		return;
 	}
 
 	BOOL bDrop = DropCard(pTurnPlayer, LOVELETTER_WIZARD);
 	if (!bDrop) {
 		//	오류
+		LogAdd(boost::str(boost::format("WizardAction - 5 : %d , %d") % pTurnPlayer->m_nIndex % pTurnPlayer->m_bCPU));LogAdd(boost::str(boost::format("WizardAction - 1 : %d , %d") % pTurnPlayer->m_nIndex % pTurnPlayer->m_bCPU));
 		return;
 	}
 
@@ -878,8 +883,11 @@ void CGameDealerLoveLetter::ProcessCPU(Player::pointer p) {
 	if (pCardUse->m_nType == LOVELETTER_PRINCESS) {
 		pCardUse = vTemp[1];
 	}
-
-	LogAdd(boost::str(boost::format("ProcessCPU : %d , %d") % p->m_nIndex % pCardUse->m_nType));
+	else if (pCardUse->m_nType == LOVELETTER_HERO || pCardUse->m_nType == LOVELETTER_WIZARD) {
+		if (vTemp[1]->m_nType == LOVELETTER_LADY) {
+			pCardUse = vTemp[1];
+		}
+	}
 
 	std::vector<Player::pointer> vTargets;
 	if (pCardUse->m_nType == LOVELETTER_GAURD) {		
